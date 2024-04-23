@@ -264,3 +264,140 @@ There's three options:
 - Make the type conform to `Sendable`. Ideally, this needs to be placed in the same file that the class was declared. Otherwise, need to use `@unchecked Sendable` for retroactive conformance.
 - Isolate the class by a global actor such as `@MainActor`, making its access serialized and concurrency-safe. However, actor isolation might not always work since it complicates access from non-concurrency contexts.
 - Using `nonisolated(unsafe)` keyword
+
+## @MainActor
+
+`@MainActor` is a global actor that uses the main queue for executing its work. In practice, this means methods or types marked with `@MainActor` can (for the most part) safely modify the UI because it will always be running on the main queue, and calling `MainActor.run()` will push some custom work of your choosing to the main actor, and thus to the main queue.
+
+Whenever you use `@StateObject` or `@ObservedObject` inside a view, Swift will ensure that the whole view runs on the main actor so that you can’t accidentally try to publish UI updates in a dangerous way.
+
+The `body` property of your SwiftUI views is always run on the main actor.
+
+If you need certain methods or computed properties to opt out of running on the main actor, use `nonisolated` as you would do with a regular actor
+
+More broadly, any type that has `@MainActor` objects as properties will also implicitly be `@MainActor` using *global actor inference* – a set of rules that Swift applies to make sure global-actor-ness works without getting in the way too much.
+
+If you do need to spontaneously run some code on the main actor, you can do that by calling `MainActor.run()` and providing your work. This allows you to safely push work onto the main actor no matter where your code is currently running, like this:
+
+```Swift
+func couldBeAnywhere() async {
+    await MainActor.run {
+        print("This is on the main actor.")
+    }
+}
+
+await couldBeAnywhere()
+```
+
+You can send back nothing from `run()` if you want, or send back a value like this:
+
+```Swift
+func couldBeAnywhere() async {
+    let result = await MainActor.run { () -> Int in
+        print("This is on the main actor.")
+        return 42
+    }
+
+    print(result)
+}
+
+await couldBeAnywhere()
+```
+
+Even better, if that code was already running on the main actor then the code is executed immediately – it won’t wait until the next run loop in the same way that `DispatchQueue.main.async()` would have done.
+
+If you wanted the work to be sent off to the main actor without waiting for its result to come back, you can place it in a new task like this:
+
+```Swift
+func couldBeAnywhere() {
+    Task {
+        await MainActor.run {
+            print("This is on the main actor.")
+        }
+    }
+
+    // more work you want to do
+}
+
+couldBeAnywhere()
+```
+
+Or you can also mark your task’s closure as being @MainActor, like this:
+
+```Swift
+func couldBeAnywhere() {
+    Task { @MainActor in
+        print("This is on the main actor.")
+    }
+
+    // more work you want to do
+}
+
+couldBeAnywhere()
+```
+
+This is particularly helpful when you’re inside a synchronous context, so you need to push work to the main actor without using the `await` keyword.
+
+**Important:** If your function is already running on the main actor, using `await MainActor.run()` will run your code immediately without waiting for the next run loop, but using Task as shown above will wait for the next run loop.
+
+You can see this in action in the following snippet:
+
+```Swift
+@MainActor class ViewModel: ObservableObject {
+    func runTest() async {
+        print("1")
+
+        await MainActor.run {
+            print("2")
+
+            Task { @MainActor in
+                print("3")
+            }
+
+            print("4")
+        }
+
+        print("5")
+    }
+}
+
+// prints out:
+// 1 2 4 5 3
+```
+
+That marks the whole type as using the main actor, so the call to MainActor.run() will run immediately when runTest() is called. However, the inner Task will not run immediately, so the code will print `1, 2, 4, 5, 3`.
+
+You can mark individual methods with the attribute as well:
+
+```Swift
+@MainActor func updateViews() {
+    // Perform UI updates..
+}
+```
+
+And you can even mark closures to perform on the main thread:
+
+```Swift
+func updateData(completion: @MainActor @escaping () -> ()) {
+    Task {
+        await someHeavyBackgroundOperation()
+        await completion()
+    }
+}
+```
+
+The `MainActor` in Swift comes with an extension to use the actor directly:
+
+```Swift
+extension MainActor {
+    /// Execute the given body closure on the main actor.
+    public static func run<T>(resultType: T.Type = T.self, body: @MainActor @Sendable () throws -> T) async rethrows -> T
+}
+
+Task {
+    await someHeavyBackgroundOperation()
+    await MainActor.run {
+        // Perform UI updates
+    }
+}
+```
