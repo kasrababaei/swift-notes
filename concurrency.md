@@ -1,13 +1,14 @@
 # Swift Concurrency
 
-- [Swift Concurrency](#swift-concurrency)
-  - [Tasks](#tasks)
-    - [Task priority and cancelation](#task-priority-and-cancelation)
-    - [Current task](#current-task)
-  - [Isolation](#isolation)
-    - [Types of isolations](#types-of-isolations)
-  - [Concurrency-safe Singletons](#concurrency-safe-singletons)
-
+- [Tasks](#tasks)
+  - [Task priority and cancelation](#task-priority-and-cancelation)
+  - [Current task](#current-task)
+  - [@TaskLocal](#tasklocal)
+- [Isolation](#isolation)
+  - [Types of isolations](#types-of-isolations)
+- [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
+- [Concurrency-safe Singletons](#concurrency-safe-singletons)
+- [@MainActor](#mainactor)
 
 When to switch to unstructured concurrency:
 Careful with withCheckedContinuation. If the block of code isn’t that big, you’re just converting into Swift concurrency, and converting out of Swift concurrency. What’s the point? Probably should start with the network calls.
@@ -286,6 +287,31 @@ class MyMainActorClass: SomeDelegate {
 Isolation cannot change at all for a synchronous function. And it cannot change for the synchronous parts of an async function. But, as soon as you need to make an async call, it could.
 
 This is really a consequence of the fact that isolation is controlled entirely by a function’s definition. It does not matter how the caller is being isolated. This is completely different from how queues or locks work.
+
+### Passing non-sendable types into actor-isolated context
+
+```Swift
+actor Foo {
+    init(name: NonSendable) {
+        //
+    }
+    
+    init(name: @Sendable () -> NonSendable) {
+        //
+    }
+}
+
+class NonSendable {
+    var name: String = "Name"
+}
+
+// Not allowed: Passing argument of non-sendable type 'NonSendable' into actor-isolated context 
+_ = Foo(name: NonSendable())
+
+// Allowed. Could even use autclosure or create a boxing type.
+_ = Foo(name: { NonSendable() })
+
+```
 
 ## Concurrency-safe Singletons
 
