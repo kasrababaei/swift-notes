@@ -168,6 +168,36 @@ task.cancel()
 
 If the task has been cancelled when we try to invoke `checkCancellation`, the function will throw, thus short-circuiting the rest of the function. This can be a lot more ergonomic to invoke than guarding for `Task.isCancelled`.
 
+### @TaskLocal
+
+Tasks have a feature known as “task local values” that allow us to associate a value with a task and then it can be effortlessly retrieved from anywhere that runs in the context of that task.
+
+```Swift
+enum MyLocals {
+  @TaskLocal static var id: Int!
+}
+
+print("before:", MyLocals.id)
+MyLocals.$id.withValue(42) {
+  print("withValue:", MyLocals.id!)
+  Task {
+    try await Task.sleep(nanoseconds: NSEC_PER_SEC)
+    Task {
+      print("Task:", MyLocals.id!)
+    }
+  }
+}
+print("after:", MyLocals.id)
+
+// prints out:
+// before: nil
+// withValue: 42
+// after: nil
+// Task: 42
+```
+
+The moment we create the task it captures all of the current task locals, and so then it doesn’t matter that later the withValue operation ends and the id local reverts back to nil.
+
 ## Isolation
 
 Isolation is the mechanism that Swift uses to make data races impossible. Isolation is specified at compile time. Everything is non-isolated by default. You must take explicit action to change this. The isolation behavior is still controlled by the definition. Isolation will not suddenly change unless you decide you want to change it.
