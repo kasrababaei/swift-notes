@@ -231,7 +231,7 @@ class MyIsolatedClass {
 - Static: actor types, global actors (like `@MainActor`), and isolated parameters
 - Dynamic: It can happen that the type system alone does not or cannot describe the isolation actually used
 
-If something has isolation that you don’t want, you can opt-out with the nonisolated keyword. This also can make a lot of sense for static constants that are immutable and safe to access from other threads.
+If something has isolation that you don’t want, you can opt-out with the `nonisolated` keyword. This also can make a lot of sense for static constants that are immutable and safe to access from other threads.
 
 Protocols, being definitions, can control isolation just like other kinds of definitions.
 
@@ -311,6 +311,15 @@ _ = Foo(name: NonSendable())
 // Allowed. Could even use autclosure or create a boxing type.
 _ = Foo(name: { NonSendable() })
 
+```
+
+It is also possible to make the whole function be `Sendable`
+
+```Swift
+// @Sendable must be placed before the ACL
+@Sendable private func foo() {
+    //
+}
 ```
 
 ## Concurrency-safe Singletons
