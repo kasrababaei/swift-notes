@@ -207,7 +207,7 @@ Isolation is the mechanism that Swift uses to make data races impossible. Isolat
 - Rule 2: isolation can only change via async calls. Synchronous code cannot change isolation.
 - Rule 3: protocols can specify isolation
 
-Whatever isolation was in effect when you create a Task will still be used inside the Task body by default. 
+Whatever isolation was in effect when you create a Task will still be used inside the Task body by default.
 
 ```Swift
 @MainActor
@@ -223,6 +223,45 @@ class MyIsolatedClass {
         }
     }
 }
+
+// no isolation for the type...
+class MyClass {
+    // ... and none for the function either
+    func method() {
+        // so this is a non-isolated context
+    }
+    
+    func asyncMethod() async {
+        // async does not affect this, so 
+        // this is non-isolated too!
+    }
+}
+
+class MyClass: SomeSupertype, SomeProtocol {
+    // isolation here might depend on inheritance
+    func method() {
+    }
+}
+
+@MainActor
+func doStuff() async {
+    // I'm on the MainActor here!
+    await anotherFunction() // have to look at the definition of anotherFunction
+    // back on the main actor
+}
+```
+
+Whenever you see an `await` keyword, **isolation** could change. That’s because with other concurrency systems, runtime context is important. Definitions are all that matter in Swift.
+
+All this means is isolation will not suddenly change unless you decide you want to change it. Whatever isolation was in effect when you create a Task will still be used inside the Task body by default. `Task` uses the `@_inheritActorContext` [underscored attribute](https://github.com/apple/swift/blob/main/docs/ReferenceGuides/UnderscoredAttributes.md) to inherit the context.
+
+Isolation also applies to variables:
+
+```Swift
+@MainActor
+class MyIsolatedClass {
+    static var value = 1 // this is also MainActor-isolated
+}
 ```
 
 ### Types of isolations
@@ -232,6 +271,21 @@ class MyIsolatedClass {
 - Dynamic: It can happen that the type system alone does not or cannot describe the isolation actually used
 
 If something has isolation that you don’t want, you can opt-out with the `nonisolated` keyword. This also can make a lot of sense for static constants that are immutable and safe to access from other threads.
+
+Dynamic Isolation is a good approach to gradually update the code-base. Some forms of dynamic isolation are:
+
+```Swift
+MainActor.assumeIsolated {
+    // promise the compiler this bit of code is actually already on the MainActor
+}
+
+// add a runtime check to guarantee that the actor-ness is what you expect
+MainActor.preconditionIsolated()
+
+await MainActor.run {
+    // run a chunk of synchronous code, hopping over to the actor if needed
+}
+```
 
 Protocols, being definitions, can control isolation just like other kinds of definitions.
 
@@ -322,7 +376,7 @@ It is also possible to make the whole function be `Sendable`
 }
 ```
 
-## Concurrency-safe Singletons
+## Concurrency-safe singletons
 
 There's three options:
 
@@ -461,8 +515,31 @@ extension MainActor {
 
 Task {
     await someHeavyBackgroundOperation()
+
+    // MainActor.run {} has a problem: just like all forms of runtime synchronization, the compiler cannot help you
+    // In most cases it's better to annotate the whole type with @MainActor
     await MainActor.run {
         // Perform UI updates
     }
 }
+```
+
+The `run` method is useful when we need to execute multiple synchronous calls without the risk of suspension:
+
+```Swift
+// atomic
+await MainActor.run {
+    obj.methodA()
+    obj.methodB()
+}
+
+// definitely not atomic
+await obj.methodA()
+await obj.methodB()   // There is a suspension point between A and B
+
+// equivalent to .run
+await Task { @MainActor in
+    m.methodA()
+    m.methodB()
+}.value
 ```
