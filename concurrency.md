@@ -1,14 +1,15 @@
 # Swift Concurrency
 
-- [Tasks](#tasks)
-  - [Task priority and cancelation](#task-priority-and-cancelation)
-  - [Current task](#current-task)
-  - [@TaskLocal](#tasklocal)
-- [Isolation](#isolation)
-  - [Types of isolations](#types-of-isolations)
-- [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
-- [Concurrency-safe Singletons](#concurrency-safe-singletons)
-- [@MainActor](#mainactor)
+- [Swift Concurrency](#swift-concurrency)
+  - [Tasks](#tasks)
+    - [Task priority and cancelation](#task-priority-and-cancelation)
+    - [Current task](#current-task)
+    - [@TaskLocal](#tasklocal)
+  - [Isolation](#isolation)
+    - [Types of isolations](#types-of-isolations)
+    - [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
+  - [Concurrency-safe Singletons](#concurrency-safe-singletons)
+  - [@MainActor](#mainactor)
 
 When to switch to unstructured concurrency:
 Careful with withCheckedContinuation. If the block of code isn’t that big, you’re just converting into Swift concurrency, and converting out of Swift concurrency. What’s the point? Probably should start with the network calls.
