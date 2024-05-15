@@ -9,6 +9,7 @@
     - [Types of isolations](#types-of-isolations)
     - [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
   - [Concurrency-safe Singletons](#concurrency-safe-singletons)
+  - [Actor](#actor)
   - [@MainActor](#mainactor)
 
 When to switch to unstructured concurrency:
@@ -384,6 +385,10 @@ There's three options:
 - Make the type conform to `Sendable`. Ideally, this needs to be placed in the same file that the class was declared. Otherwise, need to use `@unchecked Sendable` for retroactive conformance.
 - Isolate the class by a global actor such as `@MainActor`, making its access serialized and concurrency-safe. However, actor isolation might not always work since it complicates access from non-concurrency contexts.
 - Using `nonisolated(unsafe)` keyword
+
+## Actor
+
+While actors are great for protecting encapsulated state, sometimes we want to modify and read individual properties on the type, so actors aren't quite the right tool for this. Furthermore, we can't guarantee the order that operations run on an actor, so we can't ensure that, for instance, our cancellation will run first. We'll need something else such as atomic types.
 
 ## @MainActor
 
