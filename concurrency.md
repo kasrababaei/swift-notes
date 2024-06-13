@@ -43,7 +43,7 @@ Actors are made to guard mutable states.
 
 ## Tasks
 
-A task is the basic unit of concurrency in the system. 
+A task is the basic unit of concurrency in the system.
 
 Every asynchronous function is executing in a task. In other words, a task is to asynchronous functions, what a thread is to synchronous functions.
 
@@ -57,6 +57,16 @@ for n in 0..<workCount {
   }
 }
 ```
+
+There are seven things to know when working with [task cancellation](https://www.hackingwithswift.com/quick-start/concurrency/how-to-cancel-a-task):
+
+1. You can explicitly cancel a task by calling its `cancel()` method.
+2. Any task can check `Task.isCancelled` to determine whether the task has been cancelled or not.
+3. You can call the `Task.checkCancellation()` method, which will throw a CancellationError if the task has been cancelled or do nothing otherwise.
+4. Some parts of Foundation automatically check for task cancellation and will throw their own cancellation error even without your input.
+5. If you’re using `Task.sleep()` to wait for some amount of time to pass, cancelling your task will automatically terminate the sleep and throw a `CancellationError`.
+6. If the task is part of a group and any part of the group throws an error, the other tasks will be cancelled and awaited.
+7. If you have started a task using SwiftUI’s `task()` modifier, that task will automatically be canceled when the view disappears.
 
 Tasks also have the ability to schedule work after waiting some time. Threads accomplished this with a `sleep` function that was unfortunately blocking and so would tie up thread resources, and queues accomplished this by scheduling work to be executed on a future date. It’s not super ergonomic to have to use nanoseconds. Although this method is called “sleep”, it is quite different from the sleep we have used many times on Thread. This sleep does pause the current task for an amount of time, but it does not hold up the thread. The sleep function on Task works cooperatively so that other tasks can have a chance to do their work on the cooperative thread pool, and then once the time passes our task will be resumed.
 
@@ -268,8 +278,9 @@ class MyIsolatedClass {
 
 ### Types of isolations
 
-- None
+- None, aka non-isolated.
 - Static: actor types, global actors (like `@MainActor`), and isolated parameters
+- Specific actor value, i.e., They can be isolated to a specific parameter or captured value.
 - Dynamic: It can happen that the type system alone does not or cannot describe the isolation actually used
 
 If something has isolation that you don’t want, you can opt-out with the `nonisolated` keyword. This also can make a lot of sense for static constants that are immutable and safe to access from other threads.
@@ -288,6 +299,43 @@ await MainActor.run {
     // run a chunk of synchronous code, hopping over to the actor if needed
 }
 ```
+
+```Swift
+class Old {
+  public init(@_inheritActorContext operation: () async)
+}
+
+class New {
+  public init(@inheritsIsolation operation: () async)
+}
+
+class C {
+  var value = 0
+
+  @MainActor
+  func staticIsolation() {
+    Old {
+      value = 1 // closure is MainActor-isolated and therefore okay to access self
+    }
+    New {
+      value = 2 // closure is MainActor-isolated and therefore okay to access self
+    }
+  }
+
+  func dynamicIsolation(_ actor: isolated any Actor) {
+    Old {
+      // not isolated to actor without explicit capture
+    }
+    New {
+      // isolated to actor through guaranteed implicit capture
+    }
+  }
+}
+```
+
+#### Isolation inheritance
+
+`@inheritsIsolation` unconditionally and implicitly captures the isolation context.
 
 Protocols, being definitions, can control isolation just like other kinds of definitions.
 
@@ -549,3 +597,20 @@ await Task { @MainActor in
     m.methodB()
 }.value
 ```
+
+## Testing
+
+There are no tools that allow us to deterministically assert on what happens in between units of async work. We have to sprinkle in some Task.yields and hope it’s enough, and as we’ve seen a few times now, often it is not enough. We should probably be yielding a lot more times in these tests, and possibly even waiting for a duration of time to pass, which would unfortunately slow down our test suite. And still we could never be 100% certain that the test still won’t flake some day.
+
+For instance, imagine tapping a button starts a task which does an async call. Then tapping another button is supposed to cancel the running task. The test can fail sometimes because for whatever reason the Swift concurrency runtime is not scheduling the task quickly enough for us to cancel it.
+
+```Swift
+let task = Task { await model.getFactButtonTapped() }
+await Task.yield()
+await Task.yield()
+await Task.yield()
+await Task.yield()
+model.cancelButtonTapped()
+```
+
+One wait to do this is creating a mega yield function, 
