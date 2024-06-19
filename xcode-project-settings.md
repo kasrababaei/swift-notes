@@ -16,3 +16,5 @@ The iOS frameworks provide the infrastructure you need for creating iOS apps. Yo
 A detailed list of individual Xcode build settings that control or change the way a target is built.
 
 [List of build settings for Xcode projects](https://developer.apple.com/documentation/xcode/build-settings-reference)
+
+https://www.osstatus.com

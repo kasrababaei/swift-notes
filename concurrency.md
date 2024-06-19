@@ -226,7 +226,15 @@ Whatever isolation was in effect when you create a Task will still be used insid
 class MyIsolatedClass {
     func myMethod() {
         Task {
-            // still isolated to the MainActor here!
+          // still isolated to the MainActor here!
+
+          // This closure doesn't have an explicit isolation
+          // specification, and it's being passed to the `Task`
+          // initializer, so it will be inferred to have the same
+          // isolation as its enclosing context.  The enclosing
+          // context is isolated to its `self` parameter, which this
+          // closure captures, so this closure will also be isolated
+          // that value.
         }
         
         Task.detached {
@@ -261,6 +269,29 @@ func doStuff() async {
     await anotherFunction() // have to look at the definition of anotherFunction
     // back on the main actor
 }
+
+// Represents a non-isolated function
+() -> Void
+
+// Represents a function that's isolated to that global actor
+@MainActor () -> Int 
+
+// Represents a function that's isolated to that parameter
+(isolated MyActor) - > Int
+
+actor WorldModelObject {
+  var position: Point3D
+  
+  func linearMove(to finalPosition: Point3D, over time: Duration) {
+    let originalPosition = self.position
+    let motion = finalPosition - originalPosition
+
+    // A closure can be isolated to one of its captures.
+    gradually(over: time) { [isolated self] progressProportion in
+      self.position = originalPosition + progressProportion * motion
+    }
+  }
+}
 ```
 
 Whenever you see an `await` keyword, **isolation** could change. That’s because with other concurrency systems, runtime context is important. Definitions are all that matter in Swift.
@@ -281,7 +312,7 @@ class MyIsolatedClass {
 - None, aka non-isolated.
 - Static: actor types, global actors (like `@MainActor`), and isolated parameters
 - Specific actor value, i.e., They can be isolated to a specific parameter or captured value.
-- Dynamic: It can happen that the type system alone does not or cannot describe the isolation actually used
+- Dynamic: It can happen that the type system alone does not or cannot describe the isolation actually used. This comes up regularly with systems built before concurrency was a thing.
 
 If something has isolation that you don’t want, you can opt-out with the `nonisolated` keyword. This also can make a lot of sense for static constants that are immutable and safe to access from other threads.
 
@@ -331,6 +362,20 @@ class C {
     }
   }
 }
+```
+
+#### [isolated(any)](https://github.com/rjmccall/swift-evolution/blob/isolated-any-functions/proposals/NNNN-isolated-any-functions.md#proposed-solution)
+
+A function value with this type dynamically carries the isolation of the function that was used to initialize it.
+
+```Swift
+func gradually(over: Duration, operation: @isolated(any) (Double) -> ())
+```
+
+When such a function is called from an arbitrary context, it must be assumed to always cross an isolation boundary. This means, among other things, that the call is effectively asynchronous and must be `await`ed.
+
+```Swift
+await operation(timePassed / overallDuration)
 ```
 
 #### Isolation inheritance
@@ -613,4 +658,61 @@ await Task.yield()
 model.cancelButtonTapped()
 ```
 
-One wait to do this is creating a mega yield function, 
+One way to do this is creating a mega yield function, or since we have access to the task proeprty, call `await task.value` (this isn't always possible given sometimes the task is private). Looking at how Apple does it in the open-sourced repo [swift-async-algorithms](https://github.com/apple/swift-async-algorithms), we can see they [override a global variable](https://github.com/apple/swift-async-algorithms/blob/adb12bfcccaa040778c905c5a50da9d9367fd0db/Sources/AsyncSequenceValidation/Test.swift#L319):
+
+```Swift
+swift_task_enqueueGlobal_hook = { job, original in
+  Context.driver?.enqueue(job)
+}
+```
+
+Looking at the symbol, `swift_task_enqueueGlobal_hook`, can find an equivelant in the C header file [_CAsyncSequenceValidationSupport.h](https://github.com/apple/swift-async-algorithms/blob/adb12bfcccaa040778c905c5a50da9d9367fd0db/Sources/_CAsyncSequenceValidationSupport/_CAsyncSequenceValidationSupport.h#L242-L247). There's also another signature in the [Concurrency.h](https://github.com/apple/swift/blob/bd11fceff5390c960ccdfca2f6c8951dc96941c9/include/swift/Runtime/Concurrency.h#L737-L738) file in the Concurrency repo. The Async Algorithms package wants access to some C functions that are defined in Swift’s C++ codebase, [GlobalExecutor.cpp](https://github.com/apple/swift/blob/bd11fceff5390c960ccdfca2f6c8951dc96941c9/stdlib/public/BackDeployConcurrency/GlobalExecutor.cpp#L85-L92), but are not exposed with a proper Swift API. In order to do that the package defines a system library that publicly declares those signatures, and that makes it available in Swift. Whenever an async task is enqueued it calls this closure for processing. And in this case “task” does not refer to a literal unstructured task created with the `Task` type. Here “task” means any kind of asynchronous work, including every single suspension point from an await.
+
+The way to dynamically open libraries in Swift is to start with dlopen, a C function, which means we can even see its documentation from the man pages in terminal:
+
+```Bash
+$ man dlopen
+
+NAME
+dlopen -- load and link a dynamic library or bundle
+
+SYNOPSIS
+#include <dlfcn.h>
+
+void*
+dlopen(const char* path, int mode);
+```
+
+In order to do a similar thing, we'll need to create a glue code to override the C variable:
+
+```Swift
+import Darwin
+
+typealias Original = @convention(thin) (UnownedJob) -> Void
+typealias Hook = @convention(thin) (UnownedJob, Original) -> Void
+
+var swift_task_enqueueGlobal_hook: Hook? {
+  get { _swift_task_enqueueGlobal_hook.pointee }
+  set { _swift_task_enqueueGlobal_hook.pointee = newValue }
+}
+
+private let _swift_task_enqueueGlobal_hook =
+  // The man pages suggest using RTLD_LAZY as a default
+  
+  // dlopen: to dynamically open a library. It returns `UnsafeMutableRawPointer?`, 
+  // which can be used to look up the address of a particular symbol using another C function, dlsym
+
+  // dlsym: to lookup address of a particular C function
+  dlsym(dlopen(nil, RTLD_LAZY), "swift_task_enqueueGlobal_hook")
+    .assumingMemoryBound(to: Hook?.self)
+```
+
+Usage:
+
+```Swift
+swift_task_enqueueGlobal_hook = { job, original in 
+  print("Job enqueued", job)
+  original(job)
+}
+```
+
