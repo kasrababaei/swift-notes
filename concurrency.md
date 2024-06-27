@@ -479,6 +479,8 @@ There's three options:
 - Isolate the class by a global actor such as `@MainActor`, making its access serialized and concurrency-safe. However, actor isolation might not always work since it complicates access from non-concurrency contexts.
 - Using `nonisolated(unsafe)` keyword
 
+In Swift, global variables are intialized lazily on the first access. In Swift 6, this is done atomically to make sure there is no data races when the different threads try to access and initialize the variable at the same time.
+
 ## Actor
 
 While actors are great for protecting encapsulated state, sometimes we want to modify and read individual properties on the type, so actors aren't quite the right tool for this. Furthermore, we can't guarantee the order that operations run on an actor, so we can't ensure that, for instance, our cancellation will run first. We'll need something else such as atomic types.
