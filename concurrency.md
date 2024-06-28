@@ -331,34 +331,90 @@ await MainActor.run {
 }
 ```
 
+In Swift 6, [SE-0423](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md) added a new approach to replace the following dynamic isolation:
+
 ```Swift
-class Old {
-  public init(@_inheritActorContext operation: () async)
+// The protocol guarantees that respondToUIEvent runs on the main thread but isn't isolated to MainActor
+public protocol ViewDelegateProtocol {
+  func respondToUIEvent()
 }
 
-class New {
-  public init(@inheritsIsolation operation: () async)
+@MainActor
+class MyViewController: ViewDelegateProtocol {
+  // MyViewController.respondToUIEvent() is @MainActor-isolated, but it satisfies a nonisolated
+  // protocol requirement that can be called from generic code off the main actor.
+  func respondToUIEvent() { // error: @MainActor function cannot satisfy a nonisolated requirement
+      // implementation...   
+  }
 }
 
-class C {
-  var value = 0
-
-  @MainActor
-  func staticIsolation() {
-    Old {
-      value = 1 // closure is MainActor-isolated and therefore okay to access self
+// Solution: dynamic isolation: make the method nonisolated to satisfy the protocol requirement
+// and wrape the implementation in MainActor.assumeIsolated
+// Caveat: the programmer loses static data-race safety in their own code, because internal 
+// callers of respondToUIEvent() are free to invoke it from any isolation domain without compiler errors.
+@MainActor
+class MyViewController: ViewDelegateProtocol {
+  nonisolated func respondToUIEvent() {
+    MainActor.assumeIsolated {
+      // implementation...   
     }
-    New {
-      value = 2 // closure is MainActor-isolated and therefore okay to access self
+  }
+}
+```
+
+Instead of the code above, [SE-0423](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md) proposed a solution to supress the `nonisolated` protocol conformance requirement by using `@preconcurrency` annotation on the protocol to indicate that the protocol itself predates concurrency:
+
+```Swift
+@MainActor
+class MyViewController: @preconcurrency ViewDelegateProtocol {
+ func respondToUIEvent() {
+   // implementation...
+ }
+}
+```
+
+When importing a module that was compiled with the Swift 6 language mode into code that is not, it's possible to call actor-isolated functions from outside the actor using `@preconcurrency`. For example:
+
+In the above code, `onMain` from ModuleA can be called from outside the main actor via a call to `notIsolated()`. To close this safety hole, a dynamic check is inserted at the call-site of `onMain()` when ModuleB is recompiled against ModuleA after ModuleA has migrated to the Swift 6 language mode.
+
+#### Explicit isolation
+
+Currenlty, [there's a proposal](https://github.com/sophiapoirier/swift-evolution/blob/closure-isolation/proposals/nnnn-closure-isolation-control.md) that enables closures to be fully explicit about all three types of formal isolation:
+
+- `nonisolated`
+- global actor
+- specific actor value
+
+Explicit annotation has the benefit of disabling inference rules and the potential that they lead to a formal isolation that is not preferred.
+
+```Swift
+Task { nonisolated (parameter) in // Opting out of @inheritsIsolation
+  print("nonisolated")
+}
+
+actor A {
+  nonisolated func isolate() {
+    Task { [isolated self] in
+      print("isolated to 'self'")
+    }
+  }
+}
+```
+
+
+
+```Swift
+class NonSendableType {
+  @MainActor
+  func globalActor() {
+    Task {
+      // accessing self okay
     }
   }
 
-  func dynamicIsolation(_ actor: isolated any Actor) {
-    Old {
-      // not isolated to actor without explicit capture
-    }
-    New {
-      // isolated to actor through guaranteed implicit capture
+  func isolatedParameter(_ actor: isolated any Actor) {
+    Task {
+      // not okay to access self
     }
   }
 }
