@@ -9,6 +9,9 @@
   - [Lifetime](#lifetime)
   - [Identity](#identity)
   - [State](#state)
+  - [StateObject](#stateobject)
+  - [ObservedObject](#observedobject)
+  - [Binding](#binding)
 
 ## View Builders
 
@@ -147,6 +150,10 @@ struct Counetr: View {
 
 The `State(initialValue:)` initializer makes it clear that the value 0 is just the _initial_ value of the state property. This is the value that will be used when the node for the counter view is first created in the render tree. Once the node is there, the initial value of the state property will be ignored.
 
+## StateObject
+
+The `@StateObject` property wrapper works much in the same way as @State: we specity an initial value (an object in this case), which will be used as the starting point when the node in the render tree is created. From then on, SwiftUI will kepp this object around across renders for the lifetime oft he node in the render tree. It  also observes the object for changes via the `ObservableObject` protocol.
+
 `Observable` framework in iOS 17 replaced the entire existing object-observarion model based on the `Combine` framework. The `Observable` macro does two things:
 
 1. adds conformance to the `Observable` marker protocol
@@ -202,3 +209,11 @@ struct CounterView: View {
     }
 }
 ```
+
+## ObservedObject
+
+The `@observedObject` property wrapper is much simpler than `StateObject`: it doesn't have the concept of an initial value, and it doesn't maintain the observed object across renders. All it does is subscribe to the object's `objectWillChance` publisher and rerender the view when this publisher emits an event. This makes `ObservedObject` the only correct tool if we want to explicitly pass objects from the outside into a view (when targeting platforms before iOS 17). This is the equivalent of an Observable object within a regular property.
+
+## Binding
+
+When writing components, it's often the case that we need read and write access to a value, but don't need to know what the source of truth for this value actually is. Bindings are used exactly for this pupose, as we can see with many of SwiftUI's built-in components.
