@@ -12,6 +12,9 @@
   - [StateObject](#stateobject)
   - [ObservedObject](#observedobject)
   - [Binding](#binding)
+    - [Binding vs Bindable](#binding-vs-bindable)
+  - [View Updates and Performance](#view-updates-and-performance)
+    - [Which property wrapper to use](#which-property-wrapper-to-use)
 
 ## View Builders
 
@@ -159,7 +162,7 @@ The `@StateObject` property wrapper works much in the same way as @State: we spe
 1. adds conformance to the `Observable` marker protocol
 2. changes object's properties to track both read and write access.
 
-The macro only forms a dependency between the view and access properties. This is more efficient.
+The macro only forms a dependency between the view and access properties. This is more efficient. It shifts observation from the object level to the individual properties of the object.
 
 The new `@Observation` macro is more efficient than using the `@ObservableObject` property wrapper. If you only use one proerty of an object in your view's body, changes to the other properties won't cause redraws of this view. This can reduce unnecessary view updates and thus improve performance. Also, observable objects can be nested in optionals, arrays, or other collecitons. Observation and view updates will continue to work as expected, because of the property-level tracking of dependencies in the view's body.
 
@@ -212,8 +215,136 @@ struct CounterView: View {
 
 ## ObservedObject
 
-The `@observedObject` property wrapper is much simpler than `StateObject`: it doesn't have the concept of an initial value, and it doesn't maintain the observed object across renders. All it does is subscribe to the object's `objectWillChance` publisher and rerender the view when this publisher emits an event. This makes `ObservedObject` the only correct tool if we want to explicitly pass objects from the outside into a view (when targeting platforms before iOS 17). This is the equivalent of an Observable object within a regular property.
+The `@observedObject` property wrapper is much simpler than `StateObject`:
+
+- it doesn't have the concept of an initial value
+- it doesn't maintain the observed object across renders
+
+All it does is subscribe to the object's `objectWillChance` publisher and rerender the view when this publisher emits an event. This makes `ObservedObject` the only correct tool if we want to explicitly pass objects from the outside into a view (when targeting platforms before iOS 17). This is the equivalent of an Observable object within a regular property.
 
 ## Binding
 
 When writing components, it's often the case that we need read and write access to a value, but don't need to know what the source of truth for this value actually is. Bindings are used exactly for this pupose, as we can see with many of SwiftUI's built-in components.
+
+The code below, shows how the code would look like without the binding
+
+```Swift
+struct Counter: View {
+    var value: Int
+    var setValue: (Int) -> ()
+    var body: some View {
+        Button("Increment: \(value)" { setValue(value + 1) })
+    }
+}
+
+// Using `Counter`
+struct CounterView: some View {
+    @State private var value = 0
+    var body: some View {
+        Counter(value: value, setValue: { value = $0 })
+    }
+}
+
+// Or this version
+struct Counter: View {
+    var _value: Binding<Int>
+    var value: Int {
+        get { _value.wrappedValue }
+        set { _value.wrappedValue = newValue }
+    }
+    init(value: Binding<Int>) {
+        self._value = value
+    }
+    var body: some View {
+        Button("Increment: \(value)") { value +=1 }
+    }
+}
+
+// The initialize's only job is to expose a nicer API without an underscorder `_value` label for its parameter:
+struct ContentView: View {
+    @State private var value = 0
+    var body: some View {
+        Counter(value: Binding(get: { value }, set: { value = $0 }))
+    }
+}
+```
+
+To demystify the code above, we often use the syntactic sugar below:
+
+```Swift
+struct Counter: View {
+    @Binding var value: Int
+    var body: some View {
+        Button("Increment: \(value)" { value += 1 })
+    }
+}
+
+struct CounterView: View {
+    @State var value: Int= 0
+    var body: some View {
+        Counter(value: $value)
+    }
+}
+```
+
+The `$value` is shorthand for `_value.priojectedValue`. The dollar syntax isn't specific to SwiftUI; rather, it's a feature of Swift's [property wrappers](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/properties/#Property-Wrappers).
+
+### Binding vs Bindable
+
+Since we often no longer need to use a property wrapper when working iwth the `@Observable` macro, we can't constuct a binding in the same way as when using, for example, the `@ObservedObject` property wrapper. Instead, the `Bindable` wrapper, which you can use either as a property wrapper or directly inline, was introduced:
+
+```Swift
+struct Counter: View {
+    @Bindable var model: Model
+    var body: some View {
+        Stpeper("Increment: \(model.value)", value: $model.value)
+    }
+}
+
+struct CounterView: View {
+    var model = Model.shared
+    var body: some View {
+        Counter(model: model)
+    }
+}
+```
+
+## View Updates and Performance
+
+If we pull our state in one large observable object (not using the new `@Observable` macro), SwiftUI has to rerender all views that observe that object on any change, even if the particular change perhaps only affected a small subset of the views that observe the object. The `@Observable` macro alleviates this problem to a large degree, because it shifts observation from the object level to the individual properties of the object.
+
+When running into performance issues, there are serveral techniques to diagnose which view bodies are being executed. The first option is to insert a print statement in view's body:
+
+```Swift
+var body: some View {
+    let _ = print("Executing <MyView> body")
+    Text("Hello, World!")
+}
+```
+
+The anonymous variable assignment `let _ = ...` is necessary because the view builder only accepts expressions of type `View`. We cannot simply call `prrint` because the return type of print function is `Void`., which the view builder cannot handle.
+
+To find out _why_ a view's body was reececuted, we can use the `Self._printChagnes()` API in the view body like this:
+
+```Swift
+var body: some View {
+    let _ = Self._printChagnes()
+    Text("Hello, World!")
+}
+```
+
+This print statement will log the reason of the rerender to the console:
+
+- If the view was rerendered due to a state change -> Name of the state property will be logged in its underscored form
+- If the view value itself has changed, i.e., if the value of one of the view's properties has changed -> `@Self` will be logged
+- If the identity of the view has changed -> `@identity` will be logged. In practice, this usually means the view was freshly inserted into the rendered tree.
+
+### Which property wrapper to use
+
+- Start with a regular property without any property wrappers
+- When a view needs to read and write access to a value (not an object) and it should own that value as local, private view state, then we use `@State`
+- If the view needs read and write access to a value but shouldn't own that value (and doesn't care where the value is actually stored), then we use `@Binding`
+- If a view needs state in the form of an object and the view should own that object as local, private view state, which cannot be passed in from the outside, then we use `@StateObject` pre-iOS 18 or `State` with an `Observable` object post-iOS 17
+- If we need an object to be passed in from the outside, then we use `@ObservableObject` pre-iOS 17 and just a plain property post-iOS 17
+
+A good rule of thumb is that `State` and `StateObject` should only be used if a property can be initialized directly on the line where it's declared.If that doesn't work, we should probably use `@Binding`, `@ObservedObject`, or a plain property with an `@Observable` object.
