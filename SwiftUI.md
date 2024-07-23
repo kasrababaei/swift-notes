@@ -15,6 +15,8 @@
     - [Binding vs Bindable](#binding-vs-bindable)
   - [View Updates and Performance](#view-updates-and-performance)
     - [Which property wrapper to use](#which-property-wrapper-to-use)
+  - [Layout](#layout)
+    - [Text](#text)
 
 ## View Builders
 
@@ -72,7 +74,7 @@ HStack {
     }
 }
 
-// This is just a humand-frendly model to demonstrate
+// This is just a humand-friendly model to demonstrate
 
         HStack
           |
@@ -322,7 +324,7 @@ var body: some View {
 }
 ```
 
-The anonymous variable assignment `let _ = ...` is necessary because the view builder only accepts expressions of type `View`. We cannot simply call `prrint` because the return type of print function is `Void`., which the view builder cannot handle.
+The _anonymous variable assignment_ `let _ = ...` is necessary because the view builder only accepts expressions of type `View`. We cannot simply call `prrint` because the return type of print function is `Void`., which the view builder cannot handle.
 
 To find out _why_ a view's body was reececuted, we can use the `Self._printChagnes()` API in the view body like this:
 
@@ -348,3 +350,50 @@ This print statement will log the reason of the rerender to the console:
 - If we need an object to be passed in from the outside, then we use `@ObservableObject` pre-iOS 17 and just a plain property post-iOS 17
 
 A good rule of thumb is that `State` and `StateObject` should only be used if a property can be initialized directly on the line where it's declared.If that doesn't work, we should probably use `@Binding`, `@ObservedObject`, or a plain property with an `@Observable` object.
+
+## Layout
+
+The first thing to keep in mind is that SwiftUI's layout algorithm proceeds top-down along the view tree.
+
+```Swift
+VStack {
+    Image(systemName: "globe")
+    Text("Hello, World!")
+}
+```
+
+Since the `VStack` is the root view in the above example, it'll receive the safe screen area as the proposed size. To determine its own size, the stack first recursibely proposes sizes to its subviews. The iage will report its size based on the size of the globe symbol, and the text will report its size based on the porposed size and the string it has to rednder. The stack computes its own size as the size of the union of its subviews' frames and reports that back to the window. The size that the subview reports to its parent is the definitive size and the parent cannot alter this size unilaterally.
+
+In iOS 16, there's a type in the `Layout` protocol called `PorposedViewSize`:
+
+```Swift
+struct PropsoedViewSize {
+    var width, height: CGFloat?
+}
+```
+
+The difference between `ProposedViewSize` and `CGSize` is that both components are optional in `ProposedViewSize`. Porposing `nil` for a component means that the view can become its _ideal size_ in that dimension. The ideal size is different for each view.
+
+In API terms, we can express the layout algorithm like this:
+
+1. The parent calls `sizeThatFits` on its subview, passing on the proposed size.
+2. The subview determines its own size based on the porposed size, perhaps calling `sizeThatFits` on its subviews if it has any. Some views completely disregard the proposed size (e.g. `Image` does so by default). When a view returns the proposed size, we say that it _accepts_ the proposed size.
+3. The subview reports its own size to its parent via the return value of the `sizeThatFits` method.
+4. The parent places the subview according to its own alignment and the alignment guides of the subview.
+
+### Text
+
+By default, `Text` views fit themselves into any proposed size. `Text` uses various strategies to make that work, in this order:
+
+- it'll break the text into multiple lines (word wrapping)
+- break up words (line wrapping)
+- truncate
+- clip the text
+
+`Text` always reports back the exact size it needs to render the content, which is less than or equal to the proposed width, and at least the height of one line (with the exception of proposing 0⨉0).
+
+`lineLimit(_ number:)` modifier lets us specify the maximum number of lines that should be rendered. Specifying `nil` means no line limit.
+
+`lineLimit(_:reservesSpace:)` modifier lets us specify the maximum number of lines that should be rendered, while giving us the option to always include the space for these lines in the reported size, regardless of whether or not they're empty.
+
+If we apply `.fixedSize()` to `Text`, it'll become its ideal size, because `fixedSize` proposed `nil⨉nil` ot the text. The ideal size of the text is the size that's needed to render the content without wrapping and truncation.
