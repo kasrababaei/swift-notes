@@ -539,7 +539,25 @@ In Swift, global variables are intialized lazily on the first access. In Swift 6
 
 ## Actor
 
+From _Visualize and optimize Swift concurrency_, WWDC22:
+> Actors make it safe for multiple tasks to manipulate shared state. However, they do this by serializing access to that shared state. Only one task at a time is allowed to occupy the Actor, and other tasks that need to use that Actor will wait. Swift concurrency allows for parallel computation using unstructured tasks, task groups, and async let. Ideally, these constructs are able to use many CPU cores simultaneously. When using Actors from such code, beware of performing large amounts of work on an Actor that's shared among these tasks. When multiple tasks attempt to use the same Actor simultaneously, the Actor serializes execution of those tasks. Because of this, we lose the performance benefits of parallel computation.
+>
+> This is because each task must wait for the Actor to become available. To fix this, we need make sure that tasks only run on the Actor when they really need exclusive access to the Actor's data. Everything else should run off of the Actor. We divide the task into chunks. Some chunks must run on the Actor, and the others don't. The non-Actor isolated chunks can be executed in parallel, which means the computer can finish the work much faster.
+
 While actors are great for protecting encapsulated state, sometimes we want to modify and read individual properties on the type, so actors aren't quite the right tool for this. Furthermore, we can't guarantee the order that operations run on an actor, so we can't ensure that, for instance, our cancellation will run first. We'll need something else such as atomic types.
+
+When a method on actor is marked as `nonisolated`, we tell the Swift compiler that we don't need access to the shared state of the actor. But if the body of that function actually needs access to a shared state, then the `noneisolated` method could be marked as `async` and then in the body, mark all the actor states with the `await` keyword.
+
+```Swift
+actor Counter {
+  private var count = 0
+
+  nonisolated func increment() async -> Int {
+    await count += 1
+    return await count
+  }
+}
+```
 
 ## @MainActor
 
