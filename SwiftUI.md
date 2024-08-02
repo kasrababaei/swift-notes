@@ -16,7 +16,10 @@
   - [View Updates and Performance](#view-updates-and-performance)
     - [Which property wrapper to use](#which-property-wrapper-to-use)
   - [Layout](#layout)
-    - [Text](#text)
+    - [Leaf Views](#leaf-views)
+      - [Text](#text)
+      - [Shapes](#shapes)
+      - [Colors](#colors)
 
 ## View Builders
 
@@ -381,7 +384,17 @@ In API terms, we can express the layout algorithm like this:
 3. The subview reports its own size to its parent via the return value of the `sizeThatFits` method.
 4. The parent places the subview according to its own alignment and the alignment guides of the subview.
 
-### Text
+### Leaf Views
+
+Views that have no subviews. Examples:
+
+1. `Text`
+2. `Shape`
+3. `Color`
+4. `Divider`
+5. `Spacer`
+
+#### Text
 
 By default, `Text` views fit themselves into any proposed size. `Text` uses various strategies to make that work, in this order:
 
@@ -397,3 +410,53 @@ By default, `Text` views fit themselves into any proposed size. `Text` uses vari
 `lineLimit(_:reservesSpace:)` modifier lets us specify the maximum number of lines that should be rendered, while giving us the option to always include the space for these lines in the reported size, regardless of whether or not they're empty.
 
 If we apply `.fixedSize()` to `Text`, it'll become its ideal size, because `fixedSize` proposed `nil⨉nil` ot the text. The ideal size of the text is the size that's needed to render the content without wrapping and truncation.
+
+Assuming there's a window with a safe area of 320 ⨉ 480:
+
+```Swift
+Text("Favorite)
+  .padding(10)
+  .background(Color.teal)
+```
+
+in API terms, the layout algorithm can be expressed like:
+
+```Swift
+    View Tree
+        1|8
+         |
+    backrground
+  ---------------
+  |             |
+2 | 5          6|7
+  |             |
+padding       Color
+  |
+3 | 4
+  |
+ Text
+```
+
+1. The system proposes 320⨉480
+2. The background proposes the same size to its primary subview (the padding)
+3. The padding subtracks 10 points on each edge, and it propsed 300⨉460 to the text
+4. The text reports its size as 51⨉17
+5. The padding adds 10 points on each edge, and it reports its size as 71⨉37
+6. The background proposes the size of the padded text (71⨉73) to the secondary subview (color)
+7. The color accepts and reports the porposed 71⨉73
+8. The backtournd reports the size of its primary subview (71⨉73)
+
+For debugging a view:
+
+1. Generally adding a border to the view is suffiecient.
+2. Alternatively, can add an overlay with a geometry reader to also render the size of the view
+
+#### Shapes
+
+Most built-in shapes (`Rectangle`, `RoundedRectangle`, `Capsule`, and `Ellipse`) accept any proposed size from zero to infinity and fill the available space. `Circle` is an exception: it'll fit itself into any proposed size and report back the acutual size of the circle. If we propose `nil` to a shape, i.e., wrap it in a `.fixedSize`, it takes on a default size of 10⨉10.
+
+#### Colors
+
+When using a color directly as a view, e.g., `Color.red`, it behaves just as `Rectangle().fill(...)` from a layout point of view.
+
+_If we put a color in a backtround that touches the non-safe area, color will magically bleed into the non-safe area. If we want to prevent this, we can use the `ignoreSafeAreaEdges` on `.background`, or use `Rectangle().fill(...)` instead of `Color`._
