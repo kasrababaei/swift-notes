@@ -659,7 +659,7 @@ You can see this in action in the following snippet:
 // 1 2 4 5 3
 ```
 
-That marks the whole type as using the main actor, so the call to MainActor.run() will run immediately when runTest() is called. However, the inner Task will not run immediately, so the code will print `1, 2, 4, 5, 3`.
+That marks the whole type as using the main actor, so the call to `MainActor.run()` will run immediately when runTest() is called. However, the inner Task will not run immediately, so the code will print `1, 2, 4, 5, 3`.
 
 You can mark individual methods with the attribute as well:
 
@@ -721,7 +721,7 @@ await Task { @MainActor in
 
 ## Testing
 
-There are no tools that allow us to deterministically assert on what happens in between units of async work. We have to sprinkle in some Task.yields and hope it’s enough, and as we’ve seen a few times now, often it is not enough. We should probably be yielding a lot more times in these tests, and possibly even waiting for a duration of time to pass, which would unfortunately slow down our test suite. And still we could never be 100% certain that the test still won’t flake some day.
+There are no tools that allow us to deterministically assert on what happens in between units of async work. We have to sprinkle in some `Task.yields` and hope it’s enough, and as we’ve seen a few times now, often it is not enough. We should probably be yielding a lot more times in these tests, and possibly even waiting for a duration of time to pass, which would unfortunately slow down our test suite. And still we could never be 100% certain that the test still won’t flake some day.
 
 For instance, imagine tapping a button starts a task which does an async call. Then tapping another button is supposed to cancel the running task. The test can fail sometimes because for whatever reason the Swift concurrency runtime is not scheduling the task quickly enough for us to cancel it.
 
