@@ -414,7 +414,7 @@ If we apply `.fixedSize()` to `Text`, it'll become its ideal size, because `fixe
 Assuming there's a window with a safe area of 320 ⨉ 480:
 
 ```Swift
-Text("Favorite)
+Text("Favorite")
   .padding(10)
   .background(Color.teal)
 ```

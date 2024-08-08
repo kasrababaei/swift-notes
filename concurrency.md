@@ -43,7 +43,12 @@ Actors are made to guard mutable states.
 
 ## Tasks
 
-A task is the basic unit of concurrency in the system.
+A task is the basic unit of concurrency in the system. By looking at Instrument, can see it has the following lifetime states:
+
+1. Creating
+2. Running
+3. Suspended
+4. Ended
 
 Every asynchronous function is executing in a task. In other words, a task is to asynchronous functions, what a thread is to synchronous functions.
 
