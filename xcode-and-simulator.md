@@ -11,3 +11,9 @@ You can get a list of supported preview device names by using the xcrun command 
 ```text
 xcrun simctl list devicetypes
 ```
+
+To list all the frameworks, including the private ones, in iOS:
+
+```text
+ls \"$(xcode-select -p)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks\"
+```
