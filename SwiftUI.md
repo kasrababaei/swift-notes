@@ -20,6 +20,12 @@
       - [Text](#text)
       - [Shapes](#shapes)
       - [Colors](#colors)
+      - [Image](#image)
+      - [Divider](#divider)
+      - [Spacer](#spacer)
+    - [View Modifiers](#view-modifiers)
+      - [Padding](#padding)
+      - [Fixed Frames](#fixed-frames)
 
 ## View Builders
 
@@ -106,7 +112,11 @@ var body: some View {
 
 The id parameter can be any `Hashable` value.
 
-Try not using patterns that create conditional content/branch in the view tree that might have unforseen consequences. Instead, use the following pattern:
+Try not using patterns that create conditional content/branch in the view tree that might have unforseen consequences.
+
+> It is essential to keep your view hierarchy without unnecessary branches that you may create using if statements in the body of a `ViewBuilder` closure because it may hurt the performance of your views and produce state losses. _[From Swift with Majid](https://swiftwithmajid.com/2023/05/03/the-power-of-overlays-in-swiftui/)_.
+
+Instead, use the following pattern:
 
 ```Swift
 HStack { 
@@ -460,3 +470,55 @@ Most built-in shapes (`Rectangle`, `RoundedRectangle`, `Capsule`, and `Ellipse`)
 When using a color directly as a view, e.g., `Color.red`, it behaves just as `Rectangle().fill(...)` from a layout point of view.
 
 _If we put a color in a backtround that touches the non-safe area, color will magically bleed into the non-safe area. If we want to prevent this, we can use the `ignoreSafeAreaEdges` on `.background`, or use `Rectangle().fill(...)` instead of `Color`._
+
+`fill(.red)` vs `background(.red)`: _`fill` is for filling a shape such as a circle while `background` will set the background color of the whole view, i.e., the container of the circle._
+
+#### Image
+
+By default, `Image` views report a static value: the size of the underlying image. Once we call `.resizable()` on an image, it makes the view completely flexibile: the `Image` will then accept any proposded size, report it back, and squeeze the image into that size.
+
+In practice, virtually any resizable image will be combined with an `.aspectRatio(contentMode:)` or `.scaleToFit()` modifier to prevent the image from being distorted.
+
+#### Divider
+
+When `Divider` is used outside of horizontal stacks, it accepts any proposed width and reports the height of the divider line. Within a horizontal stack, the divider accepts the propsoed height and reports the width of the divider line.
+
+Proposing `nil` will result in a default size of 10 on the flexible axis, depending on the context.
+
+#### Spacer
+
+Outside of horizontal or vertical stacks, `Spacer` accepts any proposed size, from its minimum length to infinity. However, within a vertical stack, `Spacer` accepts height from its minimum length to infinity, but it reports a width of zero. Within a horizontal stack, it behaves the same way (wth the axes swapped). The minimum length of a spacer is the length of the default padding, unless the lenght is specified using the `minLength` parameter in the spacer's initializer.
+
+A popular use of spacer is for aligning views. For example, it's common to see code like this:
+
+```swift
+HStack {
+  Spacer()
+  Text("Some right-aligned text")
+}
+```
+
+Instead, use a flexible frame with alignment:
+
+```swift
+Text("Some right-aligned text")
+  .frame(maxWidth: .infinity, alignment: .trailing)
+```
+
+This is preferred over an `HStack` and the `Spacer`, because there's an edge case in the `HStack` solution. The `Spacer` has a default minimum length (equal to the defalt spacing). As a result, the text might start wrapping or truncating sonner than necessary, because the spacer also occupies some of the proposed width of the `HStack`.
+
+### View Modifiers
+
+View modifiers always wrap an existing view inside another layer: the modifier becomes the parent of the view it's applied to. While SwiftUI has the `.modifier` API to apply a value conforming to the `ViewModifier` protocol, SwiftUI's built-in modifiers are all exposed on `View`.
+
+#### Padding
+
+The `.padding` modifier uses its padding value to modify the proposed size by substracting he padding from the specified edges. This modified size is then proposed to the subview of `.padding`.
+
+By writing `.padding()` without an arguments, the default padding for the current platform is used.
+
+#### Fixed Frames
+
+The fixed fram modifier, `.fram(width:height:alignment:)`, has very simple layout behaviour: it proposes exactly the spceified size to its subview, and it reports exactly the specified size as its own size, independent of the reported size of its subview.
+
+With support for dynamic type and various screen sizes, using fixed frames in production code is actually quite rare. It's a good practice to avoid hardcoding magic numbers in fixed frames unless absolutely necessary, e.g., for certain design elements that intirinsiccally cannot or should not scale.
