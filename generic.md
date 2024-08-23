@@ -8,15 +8,13 @@
 - [SE-0244: Opaque Result Types](https://github.com/apple/swift-evolution/blob/main/proposals/0244-opaque-result-types.md)
 - [Swift documentation: Opaque and Boxed Types](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/opaquetypes/)
 
-Assuming we want to create a type that confomrs the the `Shape` protocol, there's difference methods to do so.
+Assuming we want to create a type that conforms to the `Shape` protocol, there's different ways to do it.
 
 ```Swift
 protocol Shape {
     func draw() -> String
 }
 ```
-
-Contrast the three types you could use for shapes:
 
 - Using generics, by writing `struct VerticalShapes<S: Shape>` and `var shapes: [S]`, makes an array whose elements are some specific shape type, and where the identity of that specific type is visible to any code that interacts with the array.
 - Using an opaque type, by writing `var shapes: [some Shape]`, makes an array whose elements are some specific shape type, and where that specific type’s identity is hidden.
