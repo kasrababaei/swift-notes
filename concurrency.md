@@ -6,11 +6,16 @@
     - [Current task](#current-task)
     - [@TaskLocal](#tasklocal)
   - [Isolation](#isolation)
+    - [Under-Specified Protocol - _Link_](#under-specified-protocol---link)
     - [Types of isolations](#types-of-isolations)
+      - [Explicit isolation](#explicit-isolation)
+      - [isolated(any)](#isolatedany)
+      - [Isolation inheritance](#isolation-inheritance)
     - [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
-  - [Concurrency-safe Singletons](#concurrency-safe-singletons)
+  - [Concurrency-safe singletons](#concurrency-safe-singletons)
   - [Actor](#actor)
   - [@MainActor](#mainactor)
+  - [Testing](#testing)
 
 When to switch to unstructured concurrency:
 Careful with withCheckedContinuation. If the block of code isn’t that big, you’re just converting into Swift concurrency, and converting out of Swift concurrency. What’s the point? Probably should start with the network calls.
@@ -311,6 +316,45 @@ class MyIsolatedClass {
     static var value = 1 // this is also MainActor-isolated
 }
 ```
+
+
+### Under-Specified Protocol - _[Link](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/commonproblems/#Under-Specified-Protocol)_
+
+The most commonly-encountered form of this problem happens when a protocol has no explicit isolation. In this case, as with all other declarations, this implies non-isolated. Non-isolated protocol requirements can be called from generic code in any isolation domain. If the requirement is synchronous, it is invalid for a conforming type’s implementation to access actor-isolated state:
+
+```swift
+protocol Styler {
+    func applyStyle()
+}
+
+
+@MainActor
+class WindowStyler: Styler {
+    func applyStyle() {
+        // access main-actor-isolated state
+    }
+}
+```
+
+The above code produces the following error in Swift 6 mode:
+
+```swift
+ 5 | @MainActor
+ 6 | class WindowStyler: Styler {
+ 7 |     func applyStyle() {
+   |          |- error: main actor-isolated instance method 'applyStyle()' cannot be used to satisfy nonisolated protocol requirement
+   |          `- note: add 'nonisolated' to 'applyStyle()' to make this instance method not isolated to the actor
+ 8 |         // access main-actor-isolated state
+ 9 |     }
+```
+
+It is possible that the protocol actually should be isolated, but has not yet been updated for concurrency. If conforming types are migrated to add correct isolation first, mismatches will occur.
+
+[That error has three fix-its:](https://developer.apple.com/forums/thread/760769)
+
+1. Add `nonisolated` to `applyStyle` to make this instance method not isolated to the actor
+2. Add `@preconcurrency` to the conformance to defer isolation checking to run time
+3. Mark the protocol requirement `applyStyle` `async` to allow actor-isolated conformances
 
 ### Types of isolations
 
