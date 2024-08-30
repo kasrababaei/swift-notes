@@ -16,4 +16,4 @@ A detailed list of individual Xcode build settings that control or change the wa
 
 [List of build settings for Xcode projects](https://developer.apple.com/documentation/xcode/build-settings-reference)
 
-https://www.osstatus.com
+[Apple API Errors](https://www.osstatus.com)

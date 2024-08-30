@@ -542,6 +542,10 @@ Isolation cannot change at all for a synchronous function. And it cannot change 
 
 This is really a consequence of the fact that isolation is controlled entirely by a function’s definition. It does not matter how the caller is being isolated. This is completely different from how queues or locks work.
 
+#### `sending` parameter and result values
+
+This [proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md) extends region isolation to enable the application of an explicit `sending` annotation to function parameters and results. A function parameter or result that is annotated with `sending` is required to be disconnected at the function boundary and thus possesses the capability of being safely sent across an isolation domain or merged into an actor-isolated region in the function's body or the function's caller respectively.
+
 ### Passing non-sendable types into actor-isolated context
 
 ```Swift
