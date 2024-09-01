@@ -1,7 +1,8 @@
 # Generic types
 
-- [Opaque return type vs generics](#opaque-return-type-vs-generics)
-- [Boxed protocol](#boxed-protocol)
+- [Generic types](#generic-types)
+  - [Opaque return type vs generics](#opaque-return-type-vs-generics)
+  - [Boxed protocol](#boxed-protocol)
 
 ## Opaque return type vs generics
 

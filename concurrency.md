@@ -11,6 +11,7 @@
       - [Explicit isolation](#explicit-isolation)
       - [isolated(any)](#isolatedany)
       - [Isolation inheritance](#isolation-inheritance)
+      - [`sending` parameter and result values](#sending-parameter-and-result-values)
     - [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
   - [Concurrency-safe singletons](#concurrency-safe-singletons)
   - [Actor](#actor)
@@ -92,7 +93,7 @@ for n in 0..<workCount {
 
 When we await the sleep function we are able to suspend the execution of this task, thus freeing up its thread to be used by other tasks. If we run this and pause the executable we will see a small number of threads have been created, but they all have just a single stack frame with a cryptic function name:
 
-```
+```swift
 Thread 2#0        0x00000001a05ef604 in __workq_kernreturn ()
 Thread 3#0        0x00000001a05ef604 in __workq_kernreturn ()
 Thread 4#0        0x00000001a05ef604 in __workq_kernreturn ()
@@ -317,7 +318,6 @@ class MyIsolatedClass {
 }
 ```
 
-
 ### Under-Specified Protocol - _[Link](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/commonproblems/#Under-Specified-Protocol)_
 
 The most commonly-encountered form of this problem happens when a protocol has no explicit isolation. In this case, as with all other declarations, this implies non-isolated. Non-isolated protocol requirements can be called from generic code in any isolation domain. If the requirement is synchronous, it is invalid for a conforming type’s implementation to access actor-isolated state:
@@ -449,8 +449,6 @@ actor A {
   }
 }
 ```
-
-
 
 ```Swift
 class NonSendableType {
@@ -622,7 +620,7 @@ The `body` property of your SwiftUI views is always run on the main actor.
 
 If you need certain methods or computed properties to opt out of running on the main actor, use `nonisolated` as you would do with a regular actor
 
-More broadly, any type that has `@MainActor` objects as properties will also implicitly be `@MainActor` using *global actor inference* – a set of rules that Swift applies to make sure global-actor-ness works without getting in the way too much.
+More broadly, any type that has `@MainActor` objects as properties will also implicitly be `@MainActor` using _global actor inference_ – a set of rules that Swift applies to make sure global-actor-ness works without getting in the way too much.
 
 If you do need to spontaneously run some code on the main actor, you can do that by calling `MainActor.run()` and providing your work. This allows you to safely push work onto the main actor no matter where your code is currently running, like this:
 
@@ -844,4 +842,3 @@ swift_task_enqueueGlobal_hook = { job, original in
   original(job)
 }
 ```
-
