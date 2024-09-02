@@ -18,35 +18,6 @@
   - [@MainActor](#mainactor)
   - [Testing](#testing)
 
-When to switch to unstructured concurrency:
-Careful with withCheckedContinuation. If the block of code isn’t that big, you’re just converting into Swift concurrency, and converting out of Swift concurrency. What’s the point? Probably should start with the network calls.
-
-★ Need to have the strict concurrency turned on, otherwise you’re not getting that payoff.
-
-In a large app, try to identify a subsystem that is large enough and important enough to warrant the effort to do so. Just leave that subsystem, tackle issues before going to convert more subsystems.
-
-The URLSessionDataTask itself is cancellable. If your task gets cancelled, the URLSession itself cancels the data task.
-
-In `withTaskCancellationHandler`, you want to make sure that either the cancellation block wins or the operation block. You don’t cancel it if it’s been completed already, and if you cancelled it, you’d ignore the completion. You’ll need some sort of concurrency data shared structure. The cancellation handler is called in an arbitrary context. There’s no guarantee in what context that’ll get called. So, any work done in there, has to be serialized with some sort of lock vs the work that’s done in the operation block.
-
-When working with a subsystem that is very tied to dispatch queue, it’s natural to use a dispatch queue for the cancellation. When the callback is happening on a queue, and you’re telling it what queue to call it and what queue to run the callbacks, better to just stick to using dispatch queue and use the natural serialization associated with that.
-
-Better use `OSAllocatedUnfairLock` but it’s only available in iOS 16. It’s fast, has no obj-c overhead, and uses inline attribute. Only use DispatchQueue serialization if you’re already in the dispatch queue world.
-
-The act of confinement is determined statically at compile time because that’s why the compiler can check it at compile time. The task initializer has a hidden parameter that causes the inheritance but they’re tiding it up right now.
-
-In SwiftUI, only the view’s body is isolated to the main actor. If you define a method outside of the body, then that won’t be isolated on the main actor.
-
-Nothing’s wrong with running things on the main actor as long as you are careful with APIs that block it when you don’t expect it. Keychain is a good example.
-
-Actors are made to guard mutable states.
-
-??? Make core of it into an asynchronous function that’s no actor bound.
-
-`withCheckedContinuation` is the glue code between Swift concurrency world to other concurrency domains such as dispatch queue world.
-
-`Task.detach` is for running operations asynchronously as part of a new top-level task.
-
 ## Tasks
 
 A task is the basic unit of concurrency in the system. By looking at Instrument, can see it has the following lifetime states:
