@@ -26,6 +26,8 @@
     - [View Modifiers](#view-modifiers)
       - [Padding](#padding)
       - [Fixed Frames](#fixed-frames)
+      - [Flexible Frames](#flexible-frames)
+      - [Aspect Ratio](#aspect-ratio)
 
 ## View Builders
 
@@ -522,3 +524,77 @@ By writing `.padding()` without an arguments, the default padding for the curren
 The fixed fram modifier, `.fram(width:height:alignment:)`, has very simple layout behaviour: it proposes exactly the spceified size to its subview, and it reports exactly the specified size as its own size, independent of the reported size of its subview.
 
 With support for dynamic type and various screen sizes, using fixed frames in production code is actually quite rare. It's a good practice to avoid hardcoding magic numbers in fixed frames unless absolutely necessary, e.g., for certain design elements that intirinsiccally cannot or should not scale.
+
+#### Flexible Frames
+
+The API for flexible frames has a ton of parameters: the minimum, maximum, and ideal values for both the frame's width and height. The behaviour of flexible frames isn't very intuitive, but they're a usuful tool.
+
+Flexible frames apply the minimum and maximum boundaries twice: once for the size they propose to their subview, and once to determine their reported size.
+
+The flexible frame takes the proposed size and clamps it by whatever minimum and maximum parameters were specified. This clamped size is then proposed to the frame's subview.
+
+Once the subviews' size has been computed, the flexible frame determines its own size based on the proposed size by applying the boudnaries again. However, now a missing boundary value – e.g., if we only specify `minWidth`, but not `maxWidth` – will be substituted using the subview's reported size. Then the proposed size gets clamped by these boundaries and reported as the frame's size.
+
+In practice, this means that if we only specify `minWidth`, the flexible frame will becomee at least `minWidth`, and at most, the width of its subview. If we only specify `maxWidth`, the flexible frame will become at least the width of its subview, and at most, `maxWidth`. The same applies for the height.
+
+The first common way of using flexible frames is like this:
+
+```Swift
+Text("Hello, World!")
+  .frame(maxIwdth: .infinity)
+  .background(.quaternary)
+```
+
+The `.frame(maxWidth: .infinity)` pattern makes sure the flexible frame becomes at least as wide as proposed, or the width of its subview if that's wider than proposed. This is commonly used to create views that span the entire available width. It's kinda like saying take the proposed width or greater.
+
+Another common pattern in the following:
+
+```Swift
+Text("Hello, World")
+  .frame(minWidth: 0, maxWidth: .infinity)
+  .background(Color.teal)
+```
+
+This makes sure the frame always becomes exactly as wide as proposed, independent of the size of its subview. It's kinda like saying take the proposed width.
+
+Both patterns can be applied to the height as well. In the following example, assuming the rendering screen size is 320⨉480:
+
+```Swift
+Text("Hello, World")
+  .frame(minWidth: 0, maxWidth: .infinity)
+  .background(Color.teal)
+  .padding(10)
+
+      |
+    1 | 10
+   padding
+      |
+    2 | 9
+  background
+      |
+   -------
+ 3 | 6  7 | 8
+ frame  Color
+   |
+ 4 | 5
+ Text
+```
+
+1. The system proposes 320⨉480 to the padding.
+2. The padding proposes 300⨉460 to the background.
+3. The background proposes  the same 300⨉460 to its primary subview (the frame).
+4. The frame proposes the same 300⨉460 to its subview (the text).
+5. The text reports its size as 76⨉17
+6. The fram'es width becomes `max(0, min(.infinity, 300)) = 300`. Note that the `0` and `.infinity` values are the arguments specified for the flexible frame.
+7. The background proposes the size of the flexible frame (`300⨉17`) to the secondary subview (`Color`).
+8. The color accepts and reports the proposed size.
+9. The background reports the size of its primary subview (`300⨉17`).
+10. The padding adds 10 point on each side, and it report its size as `300⨉37`.
+
+The flexible frames APIs is the only one in SwiftUI to explicitly specify an ideal size, i.e., the size that will be adpoted if `nil` is proposed for one or both dimensions. If the `iealWidth` or `idealHeight` parameters are specified, this size will be proposed ot the frame's sbuview, and it'll also be reported as the frame's own size, regardless of the size of its subview.
+
+#### Aspect Ratio
+
+In `Color.secondary.aspectRatio(4/3, contentMode: .fit)`, the `aspectRatio` modifier will compute a rectangle with an aspect ratio of 4/3 that fits into the proposed size and then propose that to its subview. To the parent view, it always reports the size of its subview, regardless of the proposed size or the specified aspec ratio.
+
+> The `scaleToFit` and `scaleToFill` modifiers are shorthand for `.aspectRatio(contentMode: .fit)` and `.aspectRatio(contentModel: .fill)`, respectively.
