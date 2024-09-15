@@ -1,8 +1,8 @@
 # Swift notes
 
-_Note that the content isn't neatly organized since I'm maintaining it for my personal use but feel free to use it._
+_Please note that the content here isn’t neatly organized, as I’m maintaining it primarily for my personal use. However, feel free to explore and use it._
 
-This is mainly me trying to collect and organize my findings about app development. Most of the information here is copied from variou sources (books, articles, podcasts, and etc.).
+This is mostly a collection of my findings on app development. A lot of the information is pulled from various sources, including books, articles, podcasts, and more.
 
 ## Table of content
 
