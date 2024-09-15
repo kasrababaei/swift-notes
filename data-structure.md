@@ -17,3 +17,30 @@ Alternatively, we can implement the hash table with a balanced binary search tre
 ## Array
 
 In Swift, an `Array` is an ordered collection which offers random access. It also offeres sequential access to its element since it conforms to the `Sequence` protocol.
+
+### In-place algorithm
+
+> In computer science, an in-place algorithm is an algorithm that operates directly on the input data structure without requiring extra space proportional to the input size. In other words, it modifies the input in place, without creating a separate copy of the data structure. An algorithm which is not in-place is sometimes called not-in-place or out-of-place. _[Source: Wikipedia](https://en.wikipedia.org/wiki/In-place_algorithm)_
+
+In Swift, this is kinda similar to using an `inout` parameter. In other words, have to modify the input directly instead of copying the whole input, i.e., allocating more memory. For example, given an array of _n_ elements, to reverse it in-place, can swap the elements using the indicies:
+
+```Swift
+func reverseArray(_ array: inout [Int]) {
+  var left = 0
+  var right = array.count - 1
+  
+  while left < right {
+    // Could also use the built-in swap(_:_:) method.
+    let temp = array[left]
+    array[left] = array[right]
+    array[right] = temp
+    
+    left += 1
+    right -= 1
+  }
+}
+```
+
+It is used in various algorithms such as bubble sort, comb sort, selection sort, insertion sort, heapsort, and Shell sort. These algorithms require only a few pointers, so their space complexity is `O(log n)`.
+
+Swift uses [Timsort](https://en.wikipedia.org/wiki/Timsort) which is a hybrid, stable sorting algorithm, derived from merge sort and insertion sort, designed to perform well on many kinds of real-world data, refer to _[Sort.swift](https://github.com/swiftlang/swift/blob/main/stdlib/public/core/Sort.swift)_ file. It was implemented by Tim Peters in 2002 for use in the Python programming language. The algorithm finds subsequences of the data that are already ordered (runs) and uses them to sort the remainder more efficiently. This is done by merging runs until certain criteria are fulfilled.
