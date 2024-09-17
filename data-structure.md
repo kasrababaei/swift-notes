@@ -44,3 +44,15 @@ func reverseArray(_ array: inout [Int]) {
 It is used in various algorithms such as bubble sort, comb sort, selection sort, insertion sort, heapsort, and Shell sort. These algorithms require only a few pointers, so their space complexity is `O(log n)`.
 
 Swift uses [Timsort](https://en.wikipedia.org/wiki/Timsort) which is a hybrid, stable sorting algorithm, derived from merge sort and insertion sort, designed to perform well on many kinds of real-world data, refer to _[Sort.swift](https://github.com/swiftlang/swift/blob/main/stdlib/public/core/Sort.swift)_ file. It was implemented by Tim Peters in 2002 for use in the Python programming language. The algorithm finds subsequences of the data that are already ordered (runs) and uses them to sort the remainder more efficiently. This is done by merging runs until certain criteria are fulfilled.
+
+## Linked Lists
+
+A linked list is a data structure that represents a sequence of nodes, in a singly linked list, each node points to the next node in the linked list. A doubly linked list gives each node pointers to both the next node and the previous node. When dealing with a coding challenge, need to understand if we're dealing with a singly linked list or a doubly linked list.
+
+Unlike an array, a linked list does not provide constant time access to a particular "index" within the list. This means that if you'd like to find the `K`th element in the list, you will need to iterate thorugh `K` elements.
+
+The _benefit_ of a linked list is that you can add and remove items from the beginning of the list in constant time.
+
+### Deleting a node from a singly linked list
+
+Given a node `n`, we find the previous node `prev`, and set `prev.next` equal to `n.next`. If the list is doubly linked, we must also update `n.next` to set `n.next.prev` equal to `n.prev`. The important things to remember are (1) to check for the null pointer and (2) to update the head or tail pointer as necessary.
