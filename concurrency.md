@@ -193,6 +193,70 @@ print("after:", MyLocals.id)
 
 The moment we create the task it captures all of the current task locals, and so then it doesn’t matter that later the withValue operation ends and the id local reverts back to nil.
 
+## Sendable Types vs Sendable Values
+
+A type that conforms to the `Sendable` protocol is a thread-safe type: values of that type can be shared with and used safely from multiple concurrent contexts at once without causing data races, [_source_](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md#sendable-values-and-sendable-types).
+
+If a value does not conform to `Sendable`, Swift must ensure that the value is never used concurrently. The value can still be sent between concurrent contexts, but the send must be a complete transfer of the value's entire region implying that all uses of the value (and anything non-`Sendable` typed that can be reached from the value) must end in the source concurrency context before any uses can begin in the destination concurrency context. Swift achieves this property by requiring that the value is in a disconnected region and we say that such a value is a `sending` value.
+
+```Swift
+actor MyActor {
+  var myNS: NonSendable
+
+  func g() async {
+    // 'ns' is initially a `sending` value since it is in a disconnected region...
+    let ns = NonSendable()
+
+    // ... but once we assign 'ns' into 'myNS', 'ns' is no longer a sending
+    // value...
+    myNS = ns
+
+    // ... causing calling 'sendToMain' to be an error.
+    await sendToMain(ns)
+  }
+}
+```
+
+If a `sending` value's isolation region is merged into another disconnected isolation region, then the value is still considered to be `sending` since two disconnected regions when merged form a new disconnected region:
+
+```Swift
+func h() async {
+  // This is a `sending` value.
+  let ns = Nonsending()
+
+  // This also a `sending value.
+  let ns2 = NonSendable()
+
+  // Since both ns and ns2 are disconnected, the region associated with
+  // tuple is also disconnected and thus 't' is a `sending` value...
+  let t = (ns, ns2)
+
+  // ... that can be sent across a concurrency boundary safely.
+  await sendToMain(ns)
+}
+```
+
+Passing a non-`Sendable` instance into a method that takes a `sending` value must be done only once, even if it's in a synchronous context. Example:
+
+```Swift
+func run() {
+    let nonSendable = NonSendable()
+    
+    for _ in 0..<10 {
+        // Sending 'nonSendable' risks causing data races
+        resume(nonSendable)
+    }
+}
+
+func resume(_ value: sending NonSendable) {
+    print(value)
+}
+
+final class NonSendable {}
+```
+
+The same instance of `NonSendable` cannot be passed to the `resume(_:)` multiple times given the compiler cannot reason what the callee is going to do to the instance (is it going to mutate it, or merge it with something else and pass it on to another method?).
+
 ## Isolation
 
 Isolation is the mechanism that Swift uses to make data races impossible. Isolation is specified at compile time. Everything is non-isolated by default. You must take explicit action to change this. The isolation behavior is still controlled by the definition. Isolation will not suddenly change unless you decide you want to change it.
@@ -451,6 +515,61 @@ When such a function is called from an arbitrary context, it must be assumed to 
 ```Swift
 await operation(timePassed / overallDuration)
 ```
+
+This is useful because even though it's possible to determine the isolation through code inspection, closures, however, are special. Their isolation is influenced not just by where there are defined, but also by what they capture. The context of a closure definition matters, but that context is also lost when you pass it around. Example:
+
+```Swift
+func scheduleSomeWork(_ f: @Sendable @escaping () async -> Void) {
+  // We've lost all the static isolation information
+  // available where f was defined.
+  Task {
+  await f()
+  }
+}
+
+func defineClosure() {
+  scheduleSomeWork { @MainActor in
+    print("I'm on the main actor")
+  }
+}
+```
+
+There is one really important place where it makes a big difference: the `Task` creation APIs. Which actor should that task run on? This information is encoded in the closure body. When looking at the function’s type, it’s completely invisible.
+
+But `Task` has to start somewhere, so it first begins with a global executor context. And then the very next thing that happens is the closure hops over to the correct actor. This double hop, aside from being inefficient, has a very significant programmer-visible effect: `Task` does not preserve order.
+
+```Swift
+Task { print("a") }
+Task { print("b") }
+Task { print("c") }
+```
+
+This proposal makes it possible to inspect a function value’s isolation. A closure annotated with `@isolated(any)` can expose its captured isolation at runtime.
+
+```Swift
+func scheduleSomeWork(_ f: @Sendable @escaping @isolated(any) () async -> Void) {
+  // closures have properties now!
+  let isolation = f.isolation
+
+  // do something with "isolation" I guess?
+}
+```
+
+Closures can now have propperties, they're just a type of course. The type of the isolation property matches isolated parameters: `(any Actor)?`, which is read-only. Aside from making this property available, this annotation has a small effect on semantics. Adding `@isolated(any)` to a closure means it must be called with an await. This is true even it does not cross an isolation boundary. `Task` can now synchronously enqueue work onto executors.
+
+However, I really do want to stress that “well-defined” ordering for `Task` creation is not the same as “FIFO”. A high prioity task can still execute before more-recently-created lower-priority tasks.
+
+It is recommended that APIs which take functions that are likely to run concurrently and don't have a predetermined isolation take those functions as `@isolated(any)`. This allows the API to make more intelligent scheduling decisions about the function.
+
+Examples that should usually use `@isolated(any)` include:
+
+- functions that wrap the creation of a task
+- algorithms that call a function multiple times in parallel, such as a parallel `map`
+
+Examples that should usually not use `@isolated(any)` include:
+
+- algorithms that preserve the current isolation, such as a non-parallel `map`; these functions should usually take a non-`Sendable` function instead
+- APIs that intend to call the function with a specific isolation, such as UI frameworks that expect their event handlers to be `@MainActor` or actor functions that run an operation on the actor
 
 #### Isolation inheritance
 

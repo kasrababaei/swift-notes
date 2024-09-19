@@ -507,7 +507,7 @@ Text("Some right-aligned text")
   .frame(maxWidth: .infinity, alignment: .trailing)
 ```
 
-This is preferred over an `HStack` and the `Spacer`, because there's an edge case in the `HStack` solution. The `Spacer` has a default minimum length (equal to the defalt spacing). As a result, the text might start wrapping or truncating sonner than necessary, because the spacer also occupies some of the proposed width of the `HStack`.
+This is preferred over an `HStack` and the `Spacer`, because there's an edge case in the `HStack` solution. The `Spacer` has a default minimum length (equal to the defalt spacing). As a result, the text might start wrapping or truncating sooner than necessary, because the spacer also occupies some of the proposed width of the `HStack`.
 
 ### View Modifiers
 
