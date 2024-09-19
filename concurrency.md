@@ -27,6 +27,12 @@ A task is the basic unit of concurrency in the system. By looking at Instrument,
 3. Suspended
 4. Ended
 
+Tasks are initialized by passing a closure containing the code that will be executed by a given task.
+
+After this code has run to completion, the task has completed, resulting in either a failure or result value, this closure is eagerly released.
+
+Retaining a task object doesn't indefinitely retain the closure, because any references that a task holds are released after the task completes. Consequently, tasks rarely need to capture `weak` references to values.
+
 Every asynchronous function is executing in a task. In other words, a task is to asynchronous functions, what a thread is to synchronous functions.
 
 So tasks seem to be capable of solving the thread explosion problem by using a pool of threads, all without having to manage an auxiliary object like an operation queue or dispatch queue. That’s already an improvement over threads and queues. Therefore, running the following code won't create a thousands thread:
