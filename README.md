@@ -15,3 +15,4 @@ This is mostly a collection of my findings on app development. A lot of the info
 - [Swift language](Swift.md)
 - [Xcode and simulator](xcode-and-simulator.md)
 - [Xcode project settings](xcode-project-settings.md)
+- [Miscellaneous](Miscellaneous.md)
