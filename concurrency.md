@@ -5,6 +5,7 @@
     - [Task priority and cancelation](#task-priority-and-cancelation)
     - [Current task](#current-task)
     - [@TaskLocal](#tasklocal)
+  - [Sendable Types vs Sendable Values](#sendable-types-vs-sendable-values)
   - [Isolation](#isolation)
     - [Under-Specified Protocol - _Link_](#under-specified-protocol---link)
     - [Types of isolations](#types-of-isolations)
