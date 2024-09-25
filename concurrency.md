@@ -340,6 +340,7 @@ actor WorldModelObject {
     let motion = finalPosition - originalPosition
 
     // A closure can be isolated to one of its captures.
+    // But Closure Isolation Control is still behind a feature flag, i.e., `ClosureIsolation`.
     gradually(over: time) { [isolated self] progressProportion in
       self.position = originalPosition + progressProportion * motion
     }
@@ -360,7 +361,7 @@ class MyIsolatedClass {
 }
 ```
 
-### Under-Specified Protocol - _[Link](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/commonproblems/#Under-Specified-Protocol)_
+### [Under-Specified Protocol](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/commonproblems/#Under-Specified-Protocol)
 
 The most commonly-encountered form of this problem happens when a protocol has no explicit isolation. In this case, as with all other declarations, this implies non-isolated. Non-isolated protocol requirements can be called from generic code in any isolation domain. If the requirement is synchronous, it is invalid for a conforming type’s implementation to access actor-isolated state:
 
@@ -395,7 +396,7 @@ It is possible that the protocol actually should be isolated, but has not yet be
 [That error has three fix-its:](https://developer.apple.com/forums/thread/760769)
 
 1. Add `nonisolated` to `applyStyle` to make this instance method not isolated to the actor
-2. Add `@preconcurrency` to the conformance to defer isolation checking to run time
+2. Add `@preconcurrency` to the conformance to defer isolation checking to run time. This uses [dynamic actor isolation checking](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md). Witnesses of synchronous `nonisolated` protocol requirements when the witness is isolated and the protocol conformance is annotated as `@preconcurrency`.
 3. Mark the protocol requirement `applyStyle` `async` to allow actor-isolated conformances
 
 ### Types of isolations
