@@ -509,7 +509,7 @@ class NonSendableType {
 }
 ```
 
-#### [isolated(any)](https://github.com/rjmccall/swift-evolution/blob/isolated-any-functions/proposals/NNNN-isolated-any-functions.md#proposed-solution)
+#### [isolated(any)](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0431-isolated-any-functions.md)
 
 A function value with this type dynamically carries the isolation of the function that was used to initialize it.
 
