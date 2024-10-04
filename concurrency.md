@@ -7,7 +7,7 @@
     - [@TaskLocal](#tasklocal)
   - [Sendable Types vs Sendable Values](#sendable-types-vs-sendable-values)
   - [Isolation](#isolation)
-    - [Under-Specified Protocol - _Link_](#under-specified-protocol---link)
+    - [Dynamic Actor Isolation (Under-Specified Protocol)](#dynamic-actor-isolation-under-specified-protocol)
     - [Types of isolations](#types-of-isolations)
       - [Explicit isolation](#explicit-isolation)
       - [isolated(any)](#isolatedany)
@@ -361,7 +361,7 @@ class MyIsolatedClass {
 }
 ```
 
-### [Under-Specified Protocol](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/commonproblems/#Under-Specified-Protocol)
+### [Dynamic Actor Isolation (Under-Specified Protocol)](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/commonproblems/#Under-Specified-Protocol)
 
 The most commonly-encountered form of this problem happens when a protocol has no explicit isolation. In this case, as with all other declarations, this implies non-isolated. Non-isolated protocol requirements can be called from generic code in any isolation domain. If the requirement is synchronous, it is invalid for a conforming type’s implementation to access actor-isolated state:
 
