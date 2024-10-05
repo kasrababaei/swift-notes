@@ -51,8 +51,48 @@ A linked list is a data structure that represents a sequence of nodes, in a sing
 
 Unlike an array, a linked list does not provide constant time access to a particular "index" within the list. This means that if you'd like to find the `K`th element in the list, you will need to iterate thorugh `K` elements.
 
-The _benefit_ of a linked list is that you can add and remove items from the beginning of the list in constant time.
+The _benefit_ of a linked list is that you can _add/insert_ and _remove/delete_ items from the beginning of the list in constant time.
+
+If we want to add a new value after a given node prev, we should:
+
+1. Initialize a new node `cur` with the given value
+2. Link the "next" field of `cur` to `prev`'s next node next
+3. Link the "next" field in `prev` to `cur`
+
+Unlike an array, we don’t need to move all elements past the inserted element. Therefore, you can insert a new node into a linked list in `O(1)` time complexity if you have a reference to `prev`, which is very efficient.
+
+So it is essential to update head when adding a new node at the beginning of the list.
+
+1. Initialize a new node cur
+2. Link the new node to our original head node head
+3. Assign cur to head
+
+```Swift
+var head = ListNode(2)
+var tail = head
+
+for value in 3...10 {
+    let new = ListNode(value)
+    tail.next = new
+    tail = new
+}
+
+head // 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
+
+let cur = ListNode(1)
+cur.next = head
+head = cur // 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
+```
 
 ### Deleting a node from a singly linked list
 
-Given a node `n`, we find the previous node `prev`, and set `prev.next` equal to `n.next`. If the list is doubly linked, we must also update `n.next` to set `n.next.prev` equal to `n.prev`. The important things to remember are (1) to check for the null pointer and (2) to update the head or tail pointer as necessary.
+If we want to delete an existing node cur from the singly linked list, we can do it in two steps:
+
+1. Find cur's previous node prev and its next node next
+2. Link prev to cur's next node next
+
+In our first step, we need to find out `prev` and `next`. It is easy to find out `next` using the reference field of `cur`. However, we have to traverse the linked list from the head node to find out `prev` which will take `O(N)` time on average, where `N` is the length of the linked list. So the time complexity of deleting a node will be `O(N)`.
+
+The space complexity is `O(1)` because we only need constant space to store our pointers.
+
+If we want to delete the first node, we can simply _assign the next node to head_.

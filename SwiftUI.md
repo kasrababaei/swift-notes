@@ -421,7 +421,7 @@ By default, `Text` views fit themselves into any proposed size. `Text` uses vari
 
 `lineLimit(_:reservesSpace:)` modifier lets us specify the maximum number of lines that should be rendered, while giving us the option to always include the space for these lines in the reported size, regardless of whether or not they're empty.
 
-If we apply `.fixedSize()` to `Text`, it'll become its ideal size, because `fixedSize` proposed `nil⨉nil` ot the text. The ideal size of the text is the size that's needed to render the content without wrapping and truncation.
+If we apply `.fixedSize()` to `Text`, it'll become its ideal size, because `fixedSize` proposed `nil ⨉ nil` of the text. The ideal size of the text is the size that's needed to render the content without wrapping and truncation.
 
 Assuming there's a window with a safe area of 320 ⨉ 480:
 
