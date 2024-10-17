@@ -18,3 +18,7 @@ There's two lists:
 
 1. [Unofficial/Undocumented Attributes](https://github.com/swiftlang/swift/blob/main/docs/ReferenceGuides/UnderscoredAttributes.md)
 2. [Official/Documented Attributes](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/attributes/)
+
+## Errors
+
+[Apple API Errors](https://www.osstatus.com)
