@@ -118,6 +118,8 @@ Try not using patterns that create conditional content/branch in the view tree t
 
 > It is essential to keep your view hierarchy without unnecessary branches that you may create using if statements in the body of a `ViewBuilder` closure because it may hurt the performance of your views and produce state losses. _[From Swift with Majid](https://swiftwithmajid.com/2023/05/03/the-power-of-overlays-in-swiftui/)_.
 
+Also, with reference to [Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/?time=2215) from WWDC23, branches are a form of structured identity. This means we have two copies of the content instead of a single, optionally modified one. By removing the branch, we can describe the view as having just one identity. By moving the branching condition into a modifier, can help performance because the dependant code becomes tightly scoped. So, when the condition changes, only the modifier needs to change. This modifiers are called _inert modifiers_ because they don't affect the rendered result. Because there is no resulting visual effect, the framework can efficiently prune away the modifier, furthermore reducing the cost.
+
 Instead, use the following pattern:
 
 ```Swift
@@ -172,7 +174,9 @@ The `State(initialValue:)` initializer makes it clear that the value 0 is just t
 
 ## StateObject
 
-The `@StateObject` property wrapper works much in the same way as @State: we specity an initial value (an object in this case), which will be used as the starting point when the node in the render tree is created. From then on, SwiftUI will kepp this object around across renders for the lifetime oft he node in the render tree. It  also observes the object for changes via the `ObservableObject` protocol.
+The `@StateObject` property wrapper works much in the same way as @State: we specity an initial value (an object in this case), which will be used as the starting point when the node in the render tree is created. From then on, SwiftUI will kepp this object around across renders for the lifetime of the node in the render tree. It  also observes the object for changes via the `ObservableObject` protocol.
+
+Observed objects marked with the `@StateObject` property wrapper don’t get destroyed and re-instantiated at times their containing view struct redraws^[1](https://www.avanderlee.com/swiftui/stateobject-observedobject-differences/)^.
 
 `Observable` framework in iOS 17 replaced the entire existing object-observarion model based on the `Combine` framework. The `Observable` macro does two things:
 
@@ -507,7 +511,7 @@ Text("Some right-aligned text")
   .frame(maxWidth: .infinity, alignment: .trailing)
 ```
 
-This is preferred over an `HStack` and the `Spacer`, because there's an edge case in the `HStack` solution. The `Spacer` has a default minimum length (equal to the defalt spacing). As a result, the text might start wrapping or truncating sooner than necessary, because the spacer also occupies some of the proposed width of the `HStack`.
+This is preferred over an `HStack` and the `Spacer`, because there's an edge case in the `HStack` solution. The `Spacer` has a default minimum length (equal to the default spacing). As a result, the text might start wrapping or truncating sooner than necessary, because the spacer also occupies some of the proposed width of the `HStack`.
 
 ### View Modifiers
 
@@ -541,7 +545,7 @@ The first common way of using flexible frames is like this:
 
 ```Swift
 Text("Hello, World!")
-  .frame(maxIwdth: .infinity)
+  .frame(maxWidth: .infinity)
   .background(.quaternary)
 ```
 
