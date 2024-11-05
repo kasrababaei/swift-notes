@@ -1,8 +1,10 @@
 # Swift Concurrency
 
 - [Swift Concurrency](#swift-concurrency)
+  - [Operation Queue](#operation-queue)
+  - [Grand Central Dispatch (GCD)](#grand-central-dispatch-gcd)
   - [Tasks](#tasks)
-    - [Task priority and cancelation](#task-priority-and-cancelation)
+    - [Task priority and cancellation](#task-priority-and-cancellation)
     - [Current task](#current-task)
     - [@TaskLocal](#tasklocal)
   - [Sendable Types vs Sendable Values](#sendable-types-vs-sendable-values)
@@ -18,6 +20,246 @@
   - [Actor](#actor)
   - [@MainActor](#mainactor)
   - [Testing](#testing)
+
+## Operation Queue
+
+An operation queue invokes its queued Operation objects based on their priority and readiness. After you add an operation to a queue, it remains in the queue until the operation finishes its task. You can’t directly remove an operation from a queue after you add it.
+
+```Swift
+let queue = OperationQueue()
+
+queue.addOperation { print("1", Thread.current) }
+queue.addOperation { print("2", Thread.current) }
+queue.addOperation { print("3", Thread.current) }
+queue.addOperation { print("4", Thread.current) }
+queue.addOperation { print("5", Thread.current) }
+```
+
+Similar to [Threads](https://developer.apple.com/documentation/foundation/thread#), the sample code above would create five different threads and runs the operations in a non-sequential order. Also, similar to Threads, you can add priority on an operations, called priority of service. To do so, you'll need a handle on the actual operation before handing it off to the queue; and to do that we'll need to construct an instance of the operation class. Although one can subclass it, Apple frameworks ship with some convenience subclasses such as `BlockOperation`.
+
+```Swift
+// Adjusting the priority of service on an operation
+let queue = OperationQueue()
+let operation = BlockOperation {
+  print(Thread.current)
+}
+operation.qualityOfService = .background
+queue.addOperation(operation)
+```
+
+Canceling an operation object leaves the object in the queue but notifies the object that it should stop its task as quickly as possible. For currently executing operations, this means that the operation object’s work code must check the cancellation state, stop what it is doing, and mark itself as finished.
+
+```Swift
+// Cancelling an operation
+let operation = BlockOperation()
+operation.addExecutionBlock { [unowned operation] in
+  guard !operation.isCancelled else { return }
+  print(Thread.current)
+}
+
+let queue = OperationQueue()
+queue.addOperation(operation)
+operation.cancel()
+```
+
+There's no way to set data on `OperationQueue` that gets carried by the operation. But they support the concept of dependencies which allows you start one operation after another one finishes. However, cancelling an operation doesn't cancel its dependencies (similar to `Thread`).
+
+```Swift
+// Adding dependencies to an operation
+let operationA = BlockOperation { print("A") }
+let operationB = BlockOperation { print("B") }
+operationB.addDependency(operationA)
+
+let queue = OperationQueue()
+queue.addOperation(operationA)
+queue.addOperation(operationB)
+```
+
+`OperationQueue` is also smart enough to prevent thread starvation where many threads are created that compete which each other to get CPU time. In the example below, although 1000 operations are created, only less than 100* threads get created (* the number depends on various factor):
+
+```Swift
+// Thread starvation
+let queue = OperationQueue()
+for number in 0..<1000 {
+  queue.addOperation {
+    print(number, Thread.current)
+  }
+}
+```
+
+However, operations still don't cooperate with other operations and other than checking for cancellation, they don't give up on the thread until the operation is finished. This means operations compete with each other even when, for instance, we're waiting for some API call to finish and ideally want the thread to perform some other operation in the meantime.
+
+## Grand Central Dispatch (GCD)
+
+In 2009, Apple announce GCD with iOS 8 where you no longer think of concurrences in terms of Threads but instead in terms of queues. GCD actually empowers `OperationQueue` under the hood but its quite simpler.
+
+A `DispatchQueue`, is an object that manages the execution of tasks serially or concurrently on your app's main thread or on a background thread.
+
+Work submitted to dispatch queues executes on a pool of threads managed by the system. Except for the dispatch queue representing your app's main thread, the system makes no guarantees about which thread it uses to execute a task.
+
+`DispatchQueue` is serial by default, which is a contrast to the operation queues that are concurrent by default.
+
+```Swift
+// Sequential execution on the same thread
+let queue = DispatchQueue(label: "queue")
+
+queue.async { print("1", Thread.current) }
+queue.async { print("2", Thread.current) }
+queue.async { print("3", Thread.current) }
+queue.async { print("4", Thread.current) }
+queue.async { print("5", Thread.current) }
+
+// 1 <NSThread: 0x600001c5ce80>{number = 2, name = (null)}
+// 2 <NSThread: 0x600001c5ce80>{number = 2, name = (null)}
+// 3 <NSThread: 0x600001c5ce80>{number = 2, name = (null)}
+// 4 <NSThread: 0x600001c5ce80>{number = 2, name = (null)}
+// 5 <NSThread: 0x600001c5ce80>{number = 2, name = (null)}
+```
+
+In the example code above, it's possible to run the operations concurrently by providing an attribute when creating the queue like:
+
+```Swift
+let queue = DispatchQueue(label: "queue", attributes: .concurrent)
+// 1 <NSThread: 0x600002a14300>{number = 2, name = (null)}
+// 2 <NSThread: 0x600002a10200>{number = 3, name = (null)}
+// 4 <NSThread: 0x600002a10200>{number = 3, name = (null)}
+// 3 <NSThread: 0x600002a14300>{number = 2, name = (null)}
+// 5 <NSThread: 0x600002a24140>{number = 4, name = (null)}
+```
+
+Just like `OperationQueue`, `DispatchQueue` can also make sure thread thread exhaustion doesn't happen.
+
+`DispatchQueue` is also capable of scheduling work to be performed in the future without blocking the current thread.
+
+```Swift
+queue.asyncAfter(deadline: .now() + 1) { print(Thread.current) }
+```
+
+Similar to `OperationQueue`, it's possible to set a quality of service on the queue. Cancelling a queue is also possible and it is done cooperatively which means we need to check if the item of work has been cancelled to perform a short circuit:
+
+```Swift
+let queue = DispatchQueue(label: "queue", attributes: [.concurrent])
+
+var item: DispatchWorkItem?
+item = DispatchWorkItem { [unowned item] in
+  Thread.sleep(forTimeInterval: 1)
+  guard item?.isCancelled == false else {
+    print("It's cancelled.")
+    return
+  }
+  print("Finished performing the item.")
+}
+
+queue.async(execute: item!)
+item?.cancel()
+```
+
+Another feature of `DispatchQueue` is passing objects that can be carried on within that execution context to be accessed later on:
+
+```Swift
+// Adding specifics
+let queue = DispatchQueue(label: "queue", attributes: .concurrent)
+let key = DispatchSpecificKey<String>()
+queue.setSpecific(key: key, value: "My Queue")
+
+queue.asyncAfter(deadline: .now() + 1) {
+  print("Start")
+  let name = DispatchQueue.getSpecific(key: key)!
+  print("Name is: \(name)")
+  print("Finished")
+}
+```
+
+Starting up a new queue from the inside of the execution context of another queue does not mean the specifics are automatically inherited. So, if we run two units of work in parallel, we may lose the specifics from the root execution context.
+
+```Swift
+// Accessing the specifics of another execution context
+queue.asyncAfter(deadline: .now() + 1) {
+  print("Start")
+  let name = DispatchQueue.getSpecific(key: key)!
+  print("Name is: \(name)")
+  print("Finished")
+  
+  let innerQueue = DispatchQueue(label: "inner-queue", attributes: .concurrent)
+  innerQueue.async {
+    print("Name is: \(DispatchQueue.getSpecific(key: key) ?? "nil")")
+  }
+}
+
+// Start
+// Name is: My Queue
+// Finished
+// Name is: nil
+```
+
+There's a fix for the problem above, which is providing a target to the inner queue. We can make even serial queues target concurrent queues; so that their work is guaranteed to be executed sequentially but it's taking its Thread from that shared Thread pool in the concurrent queue.
+
+```Swift
+// Inheriting the specifics of another execution context
+queue.asyncAfter(deadline: .now() + 1) {
+  print("Start")
+  let name = DispatchQueue.getSpecific(key: key)!
+  print("Name is: \(name)")
+  print("Finished")
+  
+  let innerQueue = DispatchQueue(label: "inner-queue", attributes: .concurrent, target: queue)
+  innerQueue.async {
+    print("Name is: \(DispatchQueue.getSpecific(key: key) ?? "nil")")
+  }
+}
+
+// Start
+// Name is: My Queue
+// Finished
+// Name is: My Queue
+```
+
+Although there's technically a way to set data on the base queue and have it implicitly travel through the entire execution context, it requires access to the parent queue. In other words, queues don't inherently know what the current execution context is. It also doesn't provide any means to cooperate with other queues.
+
+Although a `DispatchWorkItem` can be cancelled, there's no way to have the cancellation of one item trickle down to child work items that are created.
+
+In cases where we need to wait for multiple units of work that aren't concurrently to finish before continuing, we can use `DispatchGroup`, which allows us to treat multiple units of work as a single unit of work.
+
+```Swift
+let group = DispatchGroup()
+let queueA = DispatchQueue(label: "queue", attributes: .concurrent)
+let queueB = DispatchQueue(label: "queue", attributes: .concurrent)
+
+queueA.async(group: group) {
+  Thread.sleep(forTimeInterval: 0.5)
+  print("Queue A finished.", Thread.current)
+}
+queueB.async(group: group) {
+  Thread.sleep(forTimeInterval: 0.2)
+  print("Queue B finished.", Thread.current)
+}
+
+group.wait()
+
+// Queue B finished. <NSThread: 0x600003e84380>{number = 4, name = (null)}
+// Queue A finished. <NSThread: 0x600003ea4100>{number = 5, name = (null)}
+```
+
+Regarding data races, GCD does provide some tools to synchronize data access. By using `sync` function, which runs some unit of work and returns once that's finished, and a `barrier` flag, the queue kinda uses a lock which blocks any new work item from entering until the current one is finished.
+
+```Swift
+class Counter {
+  private let queue = DispatchQueue(label: "counter", attributes: .concurrent)
+  private(set) var count = 0
+  
+  func increment() {
+    queue.sync(flags: .barrier) {
+      count += 1
+    }
+  }
+}
+
+let counter = Counter()
+for _ in 0..<1000 {
+  counter.increment()
+}
+print(counter.count)
+```
 
 ## Tasks
 
@@ -87,7 +329,7 @@ Thread 12#0       0x00000001a05ef604 in __workq_kernreturn ()
 
 his `__workq_kernreturn` function is how Grand Central Dispatch parks a thread while it waits for work to be scheduled on it. Once the suspension is over, the work can be resumed on any thread not just the one that started off of.
 
-### Task priority and cancelation
+### Task priority and cancellation
 
 Like all other forms of concurrency discussed so far, tasks also support the concept of priority, and it’s a granular value of finitely many possibilities:
 
