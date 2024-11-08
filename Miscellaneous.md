@@ -1,8 +1,15 @@
 # Miscellaneous
 
+- [Miscellaneous](#miscellaneous)
+  - [Download Test Files](#download-test-files)
+  - [iOS Release Versions and Build Numbers](#ios-release-versions-and-build-numbers)
+  - [Underscored Attributes Reference](#underscored-attributes-reference)
+  - [Errors](#errors)
+  - [Date Formats](#date-formats)
+
 ## Download Test Files
 
-In case we want to hit an endpoint to downlooad a large file to test, for instance, a progress view or task cancellation, [this website](http://xcal1.vodafone.co.uk) offers a few endpoints.
+In case we want to hit an endpoint to download a large file to test, for instance, a progress view or task cancellation, [this website](http://xcal1.vodafone.co.uk) offers a few endpoints.
 
 The only catch is that the endpoint isn't using SSL pinning; therefore, the project needs to add [NSAppTransportSecurity](https://developer.apple.com/documentation/bundleresources/information_property_list/nsapptransportsecurity/).
 
@@ -12,7 +19,7 @@ The [Beta Wiki](https://betawiki.net/wiki/Main_Page) website is a good reference
 
 ## Underscored Attributes Reference
 
-There are two kinds of attributes in Swift — those that apply to declarations and those that apply to types. An attribute provides additional information about the declaration or type. For example, the discardableResult attribute on a function declaration indicates that, although the function returns a value, the compiler shouldn’t generate a warning if the return value is unused.
+There are two kinds of attributes in Swift — those that apply to declarations and those that apply to types. An attribute provides additional information about the declaration or type. For example, the `discardableResult` attribute on a function declaration indicates that, although the function returns a value, the compiler shouldn’t generate a warning if the return value is unused.
 
 There's two lists:
 
@@ -22,3 +29,7 @@ There's two lists:
 ## Errors
 
 [Apple API Errors](https://www.osstatus.com)
+
+## Date Formats
+
+The format string uses [the format patterns](http://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns) from the Unicode Technical Standard #35. The symbols are tabulated in the [Date Field Symbol table](http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table).

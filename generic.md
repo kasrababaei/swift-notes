@@ -21,9 +21,26 @@ protocol Shape {
 - Using an opaque type, by writing `var shapes: [some Shape]`, makes an array whose elements are some specific shape type, and where that specific type’s identity is hidden.
 - Using a *boxed protocol* type, by writing `var shapes: [any Shape]`, makes an array that can store elements of different types, and where those types’ identities are hidden.
 
-## Boxed protocol
+## [Boxed protocol](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/opaquetypes#Boxed-Protocol-Types)
 
 A *boxed protocol* type is also sometimes called an existential type, which comes from the phrase “there exists a type T such that T conforms to the protocol”. To make a boxed protocol type, write any before the name of a protocol.
+
+```Swift
+struct VerticalShapes: Shape {
+    var shapes: [any Shape]
+    func draw() -> String {
+        return shapes.map { $0.draw() }.joined(separator: "\n\n")
+    }
+}
+
+
+let largeTriangle = Triangle(size: 5)
+let largeSquare = Square(size: 5)
+let vertical = VerticalShapes(shapes: [largeTriangle, largeSquare])
+print(vertical.draw())
+```
+
+In the example above, VerticalShapes declares the type of shapes as `[any Shape]` — an array of boxed Shape elements. Each element in the array can be a different type, and each of those types must conform to the Shape protocol. To support this runtime flexibility, Swift adds a level of indirection when necessary — this indirection is called a *box*, and it has a performance cost.
 
 ```Swift
 protocol AnyShape {
@@ -100,7 +117,7 @@ enum Shapes {
     // The caller of this method, still thinks it's getting a Shape
     // Why not just return Merge? It'll expose types we don't want to.
     // We lose the ability to change Merge to be another type in the future.
-    // Also, we'll lose the abality to run some operations such as == since it needs to know the
+    // Also, we'll lose the ability to run some operations such as == since it needs to know the
     // type of the left and right side of the operator.
     static func merge2<T: Shape, U: Shape>(_ first: T, _ second: U) -> some Shape {
         // An important proviso here is that functions with opaque return types must always return
