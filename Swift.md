@@ -1,6 +1,8 @@
 # Swift
 
 - [Swift](#swift)
+  - [Protocol Oriented Programming (POP)](#protocol-oriented-programming-pop)
+  - [Functional Programming](#functional-programming)
   - [Comments](#comments)
   - [Compound Types](#compound-types)
   - [Type Annotations](#type-annotations)
@@ -14,6 +16,48 @@
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
 can't find a better place to document them.
+
+## Protocol Oriented Programming (POP)
+
+Swift is known to be a POP programming language. Protocol-Oriented Programming
+(POP) in Swift is a paradigm that emphasizes protocols and protocol extensions
+as a means of designing flexible, reusable, and modular code. Swift’s design
+encourages developers to compose functionality using protocols, rather than
+relying exclusively on inheritance hierarchies as in traditional
+Object-Oriented Programming (OOP).
+
+> [!NOTE]
+> POP was part of a talk that Dave Abrahams gave in WWDC 2015 when Swift protocols
+> started having default implementation (the famous story about Crusty).
+> However, everyone misunderstood it and thought POP is _a thing_ which made it a
+> buzzword in Swift.
+>
+> ![image Crusty](./.images/.cursty.png)
+>
+> In fact, that video is removed from Apple's website. The goal of that session
+> was to push for using generics and creating creating generic algorithms.
+
+In essence, the paradigm advocates using protocols and value types that conform to
+protocols whereas OOP is mainly talking about inheritance.
+
+## Functional Programming
+
+Functional programming (FP) in Swift is a paradigm that emphasizes writing code
+using pure functions, immutability, and avoiding side effects. In FP, functions
+are treated as first-class citizens, meaning they can be passed as parameters,
+returned from other functions, and assigned to variables.
+
+Key concepts in Swift:
+
+- **Pure Functions**: Functions that always return the same output for the
+same input and have no side effects, making them predictable and easy to test.
+- **Immutability**: Variables and constants, especially with `let`, are
+preferred to avoid unintended state changes, which improves code safety and concurrency.
+- **Higher-Order Functions**: Swift includes functions like `map`, `filter`,
+and `reduce` that allow transforming collections without mutating them, central
+to FP.
+- **Closures**: Anonymous functions, or closures, make Swift flexible and enable
+functional-style chaining of operations.
 
 ## Comments
 

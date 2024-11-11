@@ -1,16 +1,16 @@
 # Swift Concurrency
 
 - [Swift Concurrency](#swift-concurrency)
-  - [Operation Queue](#operation-queue)
-  - [Grand Central Dispatch (GCD)](#grand-central-dispatch-gcd)
-  - [Tasks](#tasks)
+  - [Operation Queue - iOS 2](#operation-queue---ios-2)
+  - [Grand Central Dispatch (GCD) - iOS 8](#grand-central-dispatch-gcd---ios-8)
+  - [Tasks - iOS 13](#tasks---ios-13)
     - [Task priority and cancellation](#task-priority-and-cancellation)
     - [Current task](#current-task)
     - [@TaskLocal](#tasklocal)
   - [Sendable Types vs Sendable Values](#sendable-types-vs-sendable-values)
   - [Isolation](#isolation)
     - [Dynamic Actor Isolation (Under-Specified Protocol)](#dynamic-actor-isolation-under-specified-protocol)
-    - [Types of isolations](#types-of-isolations)
+    - [Types of Isolation](#types-of-isolation)
       - [Explicit isolation](#explicit-isolation)
       - [isolated(any)](#isolatedany)
       - [Isolation inheritance](#isolation-inheritance)
@@ -21,9 +21,12 @@
   - [@MainActor](#mainactor)
   - [Testing](#testing)
 
-## Operation Queue
+## Operation Queue - iOS 2
 
-An operation queue invokes its queued Operation objects based on their priority and readiness. After you add an operation to a queue, it remains in the queue until the operation finishes its task. You can’t directly remove an operation from a queue after you add it.
+A queue that regulates the execution of operations. An operation queue invokes
+its queued Operation objects based on their priority and readiness. After you
+add an operation to a queue, it remains in the queue until the operation finishes
+its task. You can’t directly remove an operation from a queue after you add it.
 
 ```Swift
 let queue = OperationQueue()
@@ -35,7 +38,13 @@ queue.addOperation { print("4", Thread.current) }
 queue.addOperation { print("5", Thread.current) }
 ```
 
-Similar to [Threads](https://developer.apple.com/documentation/foundation/thread#), the sample code above would create five different threads and runs the operations in a non-sequential order. Also, similar to Threads, you can add priority on an operations, called priority of service. To do so, you'll need a handle on the actual operation before handing it off to the queue; and to do that we'll need to construct an instance of the operation class. Although one can subclass it, Apple frameworks ship with some convenience subclasses such as `BlockOperation`.
+Similar to [Threads](https://developer.apple.com/documentation/foundation/thread#),
+the sample code above would create five different threads and runs the operations
+in a non-sequential order. Also, similar to Threads, you can add priority on an
+operations, called priority of service. To do so, you'll need a handle on the actual
+operation before handing it off to the queue; and to do that we'll need to construct
+an instance of the operation class. Although one can subclass it, Apple frameworks
+ship with some convenience subclasses such as `BlockOperation`.
 
 ```Swift
 // Adjusting the priority of service on an operation
@@ -47,7 +56,10 @@ operation.qualityOfService = .background
 queue.addOperation(operation)
 ```
 
-Canceling an operation object leaves the object in the queue but notifies the object that it should stop its task as quickly as possible. For currently executing operations, this means that the operation object’s work code must check the cancellation state, stop what it is doing, and mark itself as finished.
+Canceling an operation object leaves the object in the queue but notifies the
+object that it should stop its task as quickly as possible. For currently executing
+operations, this means that the operation object’s work code must check the
+cancellation state, stop what it is doing, and mark itself as finished.
 
 ```Swift
 // Cancelling an operation
@@ -62,7 +74,10 @@ queue.addOperation(operation)
 operation.cancel()
 ```
 
-There's no way to set data on `OperationQueue` that gets carried by the operation. But they support the concept of dependencies which allows you start one operation after another one finishes. However, cancelling an operation doesn't cancel its dependencies (similar to `Thread`).
+There's no way to set data on `OperationQueue` that gets carried by the operation.
+But they support the concept of dependencies which allows you start one operation
+after another one finishes. However, cancelling an operation doesn't cancel its
+dependencies (similar to `Thread`).
 
 ```Swift
 // Adding dependencies to an operation
@@ -75,7 +90,10 @@ queue.addOperation(operationA)
 queue.addOperation(operationB)
 ```
 
-`OperationQueue` is also smart enough to prevent thread starvation where many threads are created that compete which each other to get CPU time. In the example below, although 1000 operations are created, only less than 100* threads get created (* the number depends on various factor):
+`OperationQueue` is also smart enough to prevent thread starvation where many
+threads are created that compete which each other to get CPU time. In the example
+below, although 1000 operations are created, only less than 100<sup>1</sup> threads
+get created (<sup>1</sup> the number depends on various factor):
 
 ```Swift
 // Thread starvation
@@ -87,11 +105,17 @@ for number in 0..<1000 {
 }
 ```
 
-However, operations still don't cooperate with other operations and other than checking for cancellation, they don't give up on the thread until the operation is finished. This means operations compete with each other even when, for instance, we're waiting for some API call to finish and ideally want the thread to perform some other operation in the meantime.
+However, operations still don't cooperate with other operations and other than
+checking for cancellation, they don't give up on the thread until the operation
+is finished. This means operations compete with each other even when, for instance,
+we're waiting for some API call to finish and ideally want the thread to perform
+some other operation in the meantime.
 
-## Grand Central Dispatch (GCD)
+## Grand Central Dispatch (GCD) - iOS 8
 
-In 2009, Apple announce GCD with iOS 8 where you no longer think of concurrences in terms of Threads but instead in terms of queues. GCD actually empowers `OperationQueue` under the hood but its quite simpler.
+In 2009, Apple announce GCD with iOS 8 where you no longer think of concurrences
+in terms of Threads but instead in terms of queues. GCD actually empowers `OperationQueue`
+under the hood but its quite simpler.
 
 A `DispatchQueue`, is an object that manages the execution of tasks serially or concurrently on your app's main thread or on a background thread.
 
@@ -261,9 +285,10 @@ for _ in 0..<1000 {
 print(counter.count)
 ```
 
-## Tasks
+## Tasks - iOS 13
 
-A task is the basic unit of concurrency in the system. By looking at Instrument, can see it has the following lifetime states:
+A task is the basic unit of concurrency in the system. By looking at Instrument,
+can see it has the following lifetime states:
 
 1. Creating
 2. Running
@@ -641,7 +666,7 @@ It is possible that the protocol actually should be isolated, but has not yet be
 2. Add `@preconcurrency` to the conformance to defer isolation checking to run time. This uses [dynamic actor isolation checking](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md). Witnesses of synchronous `nonisolated` protocol requirements when the witness is isolated and the protocol conformance is annotated as `@preconcurrency`.
 3. Mark the protocol requirement `applyStyle` `async` to allow actor-isolated conformances
 
-### Types of isolations
+### Types of Isolation
 
 - None, aka non-isolated.
 - Static: actor types, global actors (like `@MainActor`), and isolated parameters
@@ -683,7 +708,7 @@ class MyViewController: ViewDelegateProtocol {
 }
 
 // Solution: dynamic isolation: make the method nonisolated to satisfy the protocol requirement
-// and wrape the implementation in MainActor.assumeIsolated
+// and wraps the implementation in MainActor.assumeIsolated
 // Caveat: the programmer loses static data-race safety in their own code, because internal 
 // callers of respondToUIEvent() are free to invoke it from any isolation domain without compiler errors.
 @MainActor

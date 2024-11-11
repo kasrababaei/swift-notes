@@ -10,6 +10,8 @@
     - [Environment (or Context)](#environment-or-context)
     - [DI Framework](#di-framework)
     - [Instance Creation](#instance-creation)
+  - [Key-Value Observation (KVO)](#key-value-observation-kvo)
+  - [Singletons](#singletons)
 
 In software engineering, a design pattern describes a relatively small,
 well-defined aspect (i.e. functionality) of a computer program in terms of
@@ -193,3 +195,64 @@ However, this code doesn't state how to create an instance; so, let's add that:
  ```Swift
 bind<T>(_ type: T.Type, to instantiator: @escaping () -> T) -> () -> T
  ```
+
+## Key-Value Observation (KVO)
+
+Key-value observing is a Cocoa programming pattern you use to notify objects about
+changes to properties of other objects. It’s useful for communicating changes
+between logically separated parts of your app—such as between models and views.
+You can only use key-value observing with classes that inherit from `NSObject`.
+
+Properties that are marked with both `@objc` and `dynamic`, can be observed using
+KVO:
+
+```Swift
+class MyObjectToObserve: NSObject {
+  @objc dynamic var myDate = NSDate(timeIntervalSince1970: 0)
+  func updateDate() {
+    myDate = myDate.addingTimeInterval(Double(2 << 30))
+  }
+}
+```
+
+An instance of an observer class manages information about changes made to one
+or more properties.
+
+```Swift
+class MyObserver: NSObject {
+  @objc var objectToObserve: MyObjectToObserve
+  var observation: NSKeyValueObservation?
+  
+  init(object: MyObjectToObserve) {
+    objectToObserve = object
+    super.init()
+    
+    observation = observe(
+      \.objectToObserve.myDate,
+       options: [.old, .new]
+    ) { object, change in
+      print("OldValue: \(change.oldValue!), NewValue: \(change.newValue!)")
+    }
+  }
+}
+```
+
+## Singletons
+
+The Singleton is a design pattern that restricts a class to a single instance,
+ensuring only one object of the class exists throughout the application. It’s
+often used for shared resources like configurations, logging, network sessions,
+or databases, where multiple instances could cause inconsistencies or conflicts.
+
+Some cons of using singletons are:
+
+- **Global State Dependency:** Global access can make testing and debugging
+difficult, as parts of the code become dependent on shared state, leading to
+tight coupling.
+- **Limited Flexibility:** Since only one instance exists, replacing it for
+testing or extending it for other purposes can be challenging.
+- **Hidden Dependencies:** Singleton introduces hidden dependencies, as code
+relying on a singleton may indirectly depend on the singleton’s state, making
+code behavior less predictable.
+- **Multithreading Issues:** Without proper thread-safety mechanisms, singletons
+can cause race conditions in multithreaded contexts.
