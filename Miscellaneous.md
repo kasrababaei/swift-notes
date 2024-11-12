@@ -33,3 +33,5 @@ There's two lists:
 ## Date Formats
 
 The format string uses [the format patterns](http://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns) from the Unicode Technical Standard #35. The symbols are tabulated in the [Date Field Symbol table](http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table).
+
+A common mistake is to use YYYY. yyyy specifies the calendar year whereas YYYY specifies the year (of “Week of Year”), used in the ISO year-week calendar. In most cases, yyyy and YYYY yield the same number, however they may be different. Typically you should use the calendar year.
