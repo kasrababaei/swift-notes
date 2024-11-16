@@ -2,7 +2,9 @@
 
 - [Design Pattern](#design-pattern)
   - [Model-View-Controller (MVC)](#model-view-controller-mvc)
+  - [Model-View-Presenter (MVP)](#model-view-presenter-mvp)
   - [Model–View–ViewModel (MVVM)](#modelviewviewmodel-mvvm)
+    - [MVP vs MVVM](#mvp-vs-mvvm)
   - [Dependency Injection](#dependency-injection)
     - [Initializer Injection](#initializer-injection)
     - [Property Injection](#property-injection)
@@ -63,6 +65,21 @@ objects<sup>[*](https://developer.apple.com/library/archive/documentation/Genera
 - View: view objects present information to the user.
 - Controller: controller objects tie the model to the view.
 
+Normally, the view implementation instantiates the concrete presenter object,
+providing a reference to itself.
+
+## Model-View-Presenter (MVP)
+
+Model–view–presenter (MVP) is a derivation of the model–view–controller (MVC)
+architectural pattern, and is used mostly for building user interfaces.
+
+- The *model* is an interface defining the data to be displayed or otherwise acted
+upon in the user interface.
+- The *view* is a passive interface that displays data (the model) and routes user
+commands (events) to the presenter to act upon that data.
+- The *presenter* acts upon the model and the view. It retrieves data from
+repositories (the model), and formats it for display in the view.
+
 ## Model–View–ViewModel (MVVM)
 
 The Model-View-ViewModel (MVVM) design pattern to create a clear separation between
@@ -86,6 +103,24 @@ it to models typically falls within a *service layer* or *repository layer* outs
 of the Model-View-ViewModel triad. This layer interacts with the backend, parses
 the data into model objects, and provides them to the ViewModel.
 
+### MVP vs MVVM
+
+Unlike the Presenter in MVP, the ViewModel in MVVM is state-driven and does not directly
+"command" the View. It exposes observable properties (e.g., via Combine, RxSwift,
+or KVO) that the View listens to for updates.
+
+In MVVM, the View binds directly to these properties to reflect the state of the
+data. It listens to changes in the ViewModel and updates itself automatically,
+often with declarative bindings.
+
+Here's a few advantages of MVVM compared to MVP:
+
+- Decouples the View and the business logic further, making it easier to test the
+ViewModel without the View.
+- Provides a clean separation of responsibilities.
+- Reactive bindings (e.g., via Combine) reduce the need for manual synchronization
+between the View and ViewModel.
+
 ## Dependency Injection
 
 Dependency injection in short means dependencies are handed instead of reaching
@@ -94,7 +129,7 @@ for them.
 It is a programming technique in which an object or function
 receives other objects or functions that it requires, as opposed to creating
 them internally. Dependency injection aims to separate the concerns of
-constructing objects and using them, leading to loosely coupled programs.
+constructing objects and using them, leading to loosely coupled<sup>1</sup> programs.
 The pattern ensures that an object or function that wants to use a given service
 should not have to know how to construct those services. Instead, the receiving
 "client" (object or function) is provided with its dependencies by external code
@@ -115,6 +150,14 @@ Evaluate your needs, priorities and preferences. For instance, think about
 decentralization, compile-time safety, thread safety or the incremental path.
 
 Some of the common ways to do dependency injections:
+
+<sup>1</sup> A loosely coupled system is one:
+
+- in which components are weakly associated (have breakable relationships) with each
+other, and thus changes in one component least affect existence or performance
+of another component.
+- in which each of its components has, or makes uses of, little or no knowledge
+of the definitions of other separate components.
 
 ### Initializer Injection
 
