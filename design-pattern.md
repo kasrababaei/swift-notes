@@ -1,6 +1,9 @@
 # Design Pattern
 
 - [Design Pattern](#design-pattern)
+  - [Multitier/layer Architecture](#multitierlayer-architecture)
+    - [Three-tier architecture](#three-tier-architecture)
+  - [Service-Oriented Architecture (SOA)](#service-oriented-architecture-soa)
   - [Model-View-Controller (MVC)](#model-view-controller-mvc)
   - [Model-View-Presenter (MVP)](#model-view-presenter-mvp)
   - [Model–View–ViewModel (MVVM)](#modelviewviewmodel-mvvm)
@@ -14,6 +17,9 @@
     - [Instance Creation](#instance-creation)
   - [Key-Value Observation (KVO)](#key-value-observation-kvo)
   - [Singletons](#singletons)
+  - [Circuit Breaker](#circuit-breaker)
+  - [Builder Pattern](#builder-pattern)
+  - [Factory Pattern](#factory-pattern)
 
 In software engineering, a design pattern describes a relatively small,
 well-defined aspect (i.e. functionality) of a computer program in terms of
@@ -28,6 +34,20 @@ resources that a programmer uses involve configuring the codebase to use an
 artifact; for example a library. In contrast, to use a pattern, a programmer
 writes code as described by the pattern. The result is unique every time even
 though the result may be recognizable as based on the pattern.
+
+Each pattern has the following elements:
+
+- The **pattern name** is handle that is used to describe a design pattern.
+- The **problem** describes when to apply the pattern. It explains the problem
+and its context.
+- The **solution** describes the elements that make up the design, their
+relationships, responsibilities, and collaborations. The solution doesn't
+describe the a particular concrete design or implementation, because a
+pattern is like a template that can be applied in many different situations.
+- The **consequences** are the results and tradeoffs of applying the pattern.
+The consequences for software often concern space and trade-offs. Since reuse
+is often a factor in object-oriented design, the consequences of a pattern
+include its impact on a system’s flexibility, extensibility, or portability.
 
 When choosing an architecture, must consider things such as:
 
@@ -51,6 +71,57 @@ You can start by asking questions like:
 - How does testing work which goes hand-to-hand with dependency injection
 - How does routing (for deep links) work
 - Where does the business logic live
+
+## Multitier/layer Architecture
+
+In software engineering, multitier architecture (often referred to as n-tier
+architecture) is a client–server architecture in which presentation,
+application processing and data management functions are physically separated.
+The most widespread use of multitier architecture is the three-tier architecture.
+
+The following four are the most common layers:
+
+- **Presentation** layer (a.k.a. UI layer, view layer, presentation tier in
+multitier architecture)
+- **Application** layer (a.k.a. service layer or GRASP Controller Layer)
+- **Business** layer (a.k.a. business logic layer (BLL), domain logic layer)
+- **Data** access layer (a.k.a. persistence layer, logging, networking, and other
+services which are required to support a particular business layer)
+
+The more usual convention is that the application layer (or service layer) is
+considered a sublayer of the business layer, typically encapsulating the API
+definition surfacing the supported business functionality.
+
+### Three-tier architecture
+
+Three-tier architecture is a client-server software architecture pattern in
+which the user interface (presentation), functional process logic
+("business rules"), computer data storage and data access are developed
+and maintained as independent modules, most often on separate platforms.
+
+Advantages of 3-Layer Architecture:
+
+- **Separation of Concerns:** Each layer focuses on a specific responsibility.
+- **Reusability:** Components of each layer can be reused across the application.
+- **Maintainability:** Changes to one layer don’t typically affect others.
+- **Scalability:** Easier to scale different parts of the system independently.
+
+Disadvantages:
+
+- **Overhead:** Can introduce unnecessary complexity for simple applications.
+- **Latency:** Increases the number of interactions between layers, potentially
+adding latency.
+
+## Service-Oriented Architecture (SOA)
+
+SOA organizes an application as a collection of loosely coupled services that
+communicate over a network. Each service performs a specific business function
+and interacts with others through well-defined APIs.
+
+It's useful in cases such:
+
+- Ideal for large, distributed systems with multiple teams.
+- Enables integration of diverse technologies and platforms.
 
 ## Model-View-Controller (MVC)
 
@@ -217,7 +288,7 @@ Incremental adoption can be difficult and it's just one dependency to rule them 
 The goal is to separate business logic from instance creation responsibility.
 This aligns well with the *Single Responsibility Principle*.
 
-This approach is based on the principle provided by [Lyft](https://www.youtube.com/watch?v=dA9rGQRwHGs).
+This approach is based on the principle provided by [Patrick Barry from Lyft](https://www.youtube.com/watch?v=dA9rGQRwHGs).
 A DI system, at a high level, creates an instance like this:
 
 ```Swift
@@ -299,3 +370,63 @@ relying on a singleton may indirectly depend on the singleton’s state, making
 code behavior less predictable.
 - **Multithreading Issues:** Without proper thread-safety mechanisms, singletons
 can cause race conditions in multithreaded contexts.
+
+## Circuit Breaker
+
+Circuit breaker is a design pattern used in software development. It is used
+to detect failures and encapsulates the logic of preventing a failure from
+constantly recurring, during maintenance, temporary external system failure
+or unexpected system difficulties. It is commonly used in scenarios like
+network requests or database calls.
+
+## Builder Pattern
+
+The builder pattern is a design pattern that provides a flexible solution
+to various object creation problems in object-oriented programming.
+The builder pattern separates the construction of a complex object from its representation.
+The intent of the builder design pattern is to separate the construction of a
+complex object from its representation. By doing so, the same construction
+process can create different representations.
+
+The builder design pattern solves problems like:
+
+- How can a class (the same construction process) create different
+representations of a complex object?
+- How can a class that includes creating a complex object be simplified?
+
+The builder design pattern describes how to solve such problems:
+
+- Encapsulate creating and assembling the parts of a complex object in a
+separate `Builder` object.
+- A class delegates object creation to a `Builder` object instead of creating
+the objects directly.
+
+A class (the same construction process) can delegate to different `Builder`
+objects to create different representations of a complex object.
+
+Advantages of the builder pattern include:
+
+- Allows you to vary a product's internal representation.
+- Encapsulates code for construction and representation.
+- Provides control over the steps of the construction process.
+
+Disadvantages of the builder pattern include:
+
+- A distinct ConcreteBuilder must be created for each type of product.
+- Builder classes must be mutable.
+- May hamper/complicate dependency injection.
+- In many null-safe languages, the builder pattern defers
+compile-time errors for unset fields to runtime.
+
+## Factory Pattern
+
+In object-oriented programming, the factory method pattern is a design pattern
+that uses factory methods to deal with the problem of creating objects without
+having to specify their exact classes. Rather than by calling a constructor,
+this is accomplished by invoking a factory method to create an object.
+Factory methods can be specified in an interface and implemented by subclasses
+or implemented in a base class and optionally overridden by subclasses.
+
+The factory method pattern relies on inheritance, as object creation is
+delegated to subclasses that implement the factory method to create objects.
+The pattern can also rely on the implementation of an interface.
