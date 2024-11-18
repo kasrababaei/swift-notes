@@ -20,6 +20,20 @@
   - [Circuit Breaker](#circuit-breaker)
   - [Builder Pattern](#builder-pattern)
   - [Factory Pattern](#factory-pattern)
+  - [Communication Protocols](#communication-protocols)
+    - [Server-Sent Events](#server-sent-events)
+    - [REST](#rest)
+      - [Authentication](#authentication)
+    - [GraphQL](#graphql)
+    - [gRPC](#grpc)
+  - [Pagination](#pagination)
+    - [Forward Pagination](#forward-pagination)
+    - [Backward Pagination](#backward-pagination)
+    - [Bidirectional Pagination](#bidirectional-pagination)
+    - [Infinite Scroll](#infinite-scroll)
+    - [Offset Pagination](#offset-pagination)
+    - [Cursor Pagination](#cursor-pagination)
+    - [**Cursor Pagination vs. Offset Pagination**](#cursor-pagination-vs-offset-pagination)
 
 In software engineering, a design pattern describes a relatively small,
 well-defined aspect (i.e. functionality) of a computer program in terms of
@@ -430,3 +444,258 @@ or implemented in a base class and optionally overridden by subclasses.
 The factory method pattern relies on inheritance, as object creation is
 delegated to subclasses that implement the factory method to create objects.
 The pattern can also rely on the implementation of an interface.
+
+## Communication Protocols
+
+There's various protocols and technologies when it comes to establishing
+a communication channel with the backend to send/receive data by hitting
+the API endpoints.
+
+### Server-Sent Events
+
+Server-Sent Events (SSE) is a standard for unidirectional communication where a
+server pushes real-time updates to a client over an HTTP connection.
+It is part of the HTML5 specification and provides an efficient way for a
+server to send event-driven data to the client.
+
+The advantages of using SSE is that it can automatically reconnect when
+the connection drops and it removes the need for a constant polling
+(the server will notify the client when there's an update).
+However, it doesn't support client-to-server communication, supports only
+text (not data), and buffering is annoying, you can receive partial
+packets and need to buffer it up until you know you've got a full event.
+
+### REST
+
+A REST API, also known as a RESTful API, is a simple, uniform interface
+that is used to make data, content, algorithms, media, and other digital
+resources available through web URLs.
+
+Before REST, most developers had to deal with SOAP to integrate APIs.
+SOAP was notorious for being complex to build, use, and debug.
+
+REST operations are stateless. Request from client to server must contain
+all of the information necessary so that the server can understand and
+process it accordingly. The server can’t hold any information about the client state.
+
+REST APIs operate over HTTP, which is request-response-based. They are not
+inherently designed for real-time updates, requiring polling or long-polling
+mechanisms to simulate real-time communication. This can lead to inefficiencies
+compared to WebSockets, Server-Sent Events, or gRPC.
+
+REST APIs are usually designed with fixed endpoints and responses,
+which can lead to:
+
+- **Over-fetching:** Clients receive more data than they need because
+response may include unnecessary fields.
+- **Under-fetching:** Clients make multiple requests to different endpoints to
+gather all required data.
+- **Scalability Issues**: As applications grow, managing numerous endpoints
+for different entities and operations can become cumbersome. Also, new features
+would need new endpoints.
+
+#### Authentication
+
+**HTTP Authentication:** HTTP provides authentication schemes for REST API implementation.
+Two common schemes are:
+
+- **Basic authentication:** HTTP basic authentication (BA) is a simple technique
+for controlling access to web resources. It doesn’t require cookies, session
+identifiers, or login pages. Instead, it uses standard fields in the HTTP header.
+- **Bearer authentication:** Bearer authentication, also known as token authentication,
+is an HTTP authentication scheme that involves the use of bearer tokens for security.
+
+**API keys:** One way to authenticate REST APIs is with API keys.
+When a client connects to a server for the first time, it is given a
+unique identifier. This unique API key is then utilized for authentication on
+every subsequent request to retrieve resources. It’s important to note that API
+keys have security risks because they must be transmitted with each request and
+can therefore be intercepted.
+
+**OAuth:** OAuth is a security protocol that offers highly secure login access
+to any system by combining passwords and tokens. The authorization process
+starts with the server requesting a password, followed by an additional token
+to complete the process.
+
+REST is easy to learn, understand, and implement, easy to cache using built-in
+HTTP caching mechanism. Also, there's loose coupling between client and server.
+However, it's less efficient on mobile platforms since every request requires a
+separate physical connection. It's schemaless, makes it hard to check data
+validity on the client. It's stateless; so, needs extra functionality to maintain
+a session. Lastly, additional overhead is needed (every request contains
+contextual metadata and headers).
+
+### GraphQL
+
+GraphQL is a data query and manipulation language for APIs that allows a client
+to specify what data it needs ("declarative data fetching"). A GraphQL server
+can fetch data from separate sources for a single client query and present the
+results in a unified graph. It is not tied to any specific database or storage engine.
+
+A query language for working with API - allows clients to request data from
+several resources using a single endpoint (instead of making multiple requests
+in traditional RESTful apps).
+
+**Pros:**
+
+- Schema-based typed queries - clients can verify data integrity and format.
+- Highly customizable - clients can request specific data and reduce the amount of
+HTTP-traffic.
+- Bi-directional communication with GraphQL Subscriptions (WebSocket based).
+
+**Cons:**
+
+- More complex backend implementation.
+- "Leaky-abstraction" - clients become tightly coupled to the backend.
+- The performance of a query is bound to the performance of the slowest service
+on the backend (in case the response data is federated between multiple services).
+
+### gRPC
+
+gRPC is based on the client-server model, where a client can directly call
+methods on a server application as if they were local methods. Communication
+happens over HTTP/2, enabling features like multiplexing, bidirectional
+streaming, and low-latency communication.
+
+Some of the key features of gRPC are:
+
+- Enables full-duplex communication and better performance compared to HTTP/1.1.
+- Efficient serialization and deserialization.
+- Supports various types of streaming (unary, server-side, client-side, and bidirectional).
+- Supports multiple programming languages, making it suitable for cross-platform
+systems.
+- APIs are defined using Protobuf, ensuring a strict contract between client and
+server.
+
+Some of the use-cases of gRPC are:
+
+- **Microservices Communication:** Ideal for low-latency, efficient communication
+between services.
+- **Real-Time Applications:** Bidirectional streaming for chat apps, gaming, or IoT.
+- **Mobile and IoT:** Efficient communication where bandwidth is limited.
+- **Polyglot Environments:** Teams working with different programming languages.
+
+Limitations of gRPC are:
+
+- **Steeper Learning Curve:** Requires understanding of Protobuf and streaming concepts.
+- **Debugging:** Harder to debug compared to REST (binary payloads are less human-readable).
+- **Limited Browser Support:** gRPC-Web is required for frontend use, which adds
+complexity.
+
+## Pagination
+
+Endpoints that return a list of entities must support pagination.
+Without pagination, a single request could return a huge amount of
+results causing excessive network and memory usage.
+
+### Forward Pagination
+
+Loads new messages as the user scrolls downward in the chat view.
+Can use techniques like polling or WebSockets to get new messages and
+append them to the end of the list.
+
+Some of the use-cases are:
+
+- For channels or public groups with high traffic where the focus is on
+keeping up with the conversation.
+- For live chat scenarios, where new messages are expected frequently.
+
+Some of the challenges are:
+
+- Ensuring seamless scrolling when appending new messages to the bottom.
+- Handling real-time updates alongside paginated loading.
+
+### Backward Pagination
+
+Loads older messages as the user scrolls upward in the chat view.
+Need to fetch older messages from the server when the user reaches the top of the
+current message list.
+
+Some of the use-cases are:
+
+- When a user wants to view message history.
+- Most common in private chats or low-traffic public channels where users may
+want to reference past conversations.
+
+Some of the challenges:
+
+- Maintaining the user's scroll position after older messages are loaded.
+- Balancing the batch size to prevent overwhelming the UI.
+
+### Bidirectional Pagination
+
+Supports both forward and backward pagination. Need to preload messages in both
+directions with APIs that support offsets or
+cursors for bidirectional data loading.
+
+Some of the use-cases are:
+
+- For group chats where users join at an arbitrary point in the conversation
+and might scroll both forward and backward.
+- When implementing features like "jump to a specific message" or "unread messages."
+
+Some of the challenges are:
+
+- Requires careful handling of scroll positions when adding data to both ends
+of the list.
+
+### Infinite Scroll
+
+Messages are dynamically loaded in either direction as the user scrolls,
+creating an "infinite" conversation history.
+
+Some of the use-cases are:
+
+- For apps with extensive message history (e.g., Slack or Discord-like apps).
+- To provide a seamless user experience when browsing through large message sets.
+
+Some of the challenges are:
+
+- Requires efficient caching and memory management to avoid performance degradation.
+- Handling scroll offsets carefully to ensure smooth navigation.
+
+### Offset Pagination
+
+Provides a limit and an offset query parameters. Example: GET `/feed?offset=100&limit=20`.
+
+Pros:
+
+- easiest to implement - the request parameters can be passed directly to a SQL query.
+- stateless on the server.
+
+Cons:
+
+- bad performance on large offset values (the database needs to skip offset
+rows before returning the paginated result).
+- inconsistent when adding new rows into the database (Page Drift).
+
+### Cursor Pagination
+
+The cursor pagination utilizes a pointer that refers to a specific database record.
+This approach is especially useful when dealing with large datasets or
+real-time data that might change frequently.
+
+### **Cursor Pagination vs. Offset Pagination**
+
+| **Aspect** | **Cursor Pagination** | **Offset Pagination** |
+|-|-|-|
+| **Example** | `feed?after_id=p1b2&limit=10` | `feed?after_page=2&limit=10` |
+| **Navigation** | Cursor-based | Offset-based|
+| **Performance** | Efficient for large datasets| Slower with larger datasets |
+| **Dynamic Data** | Handles real-time updates gracefully | May skip or duplicate data |
+| **Complexity** | More complex to implement | Simple to implement |
+| **Random Access** | Not possible | Easy to jump to any page |
+
+Some of the use-cases are:
+
+- Real-time applications (e.g., chat, news feeds).
+- Large datasets where offset pagination becomes inefficient.
+- Systems that frequently update or delete data, causing inconsistencies
+in offset-based pagination.
+
+Cursor-based pagination comes with [tradeoffs](https://slack.engineering/evolving-api-pagination-at-slack/):
+
+- The cursor must be based on a unique, sequential column (or columns)
+in the source table.
+- There is no concept of the total number of pages or results in the set.
+- The client can’t jump to a specific page.
