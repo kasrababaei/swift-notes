@@ -1,6 +1,6 @@
 # SwiftUI
 
-> Views are funcitons of state, not of a sequence of events.
+> Views are functions of state, not of a sequence of events.
 
 - [SwiftUI](#swiftui)
   - [View Builders](#view-builders)
@@ -54,7 +54,7 @@ HStack {
 
 // View Tree:
 
-        Hstack
+        HStack
           |
           |
     -------------
@@ -134,9 +134,9 @@ Try not using patterns that create conditional content/branch in the view tree
 that might have unforeseen consequences.
 
 > It is essential to keep your view hierarchy without unnecessary branches that
->  you may create using if statements in the body of a `ViewBuilder` closure
->  because it may hurt the performance of your views and produce state losses.
->  _[From Swift with Majid](https://swiftwithmajid.com/2023/05/03/the-power-of-overlays-in-swiftui/)_.
+> you may create using if statements in the body of a `ViewBuilder` closure
+> because it may hurt the performance of your views and produce state losses.
+> _[From Swift with Majid](https://swiftwithmajid.com/2023/05/03/the-power-of-overlays-in-swiftui/)_.
 
 Also, with reference to [Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/?time=2215)
 from WWDC23, branches are a form of structured identity. This means we have two
@@ -154,7 +154,7 @@ Instead, use the following pattern:
 HStack { 
     Image(systemName: "hand.wave")
     Text("Hello")
-        .background(highlightes ? .red : .clear)
+      .background(highlights ? .red : .clear)
 }
 
 // View tree
@@ -182,13 +182,13 @@ we usually only used it for values pre-iOS 17.
 of the body property, SwiftUI notices the state property is accessed; so, it adds
 a dependency between the state property and the view's node in the render tree.
 
-If the state property is not rererenced inside the `body`, SwiftUI won't rerender
+If the state property is not re-rendered inside the `body`, SwiftUI won't rerender
 the `body` when the state property changes.
 
 Here's how we could write the same code without using the `@State` property wrapper:
 
 ```Swift
-struct Counetr: View {
+struct Counter: View {
     private var _value: State(initialValue: 0)
     private var value: Int {
         get { _value.wrappedValue }
@@ -196,7 +196,7 @@ struct Counetr: View {
     }
 
     var body: some View {
-        Button("Incremenet: \(value))") {
+        Button("Increment: \(value))") {
             value += 1
         }
     }
@@ -494,7 +494,7 @@ struct ProposedViewSize {
 ```
 
 The difference between `ProposedViewSize` and `CGSize` is that both components
-are optional in `ProposedViewSize`. Porposing `nil` for a component means that
+are optional in `ProposedViewSize`. Proposing `nil` for a component means that
 the view can become its _ideal size_ in that dimension. The ideal size is
 different for each view.
 
@@ -577,7 +577,8 @@ padding       Color
 3. The padding subtracts 10 points on each edge, and it proposed 300⨉460 to the text
 4. The text reports its size as 51⨉17
 5. The padding adds 10 points on each edge, and it reports its size as 71⨉37
-6. The background proposes the size of the padded text (71⨉73) to the secondary subview (color)
+6. The background proposes the size of the padded text (71⨉73) to the secondary
+subview (color)
 7. The color accepts and reports the proposed 71⨉73
 8. The background reports the size of its primary subview (71⨉73)
 
@@ -777,7 +778,7 @@ secondary subview (`Color`).
 
 The flexible frames APIs is the only one in SwiftUI to explicitly specify an
 ideal size, i.e., the size that will be adopted if `nil` is proposed for one or
-both dimensions. If the `iealWidth` or `idealHeight` parameters are specified,
+both dimensions. If the `idealWidth` or `idealHeight` parameters are specified,
 this size will be proposed ot the frame's subview, and it'll also be reported as
 the frame's own size, regardless of the size of its subview.
 

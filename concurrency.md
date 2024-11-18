@@ -117,11 +117,15 @@ In 2009, Apple announce GCD with iOS 8 where you no longer think of concurrences
 in terms of Threads but instead in terms of queues. GCD actually empowers `OperationQueue`
 under the hood but its quite simpler.
 
-A `DispatchQueue`, is an object that manages the execution of tasks serially or concurrently on your app's main thread or on a background thread.
+A `DispatchQueue`, is an object that manages the execution of tasks serially or
+concurrently on your app's main thread or on a background thread.
 
-Work submitted to dispatch queues executes on a pool of threads managed by the system. Except for the dispatch queue representing your app's main thread, the system makes no guarantees about which thread it uses to execute a task.
+Work submitted to dispatch queues executes on a pool of threads managed by the
+system. Except for the dispatch queue representing your app's main thread, the
+system makes no guarantees about which thread it uses to execute a task.
 
-`DispatchQueue` is serial by default, which is a contrast to the operation queues that are concurrent by default.
+`DispatchQueue` is serial by default, which is a contrast to the operation
+queues that are concurrent by default.
 
 ```Swift
 // Sequential execution on the same thread
@@ -140,7 +144,8 @@ queue.async { print("5", Thread.current) }
 // 5 <NSThread: 0x600001c5ce80>{number = 2, name = (null)}
 ```
 
-In the example code above, it's possible to run the operations concurrently by providing an attribute when creating the queue like:
+In the example code above, it's possible to run the operations concurrently by
+providing an attribute when creating the queue like:
 
 ```Swift
 let queue = DispatchQueue(label: "queue", attributes: .concurrent)
@@ -151,15 +156,20 @@ let queue = DispatchQueue(label: "queue", attributes: .concurrent)
 // 5 <NSThread: 0x600002a24140>{number = 4, name = (null)}
 ```
 
-Just like `OperationQueue`, `DispatchQueue` can also make sure thread thread exhaustion doesn't happen.
+Just like `OperationQueue`, `DispatchQueue` can also make sure thread thread
+exhaustion doesn't happen.
 
-`DispatchQueue` is also capable of scheduling work to be performed in the future without blocking the current thread.
+`DispatchQueue` is also capable of scheduling work to be performed in the future
+without blocking the current thread.
 
 ```Swift
 queue.asyncAfter(deadline: .now() + 1) { print(Thread.current) }
 ```
 
-Similar to `OperationQueue`, it's possible to set a quality of service on the queue. Cancelling a queue is also possible and it is done cooperatively which means we need to check if the item of work has been cancelled to perform a short circuit:
+Similar to `OperationQueue`, it's possible to set a quality of service on the
+queue. Cancelling a queue is also possible and it is done cooperatively which
+means we need to check if the item of work has been cancelled to perform a
+short circuit:
 
 ```Swift
 let queue = DispatchQueue(label: "queue", attributes: [.concurrent])
@@ -178,7 +188,8 @@ queue.async(execute: item!)
 item?.cancel()
 ```
 
-Another feature of `DispatchQueue` is passing objects that can be carried on within that execution context to be accessed later on:
+Another feature of `DispatchQueue` is passing objects that can be carried on
+within that execution context to be accessed later on:
 
 ```Swift
 // Adding specifics
@@ -194,7 +205,10 @@ queue.asyncAfter(deadline: .now() + 1) {
 }
 ```
 
-Starting up a new queue from the inside of the execution context of another queue does not mean the specifics are automatically inherited. So, if we run two units of work in parallel, we may lose the specifics from the root execution context.
+Starting up a new queue from the inside of the execution context of another
+queue does not mean the specifics are automatically inherited. So, if we run
+two units of work in parallel, we may lose the specifics from the root
+execution context.
 
 ```Swift
 // Accessing the specifics of another execution context
@@ -216,7 +230,10 @@ queue.asyncAfter(deadline: .now() + 1) {
 // Name is: nil
 ```
 
-There's a fix for the problem above, which is providing a target to the inner queue. We can make even serial queues target concurrent queues; so that their work is guaranteed to be executed sequentially but it's taking its Thread from that shared Thread pool in the concurrent queue.
+There's a fix for the problem above, which is providing a target to the inner
+queue. We can make even serial queues target concurrent queues; so that their
+work is guaranteed to be executed sequentially but it's taking its Thread
+from that shared Thread pool in the concurrent queue.
 
 ```Swift
 // Inheriting the specifics of another execution context
@@ -238,11 +255,18 @@ queue.asyncAfter(deadline: .now() + 1) {
 // Name is: My Queue
 ```
 
-Although there's technically a way to set data on the base queue and have it implicitly travel through the entire execution context, it requires access to the parent queue. In other words, queues don't inherently know what the current execution context is. It also doesn't provide any means to cooperate with other queues.
+Although there's technically a way to set data on the base queue and have it
+implicitly travel through the entire execution context, it requires access
+to the parent queue. In other words, queues don't inherently know what the
+current execution context is. It also doesn't provide any means to cooperate
+with other queues.
 
-Although a `DispatchWorkItem` can be cancelled, there's no way to have the cancellation of one item trickle down to child work items that are created.
+Although a `DispatchWorkItem` can be cancelled, there's no way to have the
+cancellation of one item trickle down to child work items that are created.
 
-In cases where we need to wait for multiple units of work that aren't concurrently to finish before continuing, we can use `DispatchGroup`, which allows us to treat multiple units of work as a single unit of work.
+In cases where we need to wait for multiple units of work that aren't
+concurrently to finish before continuing, we can use `DispatchGroup`,
+which allows us to treat multiple units of work as a single unit of work.
 
 ```Swift
 let group = DispatchGroup()
@@ -264,7 +288,10 @@ group.wait()
 // Queue A finished. <NSThread: 0x600003ea4100>{number = 5, name = (null)}
 ```
 
-Regarding data races, GCD does provide some tools to synchronize data access. By using `sync` function, which runs some unit of work and returns once that's finished, and a `barrier` flag, the queue kinda uses a lock which blocks any new work item from entering until the current one is finished.
+Regarding data races, GCD does provide some tools to synchronize data access.
+By using `sync` function, which runs some unit of work and returns once that's
+finished, and a `barrier` flag, the queue kinda uses a lock which blocks any
+new work item from entering until the current one is finished.
 
 ```Swift
 class Counter {
@@ -295,15 +322,23 @@ can see it has the following lifetime states:
 3. Suspended
 4. Ended
 
-Tasks are initialized by passing a closure containing the code that will be executed by a given task.
+Tasks are initialized by passing a closure containing the code that will be
+executed by a given task.
 
-After this code has run to completion, the task has completed, resulting in either a failure or result value, this closure is eagerly released.
+After this code has run to completion, the task has completed, resulting in
+either a failure or result value, this closure is eagerly released.
 
-Retaining a task object doesn't indefinitely retain the closure, because any references that a task holds are released after the task completes. Consequently, tasks rarely need to capture `weak` references to values.
+Retaining a task object doesn't indefinitely retain the closure, because any
+references that a task holds are released after the task completes. Consequently,
+tasks rarely need to capture `weak` references to values.
 
-Every asynchronous function is executing in a task. In other words, a task is to asynchronous functions, what a thread is to synchronous functions.
+Every asynchronous function is executing in a task. In other words, a task is
+to asynchronous functions, what a thread is to synchronous functions.
 
-So tasks seem to be capable of solving the thread explosion problem by using a pool of threads, all without having to manage an auxiliary object like an operation queue or dispatch queue. That’s already an improvement over threads and queues. Therefore, running the following code won't create a thousands thread:
+So tasks seem to be capable of solving the thread explosion problem by using a
+pool of threads, all without having to manage an auxiliary object like an
+operation queue or dispatch queue. That’s already an improvement over threads
+and queues. Therefore, running the following code won't create a thousands thread:
 
 ```Swift
 for n in 0..<workCount {
@@ -317,14 +352,29 @@ for n in 0..<workCount {
 There are seven things to know when working with [task cancellation](https://www.hackingwithswift.com/quick-start/concurrency/how-to-cancel-a-task):
 
 1. You can explicitly cancel a task by calling its `cancel()` method.
-2. Any task can check `Task.isCancelled` to determine whether the task has been cancelled or not.
-3. You can call the `Task.checkCancellation()` method, which will throw a CancellationError if the task has been cancelled or do nothing otherwise.
-4. Some parts of Foundation automatically check for task cancellation and will throw their own cancellation error even without your input.
-5. If you’re using `Task.sleep()` to wait for some amount of time to pass, cancelling your task will automatically terminate the sleep and throw a `CancellationError`.
-6. If the task is part of a group and any part of the group throws an error, the other tasks will be cancelled and awaited.
-7. If you have started a task using SwiftUI’s `task()` modifier, that task will automatically be canceled when the view disappears.
+2. Any task can check `Task.isCancelled` to determine whether the task has been
+cancelled or not.
+3. You can call the `Task.checkCancellation()` method, which will throw a
+CancellationError if the task has been cancelled or do nothing otherwise.
+4. Some parts of Foundation automatically check for task cancellation and will
+throw their own cancellation error even without your input.
+5. If you’re using `Task.sleep()` to wait for some amount of time to pass,
+cancelling your task will automatically terminate the sleep and throw a `CancellationError`.
+6. If the task is part of a group and any part of the group throws an error,
+the other tasks will be cancelled and awaited.
+7. If you have started a task using SwiftUI’s `task()` modifier, that task will
+automatically be canceled when the view disappears.
 
-Tasks also have the ability to schedule work after waiting some time. Threads accomplished this with a `sleep` function that was unfortunately blocking and so would tie up thread resources, and queues accomplished this by scheduling work to be executed on a future date. It’s not super ergonomic to have to use nanoseconds. Although this method is called “sleep”, it is quite different from the sleep we have used many times on Thread. This sleep does pause the current task for an amount of time, but it does not hold up the thread. The sleep function on Task works cooperatively so that other tasks can have a chance to do their work on the cooperative thread pool, and then once the time passes our task will be resumed.
+Tasks also have the ability to schedule work after waiting some time. Threads
+accomplished this with a `sleep` function that was unfortunately blocking and
+so would tie up thread resources, and queues accomplished this by scheduling
+work to be executed on a future date. It’s not super ergonomic to have to use
+nanoseconds. Although this method is called “sleep”, it is quite different from
+the sleep we have used many times on Thread. This sleep does pause the current
+task for an amount of time, but it does not hold up the thread. The sleep
+function on Task works cooperatively so that other tasks can have a chance
+to do their work on the cooperative thread pool, and then once the time
+passes our task will be resumed.
 
 We can spin up 1,000 tasks and sleep them for a second:
 
@@ -336,7 +386,10 @@ for n in 0..<workCount {
 }
 ```
 
-When we await the sleep function we are able to suspend the execution of this task, thus freeing up its thread to be used by other tasks. If we run this and pause the executable we will see a small number of threads have been created, but they all have just a single stack frame with a cryptic function name:
+When we await the sleep function we are able to suspend the execution of this
+task, thus freeing up its thread to be used by other tasks. If we run this and
+pause the executable we will see a small number of threads have been created,
+but they all have just a single stack frame with a cryptic function name:
 
 ```swift
 Thread 2#0        0x00000001a05ef604 in __workq_kernreturn ()
@@ -352,11 +405,14 @@ Thread 11#0       0x00000001a05ef604 in __workq_kernreturn ()
 Thread 12#0       0x00000001a05ef604 in __workq_kernreturn ()
 ```
 
-his `__workq_kernreturn` function is how Grand Central Dispatch parks a thread while it waits for work to be scheduled on it. Once the suspension is over, the work can be resumed on any thread not just the one that started off of.
+his `__workq_kernreturn` function is how Grand Central Dispatch parks a thread
+while it waits for work to be scheduled on it. Once the suspension is over, the
+work can be resumed on any thread not just the one that started off of.
 
 ### Task priority and cancellation
 
-Like all other forms of concurrency discussed so far, tasks also support the concept of priority, and it’s a granular value of finitely many possibilities:
+Like all other forms of concurrency discussed so far, tasks also support the
+concept of priority, and it’s a granular value of finitely many possibilities:
 
 ```Swift
 Task(priority: .low) {
@@ -371,9 +427,11 @@ Task(priority: .high) {
 // low
 ```
 
-This allows you to tell the system how important this task is, and the runtime may be able to give this task more or less time depending on various factors.
+This allows you to tell the system how important this task is, and the runtime
+may be able to give this task more or less time depending on various factors.
 
-In order to make use of cancellation we need to get a handle on the actual task we want to cancel, which means we need to assign a variable:
+In order to make use of cancellation we need to get a handle on the actual task
+we want to cancel, which means we need to assign a variable:
 
 ```Swift
 let task = Task {
@@ -387,15 +445,21 @@ And then at any time we can cancel it:
 task.cancel()
 ```
 
-However, if we run this we will see that the print statement still executes even though we canceled:
+However, if we run this we will see that the print statement still executes even
+though we canceled:
 
 ```Swift
 <NSThread: 0x106204290>{number = 2, name = (null)}
 ```
 
-This is a little different from threads, in which if you cancelled it right after creating it we could short-circuit the thread being started. Now we don’t know this is 100% always the case, but it seemed pretty consistent. So it seems tasks are a bit more eager in that they start up even if we cancel right after creating them.
+This is a little different from threads, in which if you cancelled it right
+after creating it we could short-circuit the thread being started. Now we don’t
+know this is 100% always the case, but it seemed pretty consistent. So it seems
+tasks are a bit more eager in that they start up even if we cancel right after
+creating them.
 
-The real way to short-circuit the work of a cancelled task is to manually check if the task has been cancelled:
+The real way to short-circuit the work of a cancelled task is to manually check
+if the task has been cancelled:
 
 ```Swift
 let task = Task {
@@ -409,13 +473,18 @@ let task = Task {
 task.cancel()
 ```
 
-Even though `isCancelled` seems like a global value it is actually local to just the task we are operating in. This is similar to how cancellation worked with regular threads too.
+Even though `isCancelled` seems like a global value it is actually local to
+just the task we are operating in. This is similar to how cancellation worked
+with regular threads too.
 
 ### Current task
 
-There is no Task.current static like there was `Thread.current`. This is because it’s possible to not be operating inside the context of a task, whereas you are always operating within a thread no matter what.
+There is no Task.current static like there was `Thread.current`. This is
+because it’s possible to not be operating inside the context of a task, whereas
+you are always operating within a thread no matter what.
 
-There is still a way to get the current task, but you have to invoke a function with a closure and that closure is handed the current task if it exists:
+There is still a way to get the current task, but you have to invoke a function
+with a closure and that closure is handed the current task if it exists:
 
 ```Swift
 Task {
@@ -425,7 +494,8 @@ Task {
 }
 ```
 
-If your asynchronous context happens to also be a failable context, then you can check for cancellation via a throwing function rather than a boolean:
+If your asynchronous context happens to also be a failable context, then you
+can check for cancellation via a throwing function rather than a boolean:
 
 ```Swift
 let task = Task {
@@ -435,11 +505,15 @@ let task = Task {
 task.cancel()
 ```
 
-If the task has been cancelled when we try to invoke `checkCancellation`, the function will throw, thus short-circuiting the rest of the function. This can be a lot more ergonomic to invoke than guarding for `Task.isCancelled`.
+If the task has been cancelled when we try to invoke `checkCancellation`, the
+function will throw, thus short-circuiting the rest of the function. This can
+be a lot more ergonomic to invoke than guarding for `Task.isCancelled`.
 
 ### @TaskLocal
 
-Tasks have a feature known as “task local values” that allow us to associate a value with a task and then it can be effortlessly retrieved from anywhere that runs in the context of that task.
+Tasks have a feature known as “task local values” that allow us to associate a
+value with a task and then it can be effortlessly retrieved from anywhere that
+runs in the context of that task.
 
 ```Swift
 enum MyLocals {
@@ -465,13 +539,24 @@ print("after:", MyLocals.id)
 // Task: 42
 ```
 
-The moment we create the task it captures all of the current task locals, and so then it doesn’t matter that later the withValue operation ends and the id local reverts back to nil.
+The moment we create the task it captures all of the current task locals, and
+so then it doesn’t matter that later the withValue operation ends and the id
+local reverts back to nil.
 
 ## Sendable Types vs Sendable Values
 
-A type that conforms to the `Sendable` protocol is a thread-safe type: values of that type can be shared with and used safely from multiple concurrent contexts at once without causing data races, [_source_](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md#sendable-values-and-sendable-types).
+A type that conforms to the `Sendable` protocol is a thread-safe type: values
+of that type can be shared with and used safely from multiple concurrent
+contexts at once without causing data races, [_source_](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md#sendable-values-and-sendable-types).
 
-If a value does not conform to `Sendable`, Swift must ensure that the value is never used concurrently. The value can still be sent between concurrent contexts, but the send must be a complete transfer of the value's entire region implying that all uses of the value (and anything non-`Sendable` typed that can be reached from the value) must end in the source concurrency context before any uses can begin in the destination concurrency context. Swift achieves this property by requiring that the value is in a disconnected region and we say that such a value is a `sending` value.
+If a value does not conform to `Sendable`, Swift must ensure that the value is
+never used concurrently. The value can still be sent between concurrent
+contexts, but the send must be a complete transfer of the value's entire region
+implying that all uses of the value (and anything non-`Sendable` typed that
+can be reached from the value) must end in the source concurrency context
+before any uses can begin in the destination concurrency context. Swift
+achieves this property by requiring that the value is in a disconnected
+region and we say that such a value is a `sending` value.
 
 ```Swift
 actor MyActor {
@@ -491,7 +576,9 @@ actor MyActor {
 }
 ```
 
-If a `sending` value's isolation region is merged into another disconnected isolation region, then the value is still considered to be `sending` since two disconnected regions when merged form a new disconnected region:
+If a `sending` value's isolation region is merged into another disconnected
+isolation region, then the value is still considered to be `sending` since
+two disconnected regions when merged form a new disconnected region:
 
 ```Swift
 func h() async {
@@ -510,7 +597,8 @@ func h() async {
 }
 ```
 
-Passing a non-`Sendable` instance into a method that takes a `sending` value must be done only once, even if it's in a synchronous context. Example:
+Passing a non-`Sendable` instance into a method that takes a `sending` value
+must be done only once, even if it's in a synchronous context. Example:
 
 ```Swift
 func run() {
@@ -529,17 +617,26 @@ func resume(_ value: sending NonSendable) {
 final class NonSendable {}
 ```
 
-The same instance of `NonSendable` cannot be passed to the `resume(_:)` multiple times given the compiler cannot reason what the callee is going to do to the instance (is it going to mutate it, or merge it with something else and pass it on to another method?).
+The same instance of `NonSendable` cannot be passed to the `resume(_:)`
+multiple times given the compiler cannot reason what the callee is going
+to do to the instance (is it going to mutate it, or merge it with something
+else and pass it on to another method?).
 
 ## Isolation
 
-Isolation is the mechanism that Swift uses to make data races impossible. Isolation is specified at compile time. Everything is non-isolated by default. You must take explicit action to change this. The isolation behavior is still controlled by the definition. Isolation will not suddenly change unless you decide you want to change it.
+Isolation is the mechanism that Swift uses to make data races impossible.
+Isolation is specified at compile time. Everything is non-isolated by default.
+You must take explicit action to change this. The isolation behavior is still
+controlled by the definition. Isolation will not suddenly change unless you
+decide you want to change it.
 
 - Rule 1: isolation is controlled by definitions
-- Rule 2: isolation can only change via async calls. Synchronous code cannot change isolation.
+- Rule 2: isolation can only change via async calls. Synchronous code cannot
+change isolation.
 - Rule 3: protocols can specify isolation
 
-Whatever isolation was in effect when you create a Task will still be used inside the Task body by default.
+Whatever isolation was in effect when you create a Task will still be used
+inside the Task body by default.
 
 ```Swift
 @MainActor
@@ -615,9 +712,15 @@ actor WorldModelObject {
 }
 ```
 
-Whenever you see an `await` keyword, **isolation** could change. That’s because with other concurrency systems, runtime context is important. Definitions are all that matter in Swift.
+Whenever you see an `await` keyword, **isolation** could change. That’s because
+with other concurrency systems, runtime context is important. Definitions are all
+that matter in Swift.
 
-All this means is isolation will not suddenly change unless you decide you want to change it. Whatever isolation was in effect when you create a Task will still be used inside the Task body by default. `Task` uses the `@_inheritActorContext` [underscored attribute](https://github.com/apple/swift/blob/main/docs/ReferenceGuides/UnderscoredAttributes.md) to inherit the context.
+All this means is isolation will not suddenly change unless you decide you want
+to change it. Whatever isolation was in effect when you create a Task will still
+be used inside the Task body by default. `Task` uses the `@_inheritActorContext`
+[underscored attribute](https://github.com/apple/swift/blob/main/docs/ReferenceGuides/UnderscoredAttributes.md)
+to inherit the context.
 
 Isolation also applies to variables:
 
@@ -630,7 +733,11 @@ class MyIsolatedClass {
 
 ### [Dynamic Actor Isolation (Under-Specified Protocol)](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/commonproblems/#Under-Specified-Protocol)
 
-The most commonly-encountered form of this problem happens when a protocol has no explicit isolation. In this case, as with all other declarations, this implies non-isolated. Non-isolated protocol requirements can be called from generic code in any isolation domain. If the requirement is synchronous, it is invalid for a conforming type’s implementation to access actor-isolated state:
+The most commonly-encountered form of this problem happens when a protocol has
+no explicit isolation. In this case, as with all other declarations, this implies
+non-isolated. Non-isolated protocol requirements can be called from generic code
+in any isolation domain. If the requirement is synchronous, it is invalid for a
+conforming type’s implementation to access actor-isolated state:
 
 ```swift
 protocol Styler {
@@ -652,30 +759,44 @@ The above code produces the following error in Swift 6 mode:
  5 | @MainActor
  6 | class WindowStyler: Styler {
  7 |     func applyStyle() {
-   |          |- error: main actor-isolated instance method 'applyStyle()' cannot be used to satisfy nonisolated protocol requirement
+   |          |- error: main actor-isolated instance method 'applyStyle()' cannot be used to
+   |                    satisfy nonisolated protocol requirement
    |          `- note: add 'nonisolated' to 'applyStyle()' to make this instance method not isolated to the actor
  8 |         // access main-actor-isolated state
  9 |     }
 ```
 
-It is possible that the protocol actually should be isolated, but has not yet been updated for concurrency. If conforming types are migrated to add correct isolation first, mismatches will occur.
+It is possible that the protocol actually should be isolated, but has not yet
+been updated for concurrency. If conforming types are migrated to add correct
+isolation first, mismatches will occur.
 
 [That error has three fix-its:](https://developer.apple.com/forums/thread/760769)
 
-1. Add `nonisolated` to `applyStyle` to make this instance method not isolated to the actor
-2. Add `@preconcurrency` to the conformance to defer isolation checking to run time. This uses [dynamic actor isolation checking](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md). Witnesses of synchronous `nonisolated` protocol requirements when the witness is isolated and the protocol conformance is annotated as `@preconcurrency`.
-3. Mark the protocol requirement `applyStyle` `async` to allow actor-isolated conformances
+1. Add `nonisolated` to `applyStyle` to make this instance method not isolated
+to the actor
+2. Add `@preconcurrency` to the conformance to defer isolation checking to run
+time. This uses [dynamic actor isolation checking](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md).
+Witnesses of synchronous `nonisolated` protocol requirements when the witness is
+isolated and the protocol conformance is annotated as `@preconcurrency`.
+3. Mark the protocol requirement `applyStyle` `async` to allow actor-isolated
+conformance.
 
 ### Types of Isolation
 
 - None, aka non-isolated.
 - Static: actor types, global actors (like `@MainActor`), and isolated parameters
-- Specific actor value, i.e., They can be isolated to a specific parameter or captured value.
-- Dynamic: It can happen that the type system alone does not or cannot describe the isolation actually used. This comes up regularly with systems built before concurrency was a thing.
+- Specific actor value, i.e., They can be isolated to a specific parameter or
+captured value.
+- Dynamic: It can happen that the type system alone does not or cannot describe
+the isolation actually used. This comes up regularly with systems built before
+concurrency was a thing.
 
-If something has isolation that you don’t want, you can opt-out with the `nonisolated` keyword. This also can make a lot of sense for static constants that are immutable and safe to access from other threads.
+If something has isolation that you don’t want, you can opt-out with the
+`nonisolated` keyword. This also can make a lot of sense for static constants
+that are immutable and safe to access from other threads.
 
-Dynamic Isolation is a good approach to gradually update the code-base. Some forms of dynamic isolation are:
+Dynamic Isolation is a good approach to gradually update the code-base.
+Some forms of dynamic isolation are:
 
 ```Swift
 MainActor.assumeIsolated {
@@ -690,7 +811,8 @@ await MainActor.run {
 }
 ```
 
-In Swift 6, [SE-0423](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md) added a new approach to replace the following dynamic isolation:
+In Swift 6, [SE-0423](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md)
+added a new approach to replace the following dynamic isolation:
 
 ```Swift
 // The protocol guarantees that respondToUIEvent runs on the main thread but isn't isolated to MainActor
@@ -721,7 +843,10 @@ class MyViewController: ViewDelegateProtocol {
 }
 ```
 
-Instead of the code above, [SE-0423](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md) proposed a solution to supress the `nonisolated` protocol conformance requirement by using `@preconcurrency` annotation on the protocol to indicate that the protocol itself predates concurrency:
+Instead of the code above, [SE-0423](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md)
+proposed a solution to suppress the `nonisolated` protocol conformance
+requirement by using `@preconcurrency` annotation on the protocol to indicate
+that the protocol itself predates concurrency:
 
 ```Swift
 @MainActor
@@ -732,19 +857,26 @@ class MyViewController: @preconcurrency ViewDelegateProtocol {
 }
 ```
 
-When importing a module that was compiled with the Swift 6 language mode into code that is not, it's possible to call actor-isolated functions from outside the actor using `@preconcurrency`. For example:
+When importing a module that was compiled with the Swift 6 language mode into
+code that is not, it's possible to call actor-isolated functions from outside
+the actor using `@preconcurrency`. For example:
 
-In the above code, `onMain` from ModuleA can be called from outside the main actor via a call to `notIsolated()`. To close this safety hole, a dynamic check is inserted at the call-site of `onMain()` when ModuleB is recompiled against ModuleA after ModuleA has migrated to the Swift 6 language mode.
+In the above code, `onMain` from ModuleA can be called from outside the main
+actor via a call to `notIsolated()`. To close this safety hole, a dynamic check
+is inserted at the call-site of `onMain()` when ModuleB is recompiled against
+ModuleA after ModuleA has migrated to the Swift 6 language mode.
 
 #### Explicit isolation
 
-Currenlty, [there's a proposal](https://github.com/sophiapoirier/swift-evolution/blob/closure-isolation/proposals/nnnn-closure-isolation-control.md) that enables closures to be fully explicit about all three types of formal isolation:
+Currently, [there's a proposal](https://github.com/sophiapoirier/swift-evolution/blob/closure-isolation/proposals/nnnn-closure-isolation-control.md)
+that enables closures to be fully explicit about all three types of formal isolation:
 
 - `nonisolated`
 - global actor
 - specific actor value
 
-Explicit annotation has the benefit of disabling inference rules and the potential that they lead to a formal isolation that is not preferred.
+Explicit annotation has the benefit of disabling inference rules and the
+potential that they lead to a formal isolation that is not preferred.
 
 ```Swift
 Task { nonisolated (parameter) in // Opting out of @inheritsIsolation
@@ -779,19 +911,26 @@ class NonSendableType {
 
 #### [isolated(any)](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0431-isolated-any-functions.md)
 
-A function value with this type dynamically carries the isolation of the function that was used to initialize it.
+A function value with this type dynamically carries the isolation of the
+function that was used to initialize it.
 
 ```Swift
 func gradually(over: Duration, operation: @isolated(any) (Double) -> ())
 ```
 
-When such a function is called from an arbitrary context, it must be assumed to always cross an isolation boundary. This means, among other things, that the call is effectively asynchronous and must be `await`ed.
+When such a function is called from an arbitrary context, it must be assumed
+to always cross an isolation boundary. This means, among other things, that
+the call is effectively asynchronous and must be `await`ed.
 
 ```Swift
 await operation(timePassed / overallDuration)
 ```
 
-This is useful because even though it's possible to determine the isolation through code inspection, closures, however, are special. Their isolation is influenced not just by where there are defined, but also by what they capture. The context of a closure definition matters, but that context is also lost when you pass it around. Example:
+This is useful because even though it's possible to determine the isolation
+through code inspection, closures, however, are special. Their isolation is
+influenced not just by where there are defined, but also by what they capture.
+The context of a closure definition matters, but that context is also lost when
+you pass it around. Example:
 
 ```Swift
 func scheduleSomeWork(_ f: @Sendable @escaping () async -> Void) {
@@ -809,9 +948,15 @@ func defineClosure() {
 }
 ```
 
-There is one really important place where it makes a big difference: the `Task` creation APIs. Which actor should that task run on? This information is encoded in the closure body. When looking at the function’s type, it’s completely invisible.
+There is one really important place where it makes a big difference: the
+`Task` creation APIs. Which actor should that task run on? This information
+is encoded in the closure body. When looking at the function’s type, it’s
+completely invisible.
 
-But `Task` has to start somewhere, so it first begins with a global executor context. And then the very next thing that happens is the closure hops over to the correct actor. This double hop, aside from being inefficient, has a very significant programmer-visible effect: `Task` does not preserve order.
+But `Task` has to start somewhere, so it first begins with a global executor
+context. And then the very next thing that happens is the closure hops over
+to the correct actor. This double hop, aside from being inefficient, has a
+very significant programmer-visible effect: `Task` does not preserve order.
 
 ```Swift
 Task { print("a") }
@@ -819,7 +964,8 @@ Task { print("b") }
 Task { print("c") }
 ```
 
-This proposal makes it possible to inspect a function value’s isolation. A closure annotated with `@isolated(any)` can expose its captured isolation at runtime.
+This proposal makes it possible to inspect a function value’s isolation.
+A closure annotated with `@isolated(any)` can expose its captured isolation at runtime.
 
 ```Swift
 func scheduleSomeWork(_ f: @Sendable @escaping @isolated(any) () async -> Void) {
@@ -830,21 +976,35 @@ func scheduleSomeWork(_ f: @Sendable @escaping @isolated(any) () async -> Void) 
 }
 ```
 
-Closures can now have propperties, they're just a type of course. The type of the isolation property matches isolated parameters: `(any Actor)?`, which is read-only. Aside from making this property available, this annotation has a small effect on semantics. Adding `@isolated(any)` to a closure means it must be called with an await. This is true even it does not cross an isolation boundary. `Task` can now synchronously enqueue work onto executors.
+Closures can now have properties, they're just a type of course. The type
+of the isolation property matches isolated parameters: `(any Actor)?`,
+which is read-only. Aside from making this property available, this annotation
+has a small effect on semantics. Adding `@isolated(any)` to a closure means
+it must be called with an await. This is true even it does not cross an
+isolation boundary. `Task` can now synchronously enqueue work onto executors.
 
-However, I really do want to stress that “well-defined” ordering for `Task` creation is not the same as “FIFO”. A high prioity task can still execute before more-recently-created lower-priority tasks.
+However, I really do want to stress that “well-defined” ordering for `Task`
+creation is not the same as “FIFO”. A high priority task can still execute before
+more-recently-created lower-priority tasks.
 
-It is recommended that APIs which take functions that are likely to run concurrently and don't have a predetermined isolation take those functions as `@isolated(any)`. This allows the API to make more intelligent scheduling decisions about the function.
+It is recommended that APIs which take functions that are likely to run
+concurrently and don't have a predetermined isolation take those functions as
+`@isolated(any)`. This allows the API to make more intelligent scheduling
+decisions about the function.
 
 Examples that should usually use `@isolated(any)` include:
 
 - functions that wrap the creation of a task
-- algorithms that call a function multiple times in parallel, such as a parallel `map`
+- algorithms that call a function multiple times in parallel, such as a parallel
+`map`
 
 Examples that should usually not use `@isolated(any)` include:
 
-- algorithms that preserve the current isolation, such as a non-parallel `map`; these functions should usually take a non-`Sendable` function instead
-- APIs that intend to call the function with a specific isolation, such as UI frameworks that expect their event handlers to be `@MainActor` or actor functions that run an operation on the actor
+- algorithms that preserve the current isolation, such as a non-parallel `map`;
+these functions should usually take a non-`Sendable` function instead
+- APIs that intend to call the function with a specific isolation, such as UI
+frameworks that expect their event handlers to be `@MainActor` or actor functions
+that run an operation on the actor
 
 #### Isolation inheritance
 
@@ -884,7 +1044,10 @@ extension UIViewController: CustomActorStuff {
 }
 ```
 
-Dynamic isolation comes up regularly with systems built before concurrency was a thing. One tool we have to deal with this is dynamic isolation. These are APIs that allow us to express isolation in a way that is invisible by just looking at definitions.
+Dynamic isolation comes up regularly with systems built before concurrency was
+a thing. One tool we have to deal with this is dynamic isolation. These are APIs
+that allow us to express isolation in a way that is invisible by just looking
+at definitions.
 
 ```Swift
 // this delegate will actually always make calls on the MainActor
@@ -901,13 +1064,23 @@ class MyMainActorClass: SomeDelegate {
 }
 ```
 
-Isolation cannot change at all for a synchronous function. And it cannot change for the synchronous parts of an async function. But, as soon as you need to make an async call, it could.
+Isolation cannot change at all for a synchronous function. And it cannot change
+for the synchronous parts of an async function. But, as soon as you need to
+make an async call, it could.
 
-This is really a consequence of the fact that isolation is controlled entirely by a function’s definition. It does not matter how the caller is being isolated. This is completely different from how queues or locks work.
+This is really a consequence of the fact that isolation is controlled entirely
+by a function’s definition. It does not matter how the caller is being isolated.
+This is completely different from how queues or locks work.
 
 #### `sending` parameter and result values
 
-This [proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md) extends region isolation to enable the application of an explicit `sending` annotation to function parameters and results. A function parameter or result that is annotated with `sending` is required to be disconnected at the function boundary and thus possesses the capability of being safely sent across an isolation domain or merged into an actor-isolated region in the function's body or the function's caller respectively.
+This [proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md)
+extends region isolation to enable the application of an explicit `sending`
+annotation to function parameters and results. A function parameter or result
+that is annotated with `sending` is required to be disconnected at the function
+boundary and thus possesses the capability of being safely sent across an
+isolation domain or merged into an actor-isolated region in the function's
+body or the function's caller respectively.
 
 ### Passing non-sendable types into actor-isolated context
 
@@ -929,7 +1102,7 @@ class NonSendable {
 // Not allowed: Passing argument of non-sendable type 'NonSendable' into actor-isolated context 
 _ = Foo(name: NonSendable())
 
-// Allowed. Could even use autclosure or create a boxing type.
+// Allowed. Could even use autoclosure or create a boxing type.
 _ = Foo(name: { NonSendable() })
 
 ```
@@ -947,22 +1120,50 @@ It is also possible to make the whole function be `Sendable`
 
 There's three options:
 
-- Make the type conform to `Sendable`. Ideally, this needs to be placed in the same file that the class was declared. Otherwise, need to use `@unchecked Sendable` for retroactive conformance.
-- Isolate the class by a global actor such as `@MainActor`, making its access serialized and concurrency-safe. However, actor isolation might not always work since it complicates access from non-concurrency contexts.
+- Make the type conform to `Sendable`. Ideally, this needs to be placed in
+the same file that the class was declared. Otherwise, need to use
+`@unchecked Sendable` for retroactive conformance.
+- Isolate the class by a global actor such as `@MainActor`, making its
+access serialized and concurrency-safe. However, actor isolation might not
+always work since it complicates access from non-concurrency contexts.
 - Using `nonisolated(unsafe)` keyword
 
-In Swift, global variables are intialized lazily on the first access. In Swift 6, this is done atomically to make sure there is no data races when the different threads try to access and initialize the variable at the same time.
+In Swift, global variables are initialized lazily on the first access. In
+Swift 6, this is done atomically to make sure there is no data races when
+the different threads try to access and initialize the variable at the same time.
 
 ## Actor
 
 From _Visualize and optimize Swift concurrency_, WWDC22:
-> Actors make it safe for multiple tasks to manipulate shared state. However, they do this by serializing access to that shared state. Only one task at a time is allowed to occupy the Actor, and other tasks that need to use that Actor will wait. Swift concurrency allows for parallel computation using unstructured tasks, task groups, and async let. Ideally, these constructs are able to use many CPU cores simultaneously. When using Actors from such code, beware of performing large amounts of work on an Actor that's shared among these tasks. When multiple tasks attempt to use the same Actor simultaneously, the Actor serializes execution of those tasks. Because of this, we lose the performance benefits of parallel computation.
+> Actors make it safe for multiple tasks to manipulate shared state. However,
+> they do this by serializing access to that shared state. Only one task at a
+> time is allowed to occupy the Actor, and other tasks that need to use that
+> Actor will wait. Swift concurrency allows for parallel computation using
+> unstructured tasks, task groups, and async let. Ideally, these constructs
+> are able to use many CPU cores simultaneously. When using Actors from such
+> code, beware of performing large amounts of work on an Actor that's shared
+> among these tasks. When multiple tasks attempt to use the same Actor
+> simultaneously, the Actor serializes execution of those tasks. Because of
+> this, we lose the performance benefits of parallel computation.
 >
-> This is because each task must wait for the Actor to become available. To fix this, we need make sure that tasks only run on the Actor when they really need exclusive access to the Actor's data. Everything else should run off of the Actor. We divide the task into chunks. Some chunks must run on the Actor, and the others don't. The non-Actor isolated chunks can be executed in parallel, which means the computer can finish the work much faster.
+> This is because each task must wait for the Actor to become available. To fix
+> this, we need make sure that tasks only run on the Actor when they really need
+> exclusive access to the Actor's data. Everything else should run off of the
+> Actor. We divide the task into chunks. Some chunks must run on the Actor,
+> and the others don't. The non-Actor isolated chunks can be executed in
+> parallel, which means the computer can finish the work much faster.
 
-While actors are great for protecting encapsulated state, sometimes we want to modify and read individual properties on the type, so actors aren't quite the right tool for this. Furthermore, we can't guarantee the order that operations run on an actor, so we can't ensure that, for instance, our cancellation will run first. We'll need something else such as atomic types.
+While actors are great for protecting encapsulated state, sometimes we want to
+modify and read individual properties on the type, so actors aren't quite the
+right tool for this. Furthermore, we can't guarantee the order that operations
+run on an actor, so we can't ensure that, for instance, our cancellation will
+run first. We'll need something else such as atomic types.
 
-When a method on actor is marked as `nonisolated`, we tell the Swift compiler that we don't need access to the shared state of the actor. But if the body of that function actually needs access to a shared state, then the `noneisolated` method could be marked as `async` and then in the body, mark all the actor states with the `await` keyword.
+When a method on actor is marked as `nonisolated`, we tell the Swift compiler
+that we don't need access to the shared state of the actor. But if the body
+of that function actually needs access to a shared state, then the `nonisolated`
+method could be marked as `async` and then in the body, mark all the actor
+states with the `await` keyword.
 
 ```Swift
 actor Counter {
@@ -977,17 +1178,30 @@ actor Counter {
 
 ## @MainActor
 
-`@MainActor` is a global actor that uses the main queue for executing its work. In practice, this means methods or types marked with `@MainActor` can (for the most part) safely modify the UI because it will always be running on the main queue, and calling `MainActor.run()` will push some custom work of your choosing to the main actor, and thus to the main queue.
+`@MainActor` is a global actor that uses the main queue for executing its work.
+In practice, this means methods or types marked with `@MainActor` can (for the
+most part) safely modify the UI because it will always be running on the main
+queue, and calling `MainActor.run()` will push some custom work of your choosing
+to the main actor, and thus to the main queue.
 
-Whenever you use `@StateObject` or `@ObservedObject` inside a view, Swift will ensure that the whole view runs on the main actor so that you can’t accidentally try to publish UI updates in a dangerous way.
+Whenever you use `@StateObject` or `@ObservedObject` inside a view, Swift will
+ensure that the whole view runs on the main actor so that you can’t accidentally
+try to publish UI updates in a dangerous way.
 
 The `body` property of your SwiftUI views is always run on the main actor.
 
-If you need certain methods or computed properties to opt out of running on the main actor, use `nonisolated` as you would do with a regular actor
+If you need certain methods or computed properties to opt out of running on the
+main actor, use `nonisolated` as you would do with a regular actor
 
-More broadly, any type that has `@MainActor` objects as properties will also implicitly be `@MainActor` using _global actor inference_ – a set of rules that Swift applies to make sure global-actor-ness works without getting in the way too much.
+More broadly, any type that has `@MainActor` objects as properties will also
+implicitly be `@MainActor` using _global actor inference_ – a set of rules
+that Swift applies to make sure global-actor-ness works without getting in
+the way too much.
 
-If you do need to spontaneously run some code on the main actor, you can do that by calling `MainActor.run()` and providing your work. This allows you to safely push work onto the main actor no matter where your code is currently running, like this:
+If you do need to spontaneously run some code on the main actor, you can do
+that by calling `MainActor.run()` and providing your work. This allows you
+to safely push work onto the main actor no matter where your code is currently
+running, like this:
 
 ```Swift
 func couldBeAnywhere() async {
@@ -1014,9 +1228,12 @@ func couldBeAnywhere() async {
 await couldBeAnywhere()
 ```
 
-Even better, if that code was already running on the main actor then the code is executed immediately – it won’t wait until the next run loop in the same way that `DispatchQueue.main.async()` would have done.
+Even better, if that code was already running on the main actor then the code
+is executed immediately – it won’t wait until the next run loop in the same
+way that `DispatchQueue.main.async()` would have done.
 
-If you wanted the work to be sent off to the main actor without waiting for its result to come back, you can place it in a new task like this:
+If you wanted the work to be sent off to the main actor without waiting for
+its result to come back, you can place it in a new task like this:
 
 ```Swift
 func couldBeAnywhere() {
@@ -1046,9 +1263,12 @@ func couldBeAnywhere() {
 couldBeAnywhere()
 ```
 
-This is particularly helpful when you’re inside a synchronous context, so you need to push work to the main actor without using the `await` keyword.
+This is particularly helpful when you’re inside a synchronous context, so
+you need to push work to the main actor without using the `await` keyword.
 
-**Important:** If your function is already running on the main actor, using `await MainActor.run()` will run your code immediately without waiting for the next run loop, but using Task as shown above will wait for the next run loop.
+**Important:** If your function is already running on the main actor, using
+`await MainActor.run()` will run your code immediately without waiting for
+the next run loop, but using Task as shown above will wait for the next run loop.
 
 You can see this in action in the following snippet:
 
@@ -1075,7 +1295,9 @@ You can see this in action in the following snippet:
 // 1 2 4 5 3
 ```
 
-That marks the whole type as using the main actor, so the call to `MainActor.run()` will run immediately when runTest() is called. However, the inner Task will not run immediately, so the code will print `1, 2, 4, 5, 3`.
+That marks the whole type as using the main actor, so the call to
+`MainActor.run()` will run immediately when runTest() is called. However,
+the inner Task will not run immediately, so the code will print `1, 2, 4, 5, 3`.
 
 You can mark individual methods with the attribute as well:
 
@@ -1101,21 +1323,26 @@ The `MainActor` in Swift comes with an extension to use the actor directly:
 ```Swift
 extension MainActor {
     /// Execute the given body closure on the main actor.
-    public static func run<T>(resultType: T.Type = T.self, body: @MainActor @Sendable () throws -> T) async rethrows -> T
+    public static func run<T>(
+      resultType: T.Type = T.self,
+      body: @MainActor @Sendable () throws -> T
+    ) async rethrows -> T
 }
 
 Task {
     await someHeavyBackgroundOperation()
 
-    // MainActor.run {} has a problem: just like all forms of runtime synchronization, the compiler cannot help you
-    // In most cases it's better to annotate the whole type with @MainActor
+    // MainActor.run {} has a problem: just like all forms of runtime synchronization,
+    // the compiler cannot help you. In most cases it's better to annotate the whole
+    // type with @MainActor
     await MainActor.run {
         // Perform UI updates
     }
 }
 ```
 
-The `run` method is useful when we need to execute multiple synchronous calls without the risk of suspension:
+The `run` method is useful when we need to execute multiple synchronous calls
+without the risk of suspension:
 
 ```Swift
 // atomic
@@ -1137,9 +1364,18 @@ await Task { @MainActor in
 
 ## Testing
 
-There are no tools that allow us to deterministically assert on what happens in between units of async work. We have to sprinkle in some `Task.yields` and hope it’s enough, and as we’ve seen a few times now, often it is not enough. We should probably be yielding a lot more times in these tests, and possibly even waiting for a duration of time to pass, which would unfortunately slow down our test suite. And still we could never be 100% certain that the test still won’t flake some day.
+There are no tools that allow us to deterministically assert on what happens in
+between units of async work. We have to sprinkle in some `Task.yields` and hope
+it’s enough, and as we’ve seen a few times now, often it is not enough. We should
+probably be yielding a lot more times in these tests, and possibly even waiting
+for a duration of time to pass, which would unfortunately slow down our test
+suite. And still we could never be 100% certain that the test still won’t flake
+some day.
 
-For instance, imagine tapping a button starts a task which does an async call. Then tapping another button is supposed to cancel the running task. The test can fail sometimes because for whatever reason the Swift concurrency runtime is not scheduling the task quickly enough for us to cancel it.
+For instance, imagine tapping a button starts a task which does an async call.
+Then tapping another button is supposed to cancel the running task. The test
+can fail sometimes because for whatever reason the Swift concurrency runtime
+is not scheduling the task quickly enough for us to cancel it.
 
 ```Swift
 let task = Task { await model.getFactButtonTapped() }
@@ -1150,7 +1386,11 @@ await Task.yield()
 model.cancelButtonTapped()
 ```
 
-One way to do this is creating a mega yield function, or since we have access to the task proeprty, call `await task.value` (this isn't always possible given sometimes the task is private). Looking at how Apple does it in the open-sourced repo [swift-async-algorithms](https://github.com/apple/swift-async-algorithms), we can see they [override a global variable](https://github.com/apple/swift-async-algorithms/blob/adb12bfcccaa040778c905c5a50da9d9367fd0db/Sources/AsyncSequenceValidation/Test.swift#L319):
+One way to do this is creating a mega yield function, or since we have access
+to the task property, call `await task.value` (this isn't always possible given
+sometimes the task is private). Looking at how Apple does it in the open-sourced
+repo [swift-async-algorithms](https://github.com/apple/swift-async-algorithms),
+we can see they [override a global variable](https://github.com/apple/swift-async-algorithms/blob/adb12bfcccaa040778c905c5a50da9d9367fd0db/Sources/AsyncSequenceValidation/Test.swift#L319):
 
 ```Swift
 swift_task_enqueueGlobal_hook = { job, original in
@@ -1158,9 +1398,21 @@ swift_task_enqueueGlobal_hook = { job, original in
 }
 ```
 
-Looking at the symbol, `swift_task_enqueueGlobal_hook`, can find an equivelant in the C header file [_CAsyncSequenceValidationSupport.h](https://github.com/apple/swift-async-algorithms/blob/adb12bfcccaa040778c905c5a50da9d9367fd0db/Sources/_CAsyncSequenceValidationSupport/_CAsyncSequenceValidationSupport.h#L242-L247). There's also another signature in the [Concurrency.h](https://github.com/apple/swift/blob/bd11fceff5390c960ccdfca2f6c8951dc96941c9/include/swift/Runtime/Concurrency.h#L737-L738) file in the Concurrency repo. The Async Algorithms package wants access to some C functions that are defined in Swift’s C++ codebase, [GlobalExecutor.cpp](https://github.com/apple/swift/blob/bd11fceff5390c960ccdfca2f6c8951dc96941c9/stdlib/public/BackDeployConcurrency/GlobalExecutor.cpp#L85-L92), but are not exposed with a proper Swift API. In order to do that the package defines a system library that publicly declares those signatures, and that makes it available in Swift. Whenever an async task is enqueued it calls this closure for processing. And in this case “task” does not refer to a literal unstructured task created with the `Task` type. Here “task” means any kind of asynchronous work, including every single suspension point from an await.
+Looking at the symbol, `swift_task_enqueueGlobal_hook`, can find an equivalent
+in the `C` header file [_CAsyncSequenceValidationSupport.h](https://github.com/apple/swift-async-algorithms/blob/adb12bfcccaa040778c905c5a50da9d9367fd0db/Sources/_CAsyncSequenceValidationSupport/_CAsyncSequenceValidationSupport.h#L242-L247).
+There's also another signature in the [Concurrency.h](https://github.com/apple/swift/blob/bd11fceff5390c960ccdfca2f6c8951dc96941c9/include/swift/Runtime/Concurrency.h#L737-L738)
+file in the Concurrency repo. The Async Algorithms package wants access to some `C`
+functions that are defined in Swift’s C++ codebase, [GlobalExecutor.cpp](https://github.com/apple/swift/blob/bd11fceff5390c960ccdfca2f6c8951dc96941c9/stdlib/public/BackDeployConcurrency/GlobalExecutor.cpp#L85-L92),
+but are not exposed with a proper Swift API. In order to do that the package
+defines a system library that publicly declares those signatures, and that makes
+it available in Swift. Whenever an async task is enqueued it calls this closure
+for processing. And in this case “task” does not refer to a literal unstructured
+task created with the `Task` type. Here “task” means any kind of asynchronous work,
+including every single suspension point from an await.
 
-The way to dynamically open libraries in Swift is to start with dlopen, a C function, which means we can even see its documentation from the man pages in terminal:
+The way to dynamically open libraries in Swift is to start with `dlopen`,
+a `C` function, which means we can even see its documentation from the man pages
+in terminal:
 
 ```Bash
 $ man dlopen
@@ -1175,7 +1427,8 @@ void*
 dlopen(const char* path, int mode);
 ```
 
-In order to do a similar thing, we'll need to create a glue code to override the C variable:
+In order to do a similar thing, we'll need to create a glue code to override
+the `C` variable:
 
 ```Swift
 import Darwin

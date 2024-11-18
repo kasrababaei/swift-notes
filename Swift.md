@@ -132,7 +132,7 @@ or is computationally expensive, because it lets you control when that code is
 evaluated. The code below shows how a closure delays evaluation.
 
 ```Swift
-var customersInLine = ["Chris", "Alex", "Ewa", "Barry", "Daniella"]
+var customersInLine = ["Chris", "Alex", "Ewa", "Barry", "Danielle"]
 print(customersInLine.count)
 // Prints "5"
 

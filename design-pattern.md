@@ -103,7 +103,7 @@ multitier architecture)
 services which are required to support a particular business layer)
 
 The more usual convention is that the application layer (or service layer) is
-considered a sublayer of the business layer, typically encapsulating the API
+considered a sub-layer of the business layer, typically encapsulating the API
 definition surfacing the supported business functionality.
 
 ### Three-tier architecture
