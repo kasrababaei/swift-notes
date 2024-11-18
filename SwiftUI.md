@@ -5,7 +5,7 @@
 - [SwiftUI](#swiftui)
   - [View Builders](#view-builders)
   - [Group](#group)
-  - [Dynamic Views vs Statick Views](#dynamic-views-vs-statick-views)
+  - [Dynamic Views vs Static Views](#dynamic-views-vs-static-views)
   - [Lifetime](#lifetime)
   - [Identity](#identity)
   - [State](#state)
@@ -42,7 +42,7 @@ subview within a scroll view, the group behaves like a `VStack` and the modifier
 aren't applied to each individual view within the group. When placing a `Group`
 within an `Overlay` or `Background`, it behaves like an implicit `ZStack`.
 
-## Dynamic Views vs Statick Views
+## Dynamic Views vs Static Views
 
 ```Swift
 HStack {
@@ -210,10 +210,10 @@ there, the initial value of the state property will be ignored.
 
 ## StateObject
 
-The `@StateObject` property wrapper works much in the same way as @State: we
-specity an initial value (an object in this case), which will be used as the
+The `@StateObject` property wrapper works much in the same way as `@State`: we
+specify an initial value (an object in this case), which will be used as the
 starting point when the node in the render tree is created. From then on, SwiftUI
-will kepp this object around across renders for the lifetime of the node in the
+will keep this object around across renders for the lifetime of the node in the
 render tree. It  also observes the object for changes via the `ObservableObject`
 protocol.
 
