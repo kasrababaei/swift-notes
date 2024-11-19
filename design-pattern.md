@@ -109,9 +109,13 @@ definition surfacing the supported business functionality.
 ### Three-tier architecture
 
 Three-tier architecture is a client-server software architecture pattern in
-which the user interface (presentation), functional process logic
-("business rules"), computer data storage and data access are developed
-and maintained as independent modules, most often on separate platforms.
+which:
+
+- the user interface (presentation)
+- functional process logic ("business rules")
+- computer data storage and data access
+
+are developed and maintained as independent modules, most often on separate platforms.
 
 Advantages of 3-Layer Architecture:
 
@@ -134,8 +138,17 @@ and interacts with others through well-defined APIs.
 
 It's useful in cases such:
 
-- Ideal for large, distributed systems with multiple teams.
-- Enables integration of diverse technologies and platforms.
+- Large enterprises needing integration of diverse systems or applications.
+- Projects with cross-platform requirements where teams operate independently.
+- Applications needing high scalability and modular design.
+
+Adopting SOAs increases reusability since it can be access from different view models.
+Also, each service can be scaled independently, and thanks to fault isolation,
+the state of one service won't affect other services, which goes hand-in-hand with
+maintainability and collaboration.
+
+However, it does add more complexity, high initial setup, and more layers to
+work with.
 
 ## Model-View-Controller (MVC)
 
@@ -222,7 +235,7 @@ should not have to know how to construct those services. Instead, the receiving
 implicit dependencies explicit. In short, dependency injection is done to achieve:
 
 - Isolation: the code for creating the dependency lives in one place.
-- Reusability: goes hand-to-hand with isolation. More places can use a common
+- Reusability: goes hand-in-hand with isolation. More places can use a common
 interface that hands over the dependency.
 - Testability:
   - Tests can inject mocks in place of real dependency
@@ -248,7 +261,7 @@ of the definitions of other separate components.
 
 It is simple and straightforward. The passed value would be immutable. But there's
 a "superset" problem. Parents must have superset of all their descendants' dependencies.
-Lastly, challenging for foundational dependencies (e.g., storage, networking,
+Also, challenging for foundational dependencies (e.g., storage, networking,
 and analytics). Lastly, static functions, protocols and extensions don't have initializer.
 
 The compile-time safety means there's no need to deal with codes like this and

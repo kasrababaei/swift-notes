@@ -9,3 +9,4 @@ Here's a list of development blogs:
 - [Dropbox](https://dropbox.tech/mobile)
 - [Airbnb](https://medium.com/airbnb-engineering/tagged/mobile)
 - [Curated List of Real-world Design Blog Posts](https://github.com/weeeBox/mobile-system-design/blob/master/BLOGPOSTS.MD)
+- [Lyft](https://www.lyft.com/blog)
