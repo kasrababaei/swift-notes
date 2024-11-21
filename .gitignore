@@ -91,4 +91,5 @@ iOSInjectionProject/
 
 ## Custom directories/files
 
-.temp/
+.hidden/
+.DS_Store

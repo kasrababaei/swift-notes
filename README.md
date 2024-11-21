@@ -13,7 +13,6 @@ and more.
 - [Concurrency](concurrency.md)
   - [Concurrency code blocks](concurrency-code-blocks.md)
 - [Data structure and algorithms](data-structure.md)
-  - [min-max-heap](min-max-heap.md)
 - [Design pattern](design-pattern.md)
 - [Development Blogs](development-blogs.md)
 - [Generic in Swift](generic.md)
