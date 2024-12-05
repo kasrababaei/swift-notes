@@ -365,3 +365,53 @@ for factory in [Tesla().eraseToAnyFactory(), Ford().eraseToAnyFactory()] {
 
 A delegate is an object that acts on behalf of, or in coordination with, another
 object when that object encounters an event in a program<sup>[*](https://developer.apple.com/library/archive/documentation/General/Conceptual/CocoaEncyclopedia/DelegatesandDataSources/DelegatesandDataSources.html)</sup>.
+
+## Inlining
+
+### @inline(__always)
+
+It simply tells the compiler to ignore inlining heuristics and always
+inline the function. In other words, it forces the function to be
+inlined.If it's not possible to always inline the function, e.g. if
+it's a self-recursive function, the attribute is ignored. This
+attribute has no effect in debug builds.<sup>[*](https://github.com/swiftlang/swift/blob/main/docs/ReferenceGuides/UnderscoredAttributes.md#inline__always)</sup>.
+
+### @inlinable
+
+As explained in [the proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0193-cross-module-inlining-and-specialization.md), the `@inlinable` attribute exports the body of a function as
+part of a module's interface, making it available to the optimizer
+when referenced from other modules.
+
+A function that is marked `@inline(__always) @inlinable` will be almost
+certainly inlined if optimization isn't set to none.
+
+Note that adding or removing @inlinable changes the API of a module.
+Adding or removing `@inline(__always)` does not.
+
+### @usableFromInline
+
+The `@usableFromInline` attribute marks an internal declaration as
+being part of the binary interface of a module, allowing it to be
+used from `@inlinable` code without exposing it as part of the module's
+source interface<sup>[*](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0193-cross-module-inlining-and-specialization.md#introduction)</sup>.
+
+### @_transparent
+
+Marks a function to be "macro-like", i.e., it is guaranteed to be
+inlined in debug builds.<sup>[*](https://github.com/swiftlang/swift/blob/main/docs/ReferenceGuides/UnderscoredAttributes.md#_transparent)</sup>.
+The symbol that `@_transparent` is getting applied to must be either
+`public` or `@usableFromInline`.
+
+Semantically, `@_transparent` means something like "treat this
+operation as if it were a primitive operation". The name is meant
+to imply that both the compiler and the compiled program will
+"see through" the operation to its implementation.
+
+`@_transparent` is an extremely strong form of `@inlinable` that
+ensures the call’s stack frame isn’t even preserved in the debug
+info. For example, if you try to set a breakpoint in `Int.+(_:_:)`,
+you’ll probably never see it hit in your program; this is because
+the operator is marked `@_transparent`<sup>[*](https://forums.swift.org/t/whats-transparent-for/38154/3)</sup>.
+
+`@_transparent` works as if the function was marked `@inline(__always) @inlinable`
+(assuming the `SWIFT_OPTIMIZATION_LEVEL` is set to `-O`).

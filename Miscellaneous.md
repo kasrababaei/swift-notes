@@ -55,3 +55,11 @@ Typically you should use the calendar year.
 
 A CDN is a network of geographically dispersed servers used to deliver static content.
 CDN servers cache static content like images, videos, CSS, JavaScript files, etc.
+
+## Logging
+
+Note that some of the `OSLogType` are actually equivalent to another one:
+
+- `notice` is just like `default`
+- `error` is just like `warning`
+- `fault` is just like `critical`
