@@ -148,6 +148,24 @@ needs to change. This modifiers are called _inert modifiers_ because they don't
 affect the rendered result. Because there is no resulting visual effect, the
 framework can efficiently prune away the modifier, furthermore reducing the cost.
 
+In short, as mentioned in [the video](https://developer.apple.com/videos/play/wwdc2021/10022?time=648),
+an if statement defines different views for each conditional branch. This
+will cause the views to transition in and out because SwiftUI understands that
+each branch of the if statement represents a different view with a distinct
+identity. Alternatively, we could just have a single PawView that changes its
+layout and color. When it transitions to a different state, the view will
+smoothly slide to its next position. That's because we're modifying a single
+view with a consistent identity. Both of these strategies can work, but
+SwiftUI generally recommends the second approach. By default, try to preserve
+identity and provide more fluid transitions. This also helps preserve your
+view's lifetime and state.
+
+_Future reading list:_
+
+- [Conditionally apply modifier in SwiftUI](https://forums.swift.org/t/conditionally-apply-modifier-in-swiftui/32815/29)
+- [WWDC23 Demystify SwiftUI Performance](https://developer.apple.com/videos/play/wwdc2023/10160)
+- [Why Conditional View Modifiers are a Bad Idea](https://www.objc.io/blog/2021/08/24/conditional-view-modifiers/)
+
 Instead, use the following pattern:
 
 ```Swift
