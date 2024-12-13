@@ -80,7 +80,7 @@ SwiftUI provides three hooks into lifetime events:
 - `onDisappear`: the counter part of an `onAppear`
 - `task`: combination of the two used for asynchronous work. This modifier creates
 a new `Task` at the point where `onAppear` would be called, and it cancels this
-`Task` when `onDispapear` would be invoked.
+`Task` when `onDisappear` would be invoked.
 
 ## Identity
 
