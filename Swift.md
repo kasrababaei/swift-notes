@@ -12,6 +12,11 @@
   - [Codable](#codable)
   - [Type Erasure](#type-erasure)
   - [Delegates](#delegates)
+  - [Inlining](#inlining)
+    - [@inline(\_\_always)](#inline__always)
+    - [@inlinable](#inlinable)
+    - [@usableFromInline](#usablefrominline)
+    - [@\_transparent](#_transparent)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -385,7 +390,7 @@ when referenced from other modules.
 A function that is marked `@inline(__always) @inlinable` will be almost
 certainly inlined if optimization isn't set to none.
 
-Note that adding or removing @inlinable changes the API of a module.
+Note that adding or removing `@inlinable` changes the API of a module.
 Adding or removing `@inline(__always)` does not.
 
 ### @usableFromInline
