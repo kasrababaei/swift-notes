@@ -80,7 +80,7 @@ mechanism used by the dynamic linker to locate the frameworks or dynamic
 libraries required by an app. This is the opposite of hardcoding the path.
 
 The `@rpath` placeholder is resolved by the dynamic loader (`dyld`) using the
-runtime search paths provided at link time, such as via the -rpath option.
+runtime search paths provided at link time, such as via the `-rpath` option.
 These paths can include locations like the directory of the app bundle or
 standard system directories.
 

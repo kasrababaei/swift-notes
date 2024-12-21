@@ -11,3 +11,4 @@ Here's a list of development blogs:
 - [Curated List of Real-world Design Blog Posts](https://github.com/weeeBox/mobile-system-design/blob/master/BLOGPOSTS.MD)
 - [Lyft](https://www.lyft.com/blog)
 - [Fatbobman's blog](https://fatbobman.com/en/)
+- [Saagar Jha](https://saagarjha.com)

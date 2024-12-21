@@ -58,7 +58,8 @@ CDN servers cache static content like images, videos, CSS, JavaScript files, etc
 
 ## Logging
 
-Note that some of the `OSLogType` are actually equivalent to another one:
+Note that some of the `OSLogType` are actually equivalent to another one.
+This includes the icon and also the tooltip that shows up when hovering over:
 
 - `notice` is just like `default`
 - `error` is just like `warning`

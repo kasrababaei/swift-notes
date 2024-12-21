@@ -400,6 +400,13 @@ being part of the binary interface of a module, allowing it to be
 used from `@inlinable` code without exposing it as part of the module's
 source interface<sup>[*](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0193-cross-module-inlining-and-specialization.md#introduction)</sup>.
 
+`@usableFromInline` exposes the symbol, but not the implementation.
+So it can be called, but can’t itself be inlined. The closest
+analogue in C to `@usableFromInline` is a non-`static` function
+that is not declared in a framework's header file. External clients
+cannot see it directly, but they can call it if they provide a
+local `extern` declaration.
+
 ### @_transparent
 
 Marks a function to be "macro-like", i.e., it is guaranteed to be
@@ -420,3 +427,19 @@ the operator is marked `@_transparent`<sup>[*](https://forums.swift.org/t/whats-
 
 `@_transparent` works as if the function was marked `@inline(__always) @inlinable`
 (assuming the `SWIFT_OPTIMIZATION_LEVEL` is set to `-O`).
+
+In case the assembly code is needed to verify what's being inlined, could use the following
+command:
+
+```Bash
+swiftc -emit-assembly -o Output.s ContentView.swift
+```
+
+It's also possible to look at the abstract syntax tree (AST) representation of the Swift source file.
+The AST is a structured representation of the source code that the compiler uses for further
+processing, such as semantic analysis and optimization. It is not machine code or human-readable
+but rather an intermediate internal representation.
+
+```Bash
+swiftc -emit-ast -o Output.s ContentView.swift
+```
