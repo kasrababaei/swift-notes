@@ -383,7 +383,8 @@ attribute has no effect in debug builds.<sup>[*](https://github.com/swiftlang/sw
 
 ### @inlinable
 
-As explained in [the proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0193-cross-module-inlining-and-specialization.md), the `@inlinable` attribute exports the body of a function as
+As explained in [the proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0193-cross-module-inlining-and-specialization.md),
+the `@inlinable` attribute exports the body of a function as
 part of a module's interface, making it available to the optimizer
 when referenced from other modules.
 
@@ -428,17 +429,18 @@ the operator is marked `@_transparent`<sup>[*](https://forums.swift.org/t/whats-
 `@_transparent` works as if the function was marked `@inline(__always) @inlinable`
 (assuming the `SWIFT_OPTIMIZATION_LEVEL` is set to `-O`).
 
-In case the assembly code is needed to verify what's being inlined, could use the following
-command:
+In case the assembly code is needed to verify what's being inlined, could use
+the following command:
 
 ```Bash
 swiftc -emit-assembly -o Output.s ContentView.swift
 ```
 
-It's also possible to look at the abstract syntax tree (AST) representation of the Swift source file.
-The AST is a structured representation of the source code that the compiler uses for further
-processing, such as semantic analysis and optimization. It is not machine code or human-readable
-but rather an intermediate internal representation.
+It's also possible to look at the abstract syntax tree (AST) representation of
+the Swift source file. The AST is a structured representation of the source code
+that the compiler uses for further processing, such as semantic analysis and
+optimization. It is not machine code or human-readable but rather an intermediate
+internal representation.
 
 ```Bash
 swiftc -emit-ast -o Output.s ContentView.swift

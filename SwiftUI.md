@@ -28,6 +28,12 @@
       - [Fixed Frames](#fixed-frames)
       - [Flexible Frames](#flexible-frames)
       - [Aspect Ratio](#aspect-ratio)
+      - [Overlay and Background](#overlay-and-background)
+      - [Fixed Size](#fixed-size)
+    - [Container Views](#container-views)
+      - [HStack and VStack](#hstack-and-vstack)
+      - [ZStack](#zstack)
+      - [Scroll View](#scroll-view)
 
 ## View Builders
 
@@ -804,9 +810,137 @@ the frame's own size, regardless of the size of its subview.
 
 In `Color.secondary.aspectRatio(4/3, contentMode: .fit)`, the `aspectRatio`
 modifier will compute a rectangle with an aspect ratio of 4/3 that fits into the
-proposed size and then propose that to its subview. To the parent view, it always
+proposed size and then proposes that to its subview. To the parent view, it always
 reports the size of its subview, regardless of the proposed size or the specified
 aspect ratio.
 
 > The `scaleToFit` and `scaleToFill` modifiers are shorthand for
 > `.aspectRatio(contentMode: .fit)` and `.aspectRatio(contentModel: .fill)`, respectively.
+
+#### Overlay and Background
+
+Layout-wise, they work exactly the same way. The only difference is that an
+overlay draws the secondary view on otp of the primary view, whereas a
+background draws the secondary view behind the primary view.
+
+Background and overlay don't influence the layout of their primary subviews.
+The reported size of the overlay or background is always the reported size
+of the primary subview.
+
+The background/overlay modifier always becomes the size of its primary subview,
+independent of the view in the background (the secondary subview). So,
+in the example below, the size of the `body` stays 30 by 30 while the
+background view, due to the padding, draws a 40 by 40 view:
+
+```Swift
+var body: some View {
+  Rectangle()
+    .frame(width: 30, height: 30)
+    .background { Color.red.padding(-10) }
+    .border(.blue)
+}
+```
+
+Within an overlay or background, when the secondary view is a view list
+containing multiple views, these views are placed in an implicit `ZStack`.
+
+#### Fixed Size
+
+The `fixedSize()` modifier proposes `nil` for the `width` and `height` to its
+subviews, regardless of its own proposed size. This way, the subview becomes
+its ideal size.
+
+One of the most common use cases for `fixedSize` is with `Text` views. Normally,
+`Text` will do anything to render itself inside the proposed size (e.g., truncation
+or word wrapping). One way to circumvent this is by proposing `nil⨉nil` to the test
+so that it becomes its ideal size.
+
+### Container Views
+
+#### HStack and VStack
+
+Horizontal and vertical stacks lay out their subviews in the same way, just with a
+different major axis.
+
+Consider the following stack:
+
+```Swift
+HStack(spacing: 0) {
+  Color.red
+  Text("Hello, World!")
+  Color.teal
+}
+```
+
+With a large-enough width, this renders as expected. But as the width gets
+smaller, the the text  wraps, even though there's enough spacing to show it in full.
+
+The reason for this behavior is how the `HStack` algorithm divides up the
+available width among its subviews:
+
+1. The stack determines the _flexibility_ of its subviews.
+2. The stack then sorts the subviews according to _flexibility_, from least
+flexible to most flexible. It keeps track of all the remaining subviews and
+the available remaining width.
+3. White there are remaining subviews, the stack proposes the remaining
+width, divided by the number of the remaining subviews.
+
+In the following `HStack`, the `Text` is the least flexible subview.
+
+```Swift
+HStack(spacing: 0) {
+  Color.red
+  Text("Hello, World!")
+  Color.teal
+}
+```
+
+Assuming the `Text` ideal width is 100, when 180⨉180 is proposed to the `HStack`,
+it proposes 180/3 for the width to the least flexible subview - the `Text`. The
+`Text` will then wrap or truncate as needed. Let's assume it becomes 50⨉50 points
+(inserting a line break). The two rectangles then get proposed 130/2 and 65/1 points,
+respectively. Because of this algorithm, even though there's enough space for
+the text, it doesn't grow to display itself without line breaks.
+
+There are a few workarounds. Using `fixedSize()` modifier on the `Text` will
+make it ignore the proposed size and always becomes the ideal size. However,
+once the `HStack` is proposed less than the ideal width of the text, the text
+will still render at its full width and goes out of bounds.
+
+Another alternative is to give the text a _layout priority_ using hte `.layoutPriority`
+modifier. This will cause the `HStack` to first propose the full remaining width
+to the text and then use whatever remains after that to the two colors.
+
+```Swift
+HStack(spacing: 0) {
+  Color.red
+  // Default value is typically 0.
+  Text("Hello, World!").layoutPriority(1)
+  Color.teal
+}
+```
+
+#### ZStack
+
+`ZStack` is different from an overlay or background. Overlay and background
+take on the size of the primary subview and discard the size of the secondary
+subview. `ZStack` uses the union of the subviews' frames to compute the
+stack's own size.
+
+In the example below, when the `ZStack` is used as the root view for a new
+iOS application, the color stretches to the full size of the safe area. This
+is because the `ZStack` gets proposed the entire safe area, and it takes that
+proposal and proposes the same value to each of its subviews.
+
+```Swift
+VStack {
+  Color.teal
+  Text("Hello, world")
+}
+```
+
+#### Scroll View
+
+With scroll views, have to distinguish between the layout behavior of the actual
+scroll view and the layout behavior of the scroll view's contents, which scrolls
+within the visible area of the scroll view.
