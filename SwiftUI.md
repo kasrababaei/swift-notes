@@ -34,6 +34,8 @@
       - [HStack and VStack](#hstack-and-vstack)
       - [ZStack](#zstack)
       - [Scroll View](#scroll-view)
+      - [Geometry Reader](#geometry-reader)
+      - [List](#list)
 
 ## View Builders
 
@@ -944,3 +946,62 @@ VStack {
 With scroll views, have to distinguish between the layout behavior of the actual
 scroll view and the layout behavior of the scroll view's contents, which scrolls
 within the visible area of the scroll view.
+
+The scroll view itself accepts the proposed size along the scroll axis, and it
+becomes the size of its content on the other axis. For example, if we place a
+vertical scroll view as the root view, it'll become the height of the entire
+safe area, and it'll take on the width of the scroll content.
+
+Along the scroll axis, a scroll view essentially has unlimited space. Therefore,
+the scroll view proposes `nil` in the scroll axis (or axes), and it proposes
+the unmodified dimension for the other axis.
+
+By default, the contents of the scroll view are placed inside an implicit `VStack`,
+regardless of the scroll direction.
+
+When we have a scroll view with a width less wide than the proposed width, our
+scroll view becomes less wide than proposed. To fix this, we can add a
+`.frame(maxWidth: .infinity)` to our subview (`Text` for instance).
+
+When we put a shape into a scroll view, the built-in shapes in SwiftUI all have
+an ideal size of 10⨉10. This is due to the default argument of `.replacingUnspecifiedDimension(by:)`
+on `ProposedViewSize`, which is 10⨉10. Since the scroll view proposed `nil`
+along the scroll axis, the shape will take on its ideal size of 10 points
+on that axis. To change this, can specify an explicit height using
+`.frame(height:)` or `.frame(idealHeight:)`, or we could use `.aspectRatio`.
+
+#### Geometry Reader
+
+Geometry reader are used to get access to the proposed size. It always accepts
+the proposed size and reports that size to its view builder closure via a
+`GeometryProxy`, giving us access to the geometry reader's size.
+
+Because the geometry reader always becomes the proposed size, if we want to - for
+example - measure the width of some `Text` view by putting a geometry reader
+around it, this will influence layout around the text. Here's two good ways to
+use `GeometryReader`:
+
+- When we wrap a completely flexible view inside a `GeometryReader`, it won't
+affect the layout. For example, when we have `ScrollView`, which becomes the
+proposed size anyway, we can wrap it using a geometry reader to access the
+proposed size.
+- When we put a `GeometryReader` inside a background or overlay modifier, it
+won't influence the size of the primary view. Inside the background or overlay,
+we can then use the proxy to read out different values related to the view's
+geometry. This is useful to measure the size of a view, as the size of the primary
+subview will be proposed to the secondary subview (the geometry reader).
+
+`GeometryReader` takes no alignment parameter and place their subviews top-leading
+by default, whereas all the container views except the `ScrollView`, use center
+alignment by default.
+
+#### List
+
+Equivalent of `UITableView` or `NSTableView`. The `List` itself takes on the
+proposed size, and similarly to `ScrollView`, it proposes its own width, and `nil`
+for the height, to its subview.
+
+The sizing of the list's content in the vertical direction is complicated, because
+hte list items are laid out lazily. Similar to `UITableView` with non-fixes row
+heights, `List` estimates the entire height of the content based on the items that
+have already been laid out.
