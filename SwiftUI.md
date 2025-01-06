@@ -36,6 +36,13 @@
       - [Scroll View](#scroll-view)
       - [Geometry Reader](#geometry-reader)
       - [List](#list)
+      - [LazyHStack and LazyVStack](#lazyhstack-and-lazyvstack)
+      - [LazyVGrid and LazyHGrid](#lazyvgrid-and-lazyhgrid)
+      - [ViewThatFits](#viewthatfits)
+    - [Rendering Modifiers](#rendering-modifiers)
+      - [Alignment](#alignment)
+      - [Modifying Alignment Guides](#modifying-alignment-guides)
+      - [Custom Alignment Identifiers](#custom-alignment-identifiers)
 
 ## View Builders
 
@@ -457,7 +464,7 @@ API in the view body like this:
 
 ```Swift
 var body: some View {
-  let _ = Self._printChagnes()
+  let _ = Self._printChanges()
   Text("Hello, World!")
 }
 ```
@@ -511,7 +518,7 @@ as the size of the union of its subviews' frames and reports that back to the
 window. The size that the subview reports to its parent is the definitive size
 and the parent cannot alter this size unilaterally.
 
-In iOS 16, there's a type in the `Layout` protocol called `PorposedViewSize`:
+In iOS 16, there's a type in the `Layout` protocol called `ProposedViewSize`:
 
 ```Swift
 struct ProposedViewSize {
@@ -861,8 +868,8 @@ so that it becomes its ideal size.
 
 #### HStack and VStack
 
-Horizontal and vertical stacks lay out their subviews in the same way, just with a
-different major axis.
+Horizontal and vertical stacks lay out their subviews in the same way, just with
+a different major axis.
 
 Consider the following stack:
 
@@ -1005,3 +1012,192 @@ The sizing of the list's content in the vertical direction is complicated, becau
 hte list items are laid out lazily. Similar to `UITableView` with non-fixes row
 heights, `List` estimates the entire height of the content based on the items that
 have already been laid out.
+
+#### LazyHStack and LazyVStack
+
+LazyHStack and LazyVStack behave in the same way, just with different major and
+minor axes. Lazy stacks share layout behavior with their non-lazy counterparts
+insofar as they become the size of the union of all subviews' frames.
+
+However, lazy stacks don't attempt to distribute the available space along the
+major axis among their subviews. For example, a `LazyHStack` just proposes
+`nil⨉proposedHeight` to its subviews, i.e., the subviews become their ideal width.
+
+Computing the height of the lazy vertical stack is complicated by the fact that it
+creates its subviews lazily when it's embedded inside a scroll view a scroll view
+(for the width, the lazy vertical stack accepts the proposed width).
+
+As we scroll, more and more print messages start to appear, and views in the render
+tree get created as needed. Therefore, just like `List`, the `LazyVStack` needs to
+estimate its height based on the subviews that have already been laid out and update
+its own size as new subviews appear onscreen.
+
+#### LazyVGrid and LazyHGrid
+
+The first step of layout out a `LazyVGrid` is to compute the width of the columns
+based on the grid's proposed width. There are three column types:
+
+1. fixed columns
+2. flexible columns
+3. adaptive columns
+
+Fixed-width columns unconditionally become their specified width, flexible columns
+are flexible (but have lower and upper bounds on their width), and adaptive columns
+are really containers that host multiple sub-columns.
+
+The grid starts by subtracting all the fixed-column width and spacings from the
+proposed width. For the remaining columns, the algorithm proposes the remaining
+width, divided by the number of remaining columns, in order fo the columns.
+
+Flexible columns clamp this proposal using their bounds (minimum and/or maximum
+width).
+
+Adaptive columns are special though: the grid tries to fit as many sub-columns
+inside an adaptive column as possible by taking the proposed column width and
+dividing it by the minimum width specified for the adaptive column. These
+sub-columns can then be stretched out to the specified maximum width to fill
+the remaining space.
+
+The grid computes its own width as the sum of the column widths, plus any spacing
+in between columns. For its height, the grid proposes `columnWidth⨉nil` to its
+subviews to compute the row heights and then computes its own height as the
+sum of the row heights plus spacing.
+
+Contrary to `HStack` and `VStack`, grids go through the column layout algorithm
+twice:
+
+1. once during the layout pass
+2. and then again during the render pass
+
+During the layout, the grid starts out with its proposed width. However, during
+the render pass, it starts out with the width that was calculated during the
+layout pass, and it divides that width among the columns again.
+
+```Swift
+var body: some View {
+  LazyVGrid(
+    columns: [
+      GridItem(.flexible(minimum: 60)),
+      GridItem(.flexible(minimum: 120))
+    ],
+    spacing: 10,
+    content: {
+      Rectangle().fill(.blue.opacity(0.5))
+      Rectangle().fill(.red.opacity(0.5))
+    }
+  )
+  .frame(width: 200)
+  .border(.teal)
+}
+```
+
+In the example above, the grid renders out of bounds and also renders off-center
+of its enclosing 200-point-wide frame. This is because the grid starts with width
+of 200 points, minus 10 points of spacing. For the first column, we calculate the
+width as 190 / 2, which equals 95 points. Since the first column has a minimum
+width of 60p, the width of 95p isn't affected by the clamping, so the remaining
+width stands as 95p. The second column becomes 95p clamped to its minimum of 120p,
+i.e., 120p wide.
+
+However, the gird renders the first column at 108p wide, and the second one at
+120p wide. That's where the second layout pass comes in.
+
+The overall width of the grid as calculated by the first pass is
+`95 + 10 + 120 = 225` points. The fixed frame width of 200 points around the
+grid centers the grid, shifting it `(225 - 200) / 2 = 12.5` points to the left.
+When it's time for the grid to render itself, it goes through the column layout
+again, but this time starting with a remaining width of 225p.
+
+The second pass starts with 225p minus 10p spacing, or 215p. The first column
+becomes `215 / 2 = 108`. The remaining width is now `215 - 108 = 107`. The
+second column becomes 107p clamped to its minimum of 120p. This is exactly what
+we see in the example above.
+
+Since the frame around the grid has calculated the grid's origin based on the
+original width of 225p, but the grid now renders itself with an overall width
+of `108 + 10 + 120 = 238p`, the grid appears out of center by about 7p<sup>[*](https://www.objc.io/blog/2020/11/23/grid-layout/)</sup>.
+
+#### ViewThatFits
+
+When we want to display different views depending on the proposed size, we
+can use `ViewThatFits`. It takes a number of subviews, and it displays the
+the first subview that fits. It does so by proposing `nil` to figure out
+the ideal size for each subview, and it displays the first (in the order
+the subviews appear in the code) where the ideal size fits within the proposed
+size.
+
+If none of the subviews fit, it picks the last subview.
+
+### Rendering Modifiers
+
+Modifiers that influence how a view is rendered, but that don't influence
+the layout itself - for example, `offset`, `rotationEffect`, `scaleEffect`,
+etc.
+
+We can think of these modifiers as performing something like a `CGContext.translate`
+to modify where a view is drawn. However, from the layout system's perspective,
+the view is still situated in its original position.
+
+#### Alignment
+
+SwiftUI uses alignment to position views relative to each other. By default,
+all views center their subviews.
+
+When the alignment is center, the parent view asks the subview for its horizontal
+and vertical center, the values that the subview returns are called _horizontal
+center alignment guide_ and _vertical center alignment guide_, respectively.
+
+The most important point to understanding SwiftUI's alignment system is that
+alignment is always determined in "negotiation" between the parent and the
+subview.
+
+#### Modifying Alignment Guides
+
+Note that the `Alignment` type isn't the alignment guide. Instead, it's what
+determines _which_ alignment guide to use.
+
+Using the built-in alignment guides, we can only align multiple views using
+the same alignment for each view. For example, align the top edge of one view to
+the top edge of another view. However, we cannot align e.g., the center of
+one view to the top trailing corner of another view. Unless we override the
+built-in (implicit) alignment guides and even create our own alignments.
+
+The view can provide an _explicit_ alignment guide for a certain alignment.
+For example, we can override how the first text baseline is computed for an
+image:
+
+```swift
+var body: some View {
+  let image = Image(systemName: "pencil.circle.fill")
+    .alignmentGuide(.firstTextBaseline, computeValue: { dimension in dimension.height / 2 })
+  
+  HStack(alignment: .firstTextBaseline) {
+    image
+    Text("Pencil")
+  }
+}
+```
+
+However, if we change the stack alignment to `.center`, our custom alignment
+guide doesn't affect the alignment.
+
+The parameter passed to the `computedValue` closure is of type `ViewDimensions`.
+This is similar to a `CGSize` in that it has a width and height, but it also
+allows us to access the underlying view's alignment guides.
+
+In this example, we want to overlay the center of a badge view on the top
+trailing corner of another view:
+
+```swift
+extension View {
+  func badge<B: View>(@ViewBuilder _ badge: () -> B) -> some View {
+    overlay(alignment: .topTrailing) {
+      badge()
+        .alignmentGuide(.top) { $0.height / 2 }
+        .alignmentGuide(.trailing) { $0.width / 2 }
+    }
+  }
+}
+```
+
+#### Custom Alignment Identifiers

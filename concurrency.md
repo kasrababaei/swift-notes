@@ -1176,6 +1176,19 @@ actor Counter {
 }
 ```
 
+Actor-isolated functions are reentrant. When an actor-isolated function
+suspends, reentrancy allows other work to execute on the actor before
+the original actor-isolated function resumes, which we refer to as
+interleaving. Reentrancy eliminates a source of deadlocks, where two
+actors depend on each other, can improve overall performance by not
+unnecessarily blocking work on actors, and offers opportunities for
+better scheduling of (e.g.) higher-priority tasks. However, it means
+that actor-isolated state can change across an `await` when an interleaved
+task mutates that state, meaning that developers must be sure not to
+break invariants across an await. In general, this is the reason for
+requiring `await` on asynchronous calls, because various state (e.g.,
+global state) can change when a call suspends.
+
 ## @MainActor
 
 `@MainActor` is a global actor that uses the main queue for executing its work.
