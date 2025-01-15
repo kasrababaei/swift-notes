@@ -8,6 +8,10 @@
       - [Dead Code Elimination / Link-Time Optimization (LTO)](#dead-code-elimination--link-time-optimization-lto)
       - [App Store Submission and App Thinning](#app-store-submission-and-app-thinning)
       - [Dynamic Frameworks and Lazy Loading](#dynamic-frameworks-and-lazy-loading)
+  - [Scheme vs Configuration](#scheme-vs-configuration)
+    - [Scheme](#scheme)
+    - [Configuration](#configuration)
+    - [Relationship:](#relationship)
 
 ## iOS Keys for Info.plist
 
@@ -152,3 +156,67 @@ Concepts to look into later:
 - [Dynamic Library Design Guidelines](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/DynamicLibraries/100-Articles/DynamicLibraryDesignGuidelines.html)
 - [Executing Mach-O Files](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/1-Articles/executing_files.html#//apple_ref/doc/uid/TP40001829)
 - [Creating a static framework](https://developer.apple.com/documentation/xcode/creating-a-static-framework/)
+
+## Scheme vs Configuration
+
+In Xcode, a "scheme" and a "configuration" are two distinct concepts that play
+different roles in the build and run processes of an Xcode project.
+
+### Scheme
+
+- **Definition:** A scheme is a collection of settings that specify how Xcode
+should build, run, test, or profile your app. It includes information such as
+which target to build, which build configuration to use, and how to run or test
+the app.
+
+- **Usage:**
+  - Schemes are used to define various actions that can be performed on an Xcode
+  project, such as building, running, testing, profiling, or archiving.
+  - Each scheme can be associated with one or more build configurations, allowing
+  you to specify different settings for different purposes (e.g., Debug, Release).
+
+- **Customization:**
+  - You can customize a scheme to perform specific tasks, such as running
+  specific tests, launching the app with specific arguments, or specifying
+  different environments for development, testing, and production.
+
+- **Common Scenarios:**
+  - You might have different schemes for running your app locally, running UI
+  or unit tests, or creating an archive for distribution.
+
+### Configuration
+
+- **Definition:** A configuration represents a set of build settings that
+  define how your project is built. Common configurations include "Debug" and
+  "Release," but you can create custom configurations to suit your needs.
+
+- **Usage:**
+  - Configurations determine compiler flags, optimization settings, and other
+  build-related parameters.
+  - Each target in your Xcode project can have its own configuration settings.
+  For example, you might have different optimization levels or preprocessor
+  macros for Debug and Release builds.
+
+- **Customization:**
+  - You can customize the build settings for each configuration in the Xcode
+  project settings.
+
+- **Common Scenarios:**
+  - In a Debug configuration, you might include additional debug symbols and
+  disable optimization for better debugging experience.
+  - In a Release configuration, you might enable compiler optimizations and
+  exclude unnecessary debugging information for a smaller app size.
+
+### Relationship:
+
+- **Scheme and Configuration Connection:**
+  - When you run or build your project, a scheme determines which targets to
+  build and which configurations to use.
+  - You might have a scheme for running your app in Debug mode during
+  development and a scheme for creating a Release build for distribution.
+
+In summary, a scheme is more about defining actions and behaviors, while a
+configuration is about specifying how the project should be built with regard
+to compiler flags, optimizations, and other build settings. Both work together
+to provide flexibility and control over the building, running, and testing
+processes in Xcode.
