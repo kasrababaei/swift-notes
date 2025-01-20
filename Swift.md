@@ -17,6 +17,7 @@
     - [@inlinable](#inlinable)
     - [@usableFromInline](#usablefrominline)
     - [@\_transparent](#_transparent)
+  - [Macros](#macros)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -445,3 +446,23 @@ internal representation.
 ```Bash
 swiftc -emit-ast -o Output.s ContentView.swift
 ```
+
+## Macros
+
+Use macros to generate code at compile time. Macros transform your source code
+when you compile it, letting you avoid writing repetitive code by hand. During
+compilation, Swift expands any macros in your code before building your code
+as usual.
+
+> [!NOTE]
+> There's a few issues with employing Macros into a project that our outlined
+> by [Stephen Celis](https://forums.swift.org/t/macro-adoption-concerns-around-swiftsyntax/66588):
+>
+> 1. Introducing SwiftSyntax to a project immediately incurs an additional 20
+> second debug build cost to a project.
+> 2. Because SwiftSyntax is a moving target and versioned alongside Swift
+> releases, how can a library adopt macros and be compatible with multiple
+> Swift versions at the same time?
+> 3. SwiftSyntax’s API seems to be in constant flux. I’ve used the library
+> sporadically over the years and whenever I return to a project that uses
+> it, it rarely still builds.

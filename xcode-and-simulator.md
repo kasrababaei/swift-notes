@@ -20,3 +20,14 @@ To list all the frameworks, including the private ones, in iOS:
 ```bash
 ls \"$(xcode-select -p)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks\"
 ```
+
+## Code Snippets
+
+Code snippet is a reusable piece of code or code template that you can save and
+quickly insert into your source code.
+
+Code snippets are stored in the following path:
+
+```bash
+~/Library/[username]/Developer/Xcode/UserData/CodeSnippets/
+```

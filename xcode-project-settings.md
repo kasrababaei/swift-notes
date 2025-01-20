@@ -12,6 +12,7 @@
     - [Scheme](#scheme)
     - [Configuration](#configuration)
     - [Relationship:](#relationship)
+  - [DEBUG/DEVELOPMENT Configurations Name for SPM](#debugdevelopment-configurations-name-for-spm)
 
 ## iOS Keys for Info.plist
 
@@ -220,3 +221,15 @@ configuration is about specifying how the project should be built with regard
 to compiler flags, optimizations, and other build settings. Both work together
 to provide flexibility and control over the building, running, and testing
 processes in Xcode.
+
+## DEBUG/DEVELOPMENT Configurations Name for SPM
+
+Currently, when using Swift Package Manager packages in Xcode, SPM compiles
+the package with reference to the name of the Build Configuration and
+automatically selects whether to compile with debug or release, which
+determines the compilation flag like DEBUG and This determines the architecture
+of the final binary. This automatic selection may cause problems when using
+a custom Build Configuration in Xcode other than the default “Debug” and “Release”.
+
+Right now (October 2022) there is no particularly good way to map the Build
+Configuration in Xcode to the SPM build environment <sup>[*](https://www.sobyte.net/post/2022-10/spm-in-xcode/#determination-based-on-build-configuration)</sup>.
