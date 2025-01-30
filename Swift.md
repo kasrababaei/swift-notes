@@ -17,6 +17,7 @@
     - [@inlinable](#inlinable)
     - [@usableFromInline](#usablefrominline)
     - [@\_transparent](#_transparent)
+  - [Line Statement](#line-statement)
   - [Macros](#macros)
 
 This page contains contents that are mostly about the language itself or the
@@ -446,6 +447,23 @@ internal representation.
 ```Bash
 swiftc -emit-ast -o Output.s ContentView.swift
 ```
+
+## Line Statement
+
+A line control statement is used to specify a line number and filename that can
+be different from the line number and filename of the source code being compiled.
+Use a line control statement to change the source code location used by Swift
+for diagnostic and debugging purposes.
+
+A line control statement has the following forms:
+
+```Swift
+#sourceLocation(file: <#file path#>, line: <#line number#>)
+#sourceLocation()
+```
+
+Note that since it's a compile time statement, cannot use variables.
+The path and line number must be string literals.
 
 ## Macros
 

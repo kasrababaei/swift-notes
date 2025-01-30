@@ -11,8 +11,8 @@
   - [Scheme vs Configuration](#scheme-vs-configuration)
     - [Scheme](#scheme)
     - [Configuration](#configuration)
-    - [Relationship:](#relationship)
   - [DEBUG/DEVELOPMENT Configurations Name for SPM](#debugdevelopment-configurations-name-for-spm)
+  - [dSYM](#dsym)
 
 ## iOS Keys for Info.plist
 
@@ -165,10 +165,10 @@ different roles in the build and run processes of an Xcode project.
 
 ### Scheme
 
-- **Definition:** A scheme is a collection of settings that specify how Xcode
+A scheme is a collection of settings that specify how Xcode
 should build, run, test, or profile your app. It includes information such as
 which target to build, which build configuration to use, and how to run or test
-the app.
+the app<sup>[*](https://developer.apple.com/documentation/xcode/customizing-the-build-schemes-for-a-project)</sup>.
 
 - **Usage:**
   - Schemes are used to define various actions that can be performed on an Xcode
@@ -176,20 +176,20 @@ the app.
   - Each scheme can be associated with one or more build configurations, allowing
   you to specify different settings for different purposes (e.g., Debug, Release).
 
-- **Customization:**
-  - You can customize a scheme to perform specific tasks, such as running
-  specific tests, launching the app with specific arguments, or specifying
+- **Customization:** You can customize a scheme to perform specific tasks, such
+  as running specific tests, launching the app with specific arguments, or specifying
   different environments for development, testing, and production.
 
-- **Common Scenarios:**
-  - You might have different schemes for running your app locally, running UI
-  or unit tests, or creating an archive for distribution.
+- **Common Scenarios:** You might have different schemes for running your app
+  locally, running UI or unit tests, or creating an archive for distribution.
 
 ### Configuration
 
-- **Definition:** A configuration represents a set of build settings that
-  define how your project is built. Common configurations include "Debug" and
-  "Release," but you can create custom configurations to suit your needs.
+A configuration represents a set of build settings that define how your project
+is built. A build configuration file is a plain-text file you use to specify the
+build settings for a specific target or your entire project. Common configurations
+include "Debug" and "Release," but you can create custom configurations to suit
+your needs<sup>[*](https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project)</sup>.
 
 - **Usage:**
   - Configurations determine compiler flags, optimization settings, and other
@@ -198,23 +198,14 @@ the app.
   For example, you might have different optimization levels or preprocessor
   macros for Debug and Release builds.
 
-- **Customization:**
-  - You can customize the build settings for each configuration in the Xcode
-  project settings.
+- **Customization:** You can customize the build settings for each configuration
+  in the Xcode project settings.
 
 - **Common Scenarios:**
   - In a Debug configuration, you might include additional debug symbols and
   disable optimization for better debugging experience.
   - In a Release configuration, you might enable compiler optimizations and
   exclude unnecessary debugging information for a smaller app size.
-
-### Relationship:
-
-- **Scheme and Configuration Connection:**
-  - When you run or build your project, a scheme determines which targets to
-  build and which configurations to use.
-  - You might have a scheme for running your app in Debug mode during
-  development and a scheme for creating a Release build for distribution.
 
 In summary, a scheme is more about defining actions and behaviors, while a
 configuration is about specifying how the project should be built with regard
@@ -227,9 +218,38 @@ processes in Xcode.
 Currently, when using Swift Package Manager packages in Xcode, SPM compiles
 the package with reference to the name of the Build Configuration and
 automatically selects whether to compile with debug or release, which
-determines the compilation flag like DEBUG and This determines the architecture
+determines the compilation flag like DEBUG and this determines the architecture
 of the final binary. This automatic selection may cause problems when using
 a custom Build Configuration in Xcode other than the default “Debug” and “Release”.
 
 Right now (October 2022) there is no particularly good way to map the Build
 Configuration in Xcode to the SPM build environment <sup>[*](https://www.sobyte.net/post/2022-10/spm-in-xcode/#determination-based-on-build-configuration)</sup>.
+
+## dSYM
+
+Debug builds of an app place the debug symbols inside the compiled binary file
+by default, while release builds of an app place the debug symbols in a
+companion debug symbol (dSYM) file to reduce the size of the distributed app.
+Each binary file in an app — the main app executable, frameworks, and app
+extensions — has its own dSYM file. The compiled binary and its companion
+dSYM file are tied together by a build UUID that's recorded by both the
+built binary and dSYM file. If you build two binaries from the same source
+code but with different Xcode versions or build settings, the build UUIDs
+for the two binaries won't match. A binary and a dSYM file are only
+compatible with each other when they have identical build UUIDs<sup>[*](https://developer.apple.com/documentation/xcode/building-your-app-to-include-debugging-information#Overview)</sup>.
+
+Before building your app for distribution, verify that the [Debug Information Format](https://developer.apple.com/documentation/xcode/build-settings-reference#Debug-Information-Format)
+build setting is set to DWARF with dSYM File. This generates the
+necessary dSYM files, so you can diagnose crashes after releasing your app.
+
+Starting with Xcode 14, bitcode is no longer required for watchOS and tvOS
+applications, and the App Store no longer accepts bitcode submissions from
+Xcode 14<sup>[*](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes#Deprecations)</sup>.
+Bitcode was an intermediate representation of a compiled program. It allowed
+developers to submit apps to the App Store in this intermediate format rather
+than a final binaries. This approach enabled Apple to optimize and recompile
+app's code for different hardware architectures and future updates without
+requiring developers to resubmit their apps<sup>[*](https://rocm.docs.amd.com/projects/llvm-project/en/latest/LLVM/llvm/html/BitCodeFormat.html)</sup>.
+
+Since Bitcode is no longer part of the pipeline, dSYM files are directly
+generated during the build process for all build configurations.
