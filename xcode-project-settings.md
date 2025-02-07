@@ -261,7 +261,7 @@ Often type inference and the way the type is initialized matter. Try these
 settings to get insights about [slow build times](https://www.avanderlee.com/optimization/analysing-build-performance-xcode/):
 
 - `-Xfrontend -warn-long-expression-type-checking=100`
-- -`Xfrontend -warn-long-function-bodies=100`
+- `Xfrontend -warn-long-function-bodies=100`
 - `-Xfrontend -debug-time-compilation`
 - `-Xfrontend -driver-time-compilation`
 
@@ -315,3 +315,7 @@ come in. Regarding that, Holly mentioned:
 Often it's some combination of binding order + overload resolution performance
 heuristics that determine when overload choices can be skipped if a solution
 is already found with a different overload.
+
+The [Swift Type Inference Benchmarks](https://github.com/LucasVanDongen/SwiftTypeInferenceBenchmarks)
+has done some benchmarking that compares various aspects of type inference
+affecting compiler performance.
