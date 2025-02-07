@@ -19,6 +19,8 @@
     - [@\_transparent](#_transparent)
   - [Line Statement](#line-statement)
   - [Macros](#macros)
+  - [Type Checking](#type-checking)
+  - [Reducing Dynamic Dispatch](#reducing-dynamic-dispatch)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -379,7 +381,7 @@ object when that object encounters an event in a program<sup>[*](https://develop
 
 It simply tells the compiler to ignore inlining heuristics and always
 inline the function. In other words, it forces the function to be
-inlined.If it's not possible to always inline the function, e.g. if
+inlined. If it's not possible to always inline the function, e.g. if
 it's a self-recursive function, the attribute is ignored. This
 attribute has no effect in debug builds.<sup>[*](https://github.com/swiftlang/swift/blob/main/docs/ReferenceGuides/UnderscoredAttributes.md#inline__always)</sup>.
 
@@ -484,3 +486,35 @@ as usual.
 > 3. SwiftSyntax’s API seems to be in constant flux. I’ve used the library
 > sporadically over the years and whenever I return to a project that uses
 > it, it rarely still builds.
+
+## Type Checking
+
+One technique to improve type-checking time is to be explicit about the types
+of literals in long expressions. Since literals are untyped and have their
+type inferred from the surrounding expression, being explicit removes work
+from the type checker<sup>[*](https://forums.swift.org/t/why-would-this-take-410ms-to-type-check/66099/3)</sup>:
+
+```swift
+extension BinaryInteger {
+  @inlinable
+  var isPowerOfTwo: Bool {
+    self > Self(0) && (self & (~self + Self(1))) == self
+  }
+}
+```
+
+## Reducing Dynamic Dispatch
+
+There are three ways to improve performance by eliminating dynamic dispatch<sup>[*](https://developer.apple.com/swift/blog/?id=27)</sup>:
+
+1. Using the `final` keyword to indicate the class cannot be overridden.
+   This allows the compiler to safely elide dynamic dispatch indirection.
+2. Applying the `private` keyword to a declaration restricts the visibility of
+   the declaration to the current file. This allows the compiler to find all
+   potentially overriding declarations. The absence of any such overriding
+   declarations enables the compiler to infer the `final` keyword automatically
+   and remove indirect calls for methods and property accesses.
+3. Whole Module Optimization: if Whole Module Optimization is enabled, all of
+   the module is compiled together at the same time. This allows the compiler
+   to make inferences about the entire module together and infer `final` on
+   declarations with `internal` if there are no visible overrides.
