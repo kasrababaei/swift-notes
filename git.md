@@ -15,6 +15,21 @@ In order to change that and print out the output in Terminal, need to disable pa
 git config --global pager.branch false
 ```
 
+But that only disables it for `git branch`. If the goal is to disable
+it for every command, can simply add the following to shell:
+
+```bash
+export LESS="$LESS -F -R -X"
+```
+
+- `F` (or `--quit-if-one-screen`): Exits immediately if the output
+  fits on one screen instead of waiting for user input.
+- `R` (or `--raw-control-chars`): Output "raw" control characters.
+  The `-R` option in less is used to interpret raw control characters for ANSI colors.
+  When `-R` is enabled, less preserves and displays ANSI colors instead of showing
+  raw escape sequences.
+- `X`: Disables clearing the screen when less exits, so the content remains visible.
+
 **For a list of files to be pushed, run:**
 
 ```bash
