@@ -5,6 +5,16 @@ changes in source code, collaborate on software development, and manage
 projects of any size efficiently. Created by Linus Torvalds in 2005. A good
 source of truth is the documentation on [Git-SCM](https://git-scm.com/doc).
 
+**For changing the output to be Terminal instead of pager:**
+
+[As of Git 2.16, the default behavior changed.](https://github.com/git/git/blob/master/Documentation/RelNotes/2.16.0.txt#L85-L88)
+It uses [LESS](https://en.wikipedia.org/wiki/Less_(Unix)) to display the output.
+In order to change that and print out the output in Terminal, need to disable pager:
+
+```bash
+git config --global pager.branch false
+```
+
 **For a list of files to be pushed, run:**
 
 ```bash
@@ -252,4 +262,3 @@ git diff | pbcopy
 ```bash
 pbpaste | git apply
 ```
-
