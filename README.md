@@ -19,6 +19,7 @@ and more.
 - [RunLoop](RunLoop.md)
 - [SwiftUI](SwiftUI.md)
 - [Swift](Swift.md)
+- [Swift Package Manager](swift-package-manager.md)
 - [Xcode and simulator](xcode-and-simulator.md)
 - [Xcode project settings](xcode-project-settings.md)
 - [Miscellaneous](Miscellaneous.md)
