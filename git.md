@@ -37,6 +37,15 @@ git diff --stat --cached [remote/branch]
 # example: git diff --stat --cached origin/master
 ```
 
+**For a list of changed files that are staged/cached:**
+
+```bash
+diff --cached --name-only
+# example output:
+# Sources/Modules/UIViewController.swift
+# Sources/Modules/ViewModel.swift
+```
+
 **For the code diff of the files to be pushed, run:**
 
 ```bash
@@ -104,7 +113,8 @@ git checkout -- .
 
 ```bash
 # Remove all untracked files and directories.
-# '-f' is force, '-d' is remove directories.
+# `-f` stands for force, It is required to actually remove the files
+# `-d` stands for remove directories. Useful when have untracked directories that also want to remove.
 git clean -fd
 # preview changes
 git clean -nd
