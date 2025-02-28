@@ -571,7 +571,7 @@ There are three ways to improve performance by eliminating dynamic dispatch<sup>
    to make inferences about the entire module together and infer `final` on
    declarations with `internal` if there are no visible overrides.
 
-## Struct vs Class
+## [Struct vs Class](https://developer.apple.com/documentation/swift/choosing-between-structures-and-classes)
 
 Structs are value types. Value types are infinitely understandable since they
 have such well-defined semantics.
