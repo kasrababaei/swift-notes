@@ -221,6 +221,11 @@ between the View and ViewModel.
 
 ## Dependency Injection
 
+A dependency is a piece of code that needs to talk to an external system that
+you do not control. Dependencies can wreak havoc on your code base. They make
+it difficult to run your features in isolation, such as previews, and they make
+it difficult to test your code.
+
 Dependency injection in short means dependencies are handed instead of reaching
 for them.
 

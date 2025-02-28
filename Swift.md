@@ -21,6 +21,7 @@
   - [Macros](#macros)
   - [Type Checking](#type-checking)
   - [Reducing Dynamic Dispatch](#reducing-dynamic-dispatch)
+  - [Struct vs Class](#struct-vs-class)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -569,3 +570,8 @@ There are three ways to improve performance by eliminating dynamic dispatch<sup>
    the module is compiled together at the same time. This allows the compiler
    to make inferences about the entire module together and infer `final` on
    declarations with `internal` if there are no visible overrides.
+
+## Struct vs Class
+
+Structs are value types. Value types are infinitely understandable since they
+have such well-defined semantics.

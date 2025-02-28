@@ -3,6 +3,7 @@
 > Views are functions of state, not of a sequence of events.
 
 - [SwiftUI](#swiftui)
+  - [General Notes](#general-notes)
   - [View Builders](#view-builders)
   - [Group](#group)
   - [Dynamic Views vs Static Views](#dynamic-views-vs-static-views)
@@ -43,6 +44,18 @@
       - [Alignment](#alignment)
       - [Modifying Alignment Guides](#modifying-alignment-guides)
       - [Custom Alignment Identifiers](#custom-alignment-identifiers)
+
+## General Notes
+
+Sometimes the entity which drives the view should have limit access to its
+properties. If done naively, one can observe far too much state than is necessary
+and cause slow, under-performing views. It is usually best to whittle down state
+to the bare essentials the view needs, especially when you have lots of features
+composed together.
+
+In cases where we need to force the view to be rendered, for instance in testing,
+can use a private API called `_render(seconds:)` but it's only available on
+`UIHostingController`; so, need to wrap the view in that.
 
 ## View Builders
 
