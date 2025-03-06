@@ -488,6 +488,14 @@ as usual.
 > sporadically over the years and whenever I return to a project that uses
 > it, it rarely still builds.
 
+Since then, a few PRs have been merged to fix this issue. The latest one adds
+a prebuilt swift-syntax to speed up the build: [Swift-Syntax Prebuilts for Macros
+6.1](https://github.com/swiftlang/swift-package-manager/pull/8214).
+
+[Swift AST Explorer](https://swift-ast-explorer.com) is a good website to visualize
+Swift AST and select nodes within the editor, a great way to learn about the
+structure of Swift syntax trees.
+
 ## Type Checking
 
 One technique to improve type-checking time is to be explicit about the types

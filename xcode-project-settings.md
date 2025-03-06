@@ -13,6 +13,7 @@
     - [Configuration](#configuration)
   - [dSYM](#dsym)
   - [Build performance analysis for speeding up Xcode builds](#build-performance-analysis-for-speeding-up-xcode-builds)
+  - [XCConfig](#xcconfig)
 
 ## iOS Keys for Info.plist
 
@@ -255,3 +256,15 @@ settings to get insights about [slow build times](https://www.avanderlee.com/opt
 The integers are in milliseconds. Those flags won't be passed to packages,
 so if you're modularized like that, you'll need to find a way to pass them
 to each package individually<sup>[*](https://forums.swift.org/t/debugging-long-compile-times/52447/2)</sup>.
+
+## [XCConfig](https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project)
+
+A build configuration file is a plain-text file you use to specify the build
+settings for a specific target or your entire project.
+
+It's also possible to add a conditional expression after a build setting to
+apply that setting only when a specific platform or architecture is active.
+
+```text
+OTHER_LDFLAGS[arch=x86_64] = -lncurses
+```
