@@ -42,7 +42,7 @@ Object-Oriented Programming (OOP).
 > However, everyone misunderstood it and thought POP is _a thing_ which made it a
 > buzzword in Swift.
 >
-> ![image Crusty](./.images/.cursty.png)
+> ![image Crusty](./.images/.crusty.png)
 >
 > In fact, that video is removed from Apple's website. The goal of that session
 > was to push for using generics and creating creating generic algorithms.
