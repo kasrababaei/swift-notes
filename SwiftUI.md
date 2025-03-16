@@ -1214,3 +1214,117 @@ extension View {
 ```
 
 #### Custom Alignment Identifiers
+
+Consider the layout for this view:
+
+```Swift
+struct CustomAlignmentView: View {
+  var body: some View {
+    VStack() {
+      HStack {
+        Text("Inbox")
+        CircleButton(symbolName: "tray.and.arrow.down")
+          .frame(width: 30, height: 30)
+      }
+      HStack {
+        Text("Sent")
+        CircleButton(symbolName: "tray.and.arrow.up")
+          .frame(width: 30, height: 30)
+      }
+      HStack {
+        CircleButton(symbolName: "line.3.horizontal")
+          .frame(width: 40, height: 40)
+      }
+    }
+  }
+}
+
+private struct CircleButton: View {
+  let symbolName: String
+  
+  var body: some View {
+    Image(systemName: symbolName)
+       .resizable()
+      .foregroundColor(.black)
+      .padding()
+      .background(Color.gray)
+      .clipShape(Circle())
+  }
+}
+```
+
+The problem is the horizontal alignment of the `VStack`. We want the `CircleButton`
+to be vertically stacked on each other with a center alignment while the `Text` are
+stacked on top of each other with a trailing alignment:
+
+```text
+Inbox   <Icon-1>
+ Sent   <Icon-2>
+       <Icon---3>
+```
+
+We could try to specify `.trailing` alignment on the `VStack` and then specify an
+explicit alignment guide for `.trailing` on both items' `CircleButton`. However,
+this doesn't work either. When `VStack` places its subviews, it asks each subview
+for its `.trailing` alignment guide. Since `HStack` has its own `.trailing`
+alignment guide, the explicit alignment guide on `CircleButton` will never be used.
+
+Custom alignments can propagate up through multiple container views. First thing,
+need a type conforming to the `AlignmentID` protocol:
+
+```Swift
+struct MenuAlignment: AlignmentID {
+  static func defaultValue(in context: ViewDimensions) -> CGFloat {
+    context.width / 2
+  }
+}
+```
+
+The default value that `defaultValue(in:)` returns is used unless we specify
+the view's horizontal center as the default value. Now we can define a static
+constant for our custom alignment on the `HorizontalAlignment` struct, just
+as SwiftUI does for the built-in alignments:
+
+```Swift
+extension HorizontalAlignment {
+  static let menu = HorizontalAlignment(MenuAlignment.self)
+}
+```
+
+Now we can use it in the menu `VStack` and specify explicit alignment guides for
+`.menu` on the CircleButtons:
+
+```Swift
+struct CustomAlignmentView: View {
+  var body: some View {
+    VStack() {
+      HStack {
+        Text("Inbox")
+        CircleButton(symbolName: "tray.and.arrow.down")
+          .frame(width: 30, height: 30)
+          .alignmentGuide(.menu) { $0.width / 2 }
+      }
+      HStack {
+        Text("Sent")
+        CircleButton(symbolName: "tray.and.arrow.up")
+          .frame(width: 30, height: 30)
+          .alignmentGuide(.menu) { $0.width / 2 }
+      }
+      HStack {
+        CircleButton(symbolName: "line.3.horizontal")
+          .frame(width: 40, height: 40)
+      }
+    }
+  }
+}
+```
+
+The last `CircleButton` doesn't need the `.menu` alignment because the default
+value of `.menu` is already the center.
+
+When the `VStack` asks its subviews for the `.menu` alignment guide, the `HStack`
+will consult their subviews for an explicit alignment guide value before falling
+back tot he default value. This means that the `HStack` will return the explicit
+alignment guide we specified on the `CircleButton` when asked for its `.menu`
+alignment guide. In other words, the subview's explicit alignment guide is used
+instead of the stack's implicit alignment guide.
