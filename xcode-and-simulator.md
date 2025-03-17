@@ -55,3 +55,27 @@ Xcode uses the following format for displaying warning/error/note[<sup>*</sup>](
 ```text
 [filename]:[linenumber]: error | warning | note : [message]
 ```
+
+It's possible to increase custom script run phase by introducing INPUT and
+OUTPUT files. Here’s the low down on the impact of specifying input and output
+files with script phases in Xcode[<sup>*</sup>](https://indiestack.com/2014/12/speeding-up-custom-script-phases/):
+
+- Lack of modification to any of the listed input files encourages Xcode not
+to run the script phase. Hooray! Fastness!
+- Non-existence of any listed output file compels Xcode to run your script phase.
+- The number of input and output file paths is passed to the script
+as `${SCRIPT_INPUT_FILE_COUNT}` and `${SCRIPT_OUTPUT_FILE_COUNT}` environment variables.
+- Each input and output path is passed as e.g. `${SCRIPT_INPUT_FILE_0}`,
+`${SCRIPT_OUTPUT_FILE_1}`, etc.
+
+In practice, what does this mean when you go looking to speed up your
+script phase? It means you should:
+
+- List as an input every file or folder that may affect the results of your
+script phase.
+- List at least one output, even if your script doesn’t leave any reliable artifacts.
+
+Adding a bogus file to the derived files folder, as the output can indicate that
+the script has run. It has the effect of causing a “clean” of the project to wipe
+out the artificial file and thus cause the script phase to run again even
+though none of the input files may have changed.

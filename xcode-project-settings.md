@@ -2,6 +2,7 @@
 
 - [Xcode Project Settings](#xcode-project-settings)
   - [iOS Keys for Info.plist](#ios-keys-for-infoplist)
+    - [CFBundleDisplayName vs CFBundleName](#cfbundledisplayname-vs-cfbundlename)
   - [Build settings](#build-settings)
   - [Dependencies](#dependencies)
     - [Unused Dependencies](#unused-dependencies)
@@ -22,6 +23,16 @@ You use the keys associated with this framework to configure the appearance of
 your app at launch time and the behavior of your app once it is running.
 
 [List of iOS keys for Info.plist](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/iPhoneOSKeys.html#//apple_ref/doc/uid/TP40009252-SW1)
+
+### CFBundleDisplayName vs CFBundleName
+
+`CFBundleDisplayName`: this is the user-facing name of the app as it appears on
+the home screen (Springboard) of iOS devices or in the Finder on macOS. Also, in
+App Switcher. Use this key if you want a product name that’s longer than CFBundleName.
+
+`CFDisplayName`: this is an older or alternative key used primarily for macOS
+applications. It specified a human-readable name for a document type or bundle.
+The system may display it to users if `CFBundleDisplayName` isn’t set.
 
 ## Build settings
 
@@ -268,3 +279,6 @@ apply that setting only when a specific platform or architecture is active.
 ```text
 OTHER_LDFLAGS[arch=x86_64] = -lncurses
 ```
+
+[This website](https://pewpewthespells.com/blog/xcconfig_guide.html) has an
+unofficial guide for xcconfig files.
