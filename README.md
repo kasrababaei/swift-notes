@@ -10,6 +10,7 @@ and more.
 ## Table of content
 
 - [Accessibility](accessibility.md)
+- [Bash](bash.md)
 - [Concurrency](concurrency.md)
   - [Concurrency code blocks](concurrency-code-blocks.md)
 - [Data structure and algorithms](data-structure.md)
@@ -21,5 +22,4 @@ and more.
 - [Swift](Swift.md)
 - [Swift Package Manager](swift-package-manager.md)
 - [Xcode and simulator](xcode-and-simulator.md)
-- [Xcode project settings](xcode-project-settings.md)
-- [Miscellaneous](Miscellaneous.md)
+- [Xcode project settings and simulator](xcode-project-settings-and-simulator.md)
