@@ -16,9 +16,12 @@
   - [Build performance analysis for speeding up Xcode builds](#build-performance-analysis-for-speeding-up-xcode-builds)
   - [XCConfig](#xcconfig)
   - [Home Directory](#home-directory)
+  - [Simulator List](#simulator-list)
+    - [Simulator Cache Dir](#simulator-cache-dir)
   - [Code Snippets](#code-snippets)
   - [Provisioning Profiles](#provisioning-profiles)
   - [Running custom scripts during a build](#running-custom-scripts-during-a-build)
+  - [Writing Symbol Documentation](#writing-symbol-documentation)
 
 ## iOS Keys for Info.plist
 
@@ -297,6 +300,8 @@ breakpoint in Xcode and run the following command in the LLDB console:
 po NSHomeDirectory()
 ```
 
+## Simulator List
+
 You can get a list of supported preview device names by using the `xcrun`
 command in the Terminal app:
 
@@ -308,6 +313,14 @@ To list all the frameworks, including the private ones, in iOS:
 
 ```bash
 ls \"$(xcode-select -p)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks\"
+```
+
+### Simulator Cache Dir
+
+The following directory contains the cache for the simulators:
+
+```powershell
+~/Library/Developer/CoreSimulator/Caches
 ```
 
 ## Code Snippets
@@ -360,3 +373,34 @@ Adding a bogus file to the derived files folder, as the output can indicate that
 the script has run. It has the effect of causing a “clean” of the project to wipe
 out the artificial file and thus cause the script phase to run again even
 though none of the input files may have changed.
+
+## Writing Symbol Documentation
+
+Writing symbol documentation in your source files:
+
+- [developer.apple.com](https://developer.apple.com/documentation/xcode/writing-symbol-documentation-in-your-source-files)
+- [swift.org](https://www.swift.org/documentation/docc/writing-symbol-documentation-in-your-source-files)
+
+Adding tips to the symbol documentation:
+
+```Swift
+/// Overwrites the isolated value with a new value.
+/// > Tip: Use the closure parameter if the new value is 
+/// > derived from the current value instead of using the subscript.
+/// > For instance:
+/// > ```swift
+/// > counter.withLock { $0.count += 1 }
+/// > ```
+/// > instead of:
+/// > ```swift
+/// > counter.withLock { $0.count = counter.count + 1 }
+/// > ```
+/// > which causes a deadlock.
+@discardableResult
+func withLock<R>(_ closure: (inout T) -> R) -> R {
+    lock.lock()
+    defer { lock.unlock() }
+
+    return closure(&_value)
+}
+```

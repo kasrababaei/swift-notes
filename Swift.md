@@ -377,6 +377,10 @@ object when that object encounters an event in a program<sup>[*](https://develop
 
 ## Inlining
 
+An optimization technique where the Swift compiler replaces a function call with
+the actual body of the function. This avoids the overhead of a function call and
+can sometimes improve performance, especially for small or frequently used functions.
+
 ### @inline(__always)
 
 It simply tells the compiler to ignore inlining heuristics and always

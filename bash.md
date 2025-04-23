@@ -49,6 +49,14 @@ echo "" >> file.txt
 echo "" > file.txt
 ```
 
+To create a new file if it doesn't exist, and clear the contents:
+
+```bash
+touch > file.txt
+true > file.txt // Option 1
+echo "" > file.txt // Option 2
+```
+
 ## Exit
 
 Shell functions provide their return value in a variable named 1 and their error

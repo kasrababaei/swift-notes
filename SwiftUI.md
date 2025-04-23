@@ -1045,6 +1045,45 @@ tree get created as needed. Therefore, just like `List`, the `LazyVStack` needs 
 estimate its height based on the subviews that have already been laid out and update
 its own size as new subviews appear onscreen.
 
+When choosing the type of stack view to use, always start with a standard stack
+view and only switch to a lazy stack if profiling your code shows a worthwhile
+performance improvement. For more information on lazy stack views and how to
+measure your app’s view loading performance, see [Creating performant scrollable
+stacks.](https://developer.apple.com/documentation/swiftui/creating-performant-scrollable-stacks)
+
+> Never profile your code using the iOS simulator.
+> Always use real devices for performance testing<sup>[*](https://developer.apple.com/documentation/swiftui/creating-performant-scrollable-stacks#Profile-to-find-performance-problems)</sup>.
+
+Here's another quote from [Apple Developer forum](https://developer.apple.com/forums/thread/651593?answerId=616783022#616783022):
+
+> Lazy stacks incur a small amount of extra overhead, both in time and memory,
+> to handle the bookkeeping for what views have and have not been instantiated.
+> In cases where all the views have to be instantiated anyway, that overhead is
+> pure cost with no benefit.
+>
+> It’s also worth noting that all the views in a lazy stack must be instantiated
+> in some situations that might be unexpected at first glance. For example consider
+> a vertically scrolling `ScrollView` containing a `LazyVStack`. So far, so good.
+> But now suppose that `LazyVStack` includes horizontally scrolling ScrollViews within
+> it—think rows with photo thumbnails. In the general case, all the views in the
+> horizontally scrolling `ScrollView` have to be instantiated eagerly so that SwiftUI
+> can determine the height of the row.
+>
+> These unexpected cases are the reason to prefer regular stacks and switch to lazy
+> stacks when it makes a measurable difference. If lazy stacks were always the right
+> answer, SwiftUI could have just made all stacks lazy.
+>
+> Practically, if the highest level `ScrollView` in a view hierarchy directly wraps
+> an `HStack` or `VStack`, then that’s a good candidate for a lazy stack. Beyond
+> that, profile first lest you accidentally make your app slower while trying to
+> make it faster.
+
+There's also this recommendation from [WWDC20](https://developer.apple.com/videos/play/wwdc2020/10031?time=299):
+
+> As a rule, if you aren't sure which type of stack to use, use `VStack` or `HStack`.
+> Adopt Lazy Stacks as a way to resolve performance bottlenecks that you find
+> after profiling with Instruments.
+
 #### LazyVGrid and LazyHGrid
 
 The first step of layout out a `LazyVGrid` is to compute the width of the columns

@@ -27,3 +27,4 @@ retention studies:
   Do About It](https://gojilabs.com/blog/the-psychology-behind-app-user-retention-and-what-to-do-about-it/?utm_source=chatgpt.com)
 - **National Taiwan University:** [Assessing User Retention of a Mobile
   App: Survival Analysis](https://pmc.ncbi.nlm.nih.gov/articles/PMC7728530/?utm_source=chatgpt.com)
+- [Pol](https://www.polpiella.dev)
