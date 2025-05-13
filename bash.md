@@ -6,6 +6,9 @@
   - [Exit](#exit)
   - [RakeFile vs Makefile: Summary Comparison](#rakefile-vs-makefile-summary-comparison)
     - [When to Use](#when-to-use)
+  - [File Conditions](#file-conditions)
+  - [Directories](#directories)
+  - [Working with Strings and Files](#working-with-strings-and-files)
 
 A shell script is a computer program designed to be run by a Unix shell, a
 command-line interpreter. Typical operations performed by shell scripts
@@ -95,3 +98,92 @@ exit 1
 - **Use Makefile if:**
   - You’re compiling C/C++ or managing a lightweight shell-based build process.
   - You want a fast, minimal setup for task automation.
+
+## File Conditions
+
+To check if a file exists:
+
+```bash
+FILE_NAME="Sample.txt"
+
+if [ ! -e "$FILE_NAME" ]; then
+    touch "$FILE_NAME"
+fi
+```
+
+To check if the content of the file is or is not empty:
+
+```bash
+if [ -z "$(cat "$FILE_NAME")" ]; then
+    echo "Is empty"
+else
+    echo "Not empty"
+fi
+```
+
+It's also possible to use `-n` for not empty, example:
+
+```bash
+if [ -n "$(cat "$FILE_NAME")" ]; then
+    echo "Is not empty"
+fi
+```
+
+## Directories
+
+To get the directory where the bash script is located at:
+
+```bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+```
+
+## Working with Strings and Files
+
+To read content a file and assign it to a variable:
+
+```bash
+FILE="./List.txt"
+CONTENT=$(cat "$FILE")
+```
+
+To read content of a file line by line:
+
+```bash
+while read -r line; do
+  echo "Line: ${line}"
+done <<< "$FILE_PATHS"
+```
+
+In case we want to create a multiline string variable but we don't want the
+trailing `\n`, can do:
+
+```bash
+CONTENT=""
+while read -r line; do
+  CONTENT="$CONTENT"$'\n'"$LINE"
+done <<< "$FILE_PATHS"
+```
+
+For string comparison:
+
+```bash
+if [ "$str1" == "$str2" ]; then
+    echo "Equal"
+fi
+
+if [ "$str1" != "$str2" ]; then
+    echo "Not Equal"
+fi
+```
+
+Always quote the variables `"$str1"` to avoid issues with spaces or empty strings.
+
+It's also possible to use double brackets `[[  ]]` instead of single
+brackets `[  ]`. Single brackets are the original and POSIX-compliant syntax.
+It is more portable (works in sh, dash, etc.), but has more limitations.
+Double brackets are a Bash-only (and Zsh/Ksh) enhancement. Safer and more powerful:
+
+- No need to quote variables (though it's still good practice).
+- Supports regex matching `=~`, pattern matching, and better string comparisons.
+- `<` and `>` are not treated as redirection operators.
+- Logical operators like `&&` and `||` are supported inside.
