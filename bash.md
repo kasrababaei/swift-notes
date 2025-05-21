@@ -9,6 +9,9 @@
   - [File Conditions](#file-conditions)
   - [Directories](#directories)
   - [Working with Strings and Files](#working-with-strings-and-files)
+  - [Generate XCFileList](#generate-xcfilelist)
+  - [Download and Unzip](#download-and-unzip)
+  - [Sparse Checkout](#sparse-checkout)
 
 A shell script is a computer program designed to be run by a Unix shell, a
 command-line interpreter. Typical operations performed by shell scripts
@@ -187,3 +190,140 @@ Double brackets are a Bash-only (and Zsh/Ksh) enhancement. Safer and more powerf
 - Supports regex matching `=~`, pattern matching, and better string comparisons.
 - `<` and `>` are not treated as redirection operators.
 - Logical operators like `&&` and `||` are supported inside.
+
+## Generate XCFileList
+
+The following script can create an XCFileList of Swift files that created/modified/copied
+which then can be fed to lint tools such as SwiftLint. It also maps wildcards
+such as `**` or `*` to regex because
+
+```Bash
+#!/bin/bash
+
+set -e
+
+echo "Generating Swift XCFileList..."
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT=$(realpath "${SCRIPT_DIR}/../../" )
+
+pushd "${ROOT}" > /dev/null
+
+XCFILELIST="${ROOT}/Tooling/Linters/Swift.generated.xcfilelist"
+
+if [ ! -e "$XCFILELIST" ]; then
+  # Always generate the XCFileList since it is used as an input file list by Xcode
+  # when running the SwiftLint and SwiftFormat scripts. This is to ensure that those
+  # scripts won't fail due to missing inputs.
+  touch "$XCFILELIST"
+fi
+
+if [[ -n ${IS_CI+x} ]]; then
+  echo "Skipping generating XCFileList when building on CI"
+  exit 0
+fi
+
+# Excludes files that are not in the Sources directory.
+# The `|| true` is used to prevent the script from failing if no files are found.
+FILE_PATHS=$(git diff --name-only --diff-filter=ACMD HEAD -- '*.swift' | grep '^Sources/' || true)
+
+if [[ -z "$FILE_PATHS" ]]; then
+  echo "No Swift file was added or modified."
+  exit 0
+fi
+
+SWIFTLINT_CONFIG="${ROOT}/.swiftlint.yml"
+if [[ ! -e "$SWIFTLINT_CONFIG" ]]; then
+  echo "error: Missing shared rules. Run 'make' in repo's root directory." >&2
+  exit 1
+fi
+
+HAS_EXCLUDED_FILE_PATHS=false
+declare -a EXCLUDED_FILE_PATHS
+
+while read -r line; do
+  if [[ "${line}" == "excluded:" ]]; then
+    HAS_EXCLUDED_FILE_PATHS=true
+  fi
+
+  if [[ $HAS_EXCLUDED_FILE_PATHS = true && "${line}" =~ ^\s*-.* ]]; then
+    FILE_PATH="\\\${SRCROOT}/${line#*- }"
+    FILE_PATH=$(echo "$FILE_PATH" | perl -pe 's/\./\\./g')
+    FILE_PATH=$(echo "$FILE_PATH" | perl -pe 's/\*\*/.*/g')
+    FILE_PATH=$(echo "$FILE_PATH" | perl -pe 's/(?<!\.)\*(?!\.)/\\w*/g')
+
+    EXCLUDED_FILE_PATHS+=("$FILE_PATH")
+  elif [[ $HAS_EXCLUDED_FILE_PATHS = true && -z "${line}" ]]; then
+    break
+  fi
+done < "${SWIFTLINT_CONFIG}"
+
+EXPANDED_FILE_PATHS=""
+
+while read -r line; do
+  FILE_PATH="\${SRCROOT}/${line#Sources/}"
+
+  for EXCLUDED_FILE_PATH in "${EXCLUDED_FILE_PATHS[@]}"; do
+    if [[ "${FILE_PATH}" =~ $EXCLUDED_FILE_PATH ]]; then
+      echo "Excluded file: ${FILE_PATH}"
+      continue 2
+    fi
+  done
+
+  if [ -z "$XCODE_VERSION_ACTUAL" ]; then
+    # Expand the file path. This is needed when the script isn't run
+    # by Xcode, which expands the paths automatically.
+    FILE_PATH=$(eval echo "$FILE_PATH")
+  fi
+
+  if [[ -z "$EXPANDED_FILE_PATHS" ]]; then
+    EXPANDED_FILE_PATHS="$FILE_PATH"
+  else
+    EXPANDED_FILE_PATHS="$EXPANDED_FILE_PATHS"$'\n'"$FILE_PATH"
+  fi
+done <<< "$FILE_PATHS"
+
+if [[ "$(cat "$XCFILELIST")" = "$EXPANDED_FILE_PATHS" ]]; then
+  exit 0
+else
+  echo "$EXPANDED_FILE_PATHS" > "$XCFILELIST"
+fi
+
+# Used when used by another script like the pre-commit hook.
+export XCFILELIST
+
+pushd > /dev/null
+```
+
+## Download and Unzip
+
+To download a zip file and unzip it, can use the following code block:
+
+```bash
+curl --fail "${artifact_url}" -L -o "${TEMP_DIR}/${tool_name}.zip" || {
+  echo "error: Failed to download ${tool_name} artifact." >&2
+  exit 1
+}
+
+# Unzip the artifact quietly, then copy the binary to the bin directory and make it executable
+unzip -q "${TEMP_DIR}/${tool_name}.zip" -d "${TEMP_DIR}" || {
+  echo "error: Failed to unzip ${tool_name} artifact." >&2
+  exit 1
+}
+```
+
+## Sparse Checkout
+
+To checkout a remote repo, but a sparse checkout, to only copy over a certain
+file(s), run:
+
+```bash
+git -C "${TEMP_DIR}" sparse-checkout init --cone
+git -C "${TEMP_DIR}" checkout
+ACTION_DIR="${SOME_DIR}/${REPO}"
+mkdir -p "${NEW_DIR}"
+cp -f "${TEMP_DIR}/${FILENAME}" "${NEW_DIR}/${FILENAME}" || {
+  echo "error: Failed to copy ${FILENAME}." >&2
+  exit 1
+}
+```
