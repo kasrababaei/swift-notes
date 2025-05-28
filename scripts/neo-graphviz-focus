@@ -1,0 +1,43 @@
+#!/bin/bash
+
+function neo-graphviz-focus {
+  # Get the pattern to use to focus
+  if [ -z "$1" ]; then
+    echo "Expected module name to be passed to this command"
+    return 1
+  else
+    module="$1"
+  fi
+
+  graph_directory="$HOME/Desktop/neo-graph"
+  mkdir -p "$graph_directory"
+
+  raw_graph_file="$graph_directory/graph-raw.dot"
+  focused_graph_file="$graph_directory/graph-$module.dot"
+
+  echo "Generating the graph file..."
+  set -x
+  xcodegen dump --type graphviz --file "$raw_graph_file"
+  { set +x; } 2>/dev/null
+
+  echo "Focusing using $module..."
+  set -x
+  grep -E "^(  .*($module)|[^ ])" "$raw_graph_file" \
+    | grep --invert-match -E "Test|\.xcframework|\.framework|\.tbd" \
+    > "$focused_graph_file"
+  { set +x; } 2>/dev/null
+  
+  echo "Removing duplicate lnies from the graph file..."
+  awk '!seen[$0]++' "$focused_graph_file" > tmp && mv tmp "$focused_graph_file"
+
+  echo "Creating the image from the graph file.."
+  image="${focused_graph_file%.*}.png"
+
+  set -x
+  dot -Tpng "$focused_graph_file" -o "$image"
+  { set +x; } 2>/dev/null
+  
+  open "$graph_directory"
+}
+
+neo-graphviz-focus "$@"

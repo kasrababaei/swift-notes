@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# get the commit hash from the command-line argument
+commit_hash=$1
+
+# use gh to find the pull request that contains the commit
+pr_url=$(
+  gh api "repos/:owner/:repo/commits/$commit_hash/pulls" \
+    | jq -r 'first.html_url'
+)
+
+# Open pull request URL
+open "$pr_url"

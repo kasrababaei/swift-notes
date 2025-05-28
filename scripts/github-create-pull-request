@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Get the currently checked out branch name using git
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Regular expression to get the ticket
+ticket_regex="([a-z]+|[A-Z]+)-[0-9]+"
+
+# Extract ticket number using the regular expression
+ticket=$(echo "$current_branch" | grep -oE "$ticket_regex")
+
+pull_request_template=$(cat ".github/pull_request_template.md")
+
+# A placeholder that is inside the pull_request_template.md file
+ticket_placeholder="<!--- ENGIOS-#### --->"
+
+# Find and replace the placehlder with the extracted ticket
+pull_request_template=${pull_request_template//$ticket_placeholder/$ticket}
+
+gh pr create -t "$ticket: " -b "$pull_request_template" -w

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Check if a URL is provided as an argument
+if [ -z "$1" ]; then
+  echo "Usage: $0 <url>"
+  exit 1
+fi
+
+# Extract the string after the last slash
+url=$1
+last_segment=${url##*/}
+
+echo "Filename: $last_segment"
+echo "URL: $url"
+
+yt-dlp --cookies "/Users/kasrababaei/Downloads/www.pointfree.co_cookies.txt" -o "$last_segment" "$url"

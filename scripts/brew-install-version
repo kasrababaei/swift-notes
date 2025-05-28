@@ -1,0 +1,25 @@
+#!/bin/bash
+NAME=$1
+FORMULA_FILE="$NAME.rb"
+VERSION=$2
+# Creates a new tap that adds a version of the dependecy to it.
+# TAP_NAME="$USER/personal"
+# brew tap-new "$TAP_NAME"
+# brew extract --version "$VERSION" "$NAME" "$TAP_NAME"
+# brew unlink "$NAME"
+# brew install "$TAP_NAME/$NAME@$VERSION"
+# Reverts homebrew back to a commit for the desired version and installs it.
+# Has the benefit that it can install from a bottle meaning it's usually faster.
+pushd "$(brew --repo homebrew/core)/Formula" || exit
+if [ ! -f "$FORMULA_FILE" ]; then
+  echo "$FORMULA_FILE does not exist."
+  exit 1
+fi
+STARTING_COMMIT=$(git rev-parse --abbrev-ref HEAD)
+echo "Looking for commit containing $VERSION"
+MATCHING_COMMIT=$(git log --oneline -n 1 --grep "$VERSION" -- "$FORMULA_FILE" | cut -d' ' -f1)
+git checkout "$MATCHING_COMMIT"
+HOMEBREW_NO_AUTO_UPDATE=1 brew uninstall "$NAME"
+HOMEBREW_NO_AUTO_UPDATE=1 brew install "$NAME"
+git checkout "$STARTING_COMMIT"
+popd || exit

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Example of how to run: ~/Downloads/swift-package-install-completion.sh ~/neo-ios/neo-tools 
+
+NAME=$(basename "$1")
+DESTINATION="$HOME/.oh-my-zsh/completions/_$NAME"
+"$1" --generate-completion-script zsh > "$DESTINATION"
+
+echo "Installed completion: $DESTINATION"

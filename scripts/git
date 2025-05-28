@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+# Get the directory where the script is located
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# Create a folder.
+LOG_FOLDER="git-logs"
+mkdir -p "$DIR/$LOG_FOLDER"
+
+# Date is used as a prefix for the log file.
+DATE="$(TZ=UTC date '+ %Y-%m-%d')"
+
+# Set the log file path
+LOG_FILE="$DIR/$LOG_FOLDER/$DATE.log"
+
+# Create a `$DATE.log` file if it doesn't exists.
+if [ ! -f "$LOG_FILE" ]; then
+    touch "$LOG_FILE"
+fi
+
+# Notice that the timezone is set to MT. But you can adjust it.
+TIMESSTAMP="$(TZ=America/Edmonton date '+%Y-%m-%d-%H:%M:%S')"
+echo "$TIMESSTAMP git $*" >> "$LOG_FILE"
+
+# The path needs to match the one that was logged in the previous step.
+/opt/homebrew/bin/git "${@}"

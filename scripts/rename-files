@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Loop through each file in the current folder
+for file in *; do
+  # Check if it's a file (not a directory)
+  if [ -f "$file" ]; then
+    # Convert filename to lowercase, replace spaces with dashes, and replace underscores with dashes
+    new_name=$(echo "$file" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '_' '-')
+    
+    # Rename the file
+    mv "$file" "$new_name"
+    
+    echo "Renamed: $file to $new_name"
+  fi
+done

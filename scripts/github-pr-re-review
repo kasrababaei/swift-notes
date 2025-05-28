@@ -1,0 +1,6 @@
+#!/bin/sh
+
+reviewers=$(gh pr view --json reviews \
+  | jq -r '.reviews | map(.author.login) | unique | join(",")'
+  )
+  gh pr edit --add-reviewer "$reviewers"
