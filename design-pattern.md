@@ -53,31 +53,31 @@ Each pattern has the following elements:
 
 - The **pattern name** is handle that is used to describe a design pattern.
 - The **problem** describes when to apply the pattern. It explains the problem
-and its context.
+  and its context.
 - The **solution** describes the elements that make up the design, their
-relationships, responsibilities, and collaborations. The solution doesn't
-describe the a particular concrete design or implementation, because a
-pattern is like a template that can be applied in many different situations.
+  relationships, responsibilities, and collaborations. The solution doesn't
+  describe the a particular concrete design or implementation, because a
+  pattern is like a template that can be applied in many different situations.
 - The **consequences** are the results and tradeoffs of applying the pattern.
-The consequences for software often concern space and trade-offs. Since reuse
-is often a factor in object-oriented design, the consequences of a pattern
-include its impact on a system’s flexibility, extensibility, or portability.
+  The consequences for software often concern space and trade-offs. Since reuse
+  is often a factor in object-oriented design, the consequences of a pattern
+  include its impact on a system’s flexibility, extensibility, or portability.
 
 When choosing an architecture, must consider things such as:
 
 - Project requirements: Consider whether the project will need scalability,
-maintainability, testability, or flexibility in the future.
+  maintainability, testability, or flexibility in the future.
 - Complexity and Simplicity: Strive for a balance between simplicity and
-functionality. Overly complex patterns can make code more difficult to understand
-and maintain.
+  functionality. Overly complex patterns can make code more difficult to understand
+  and maintain.
 - Testing Requirements: If unit testing is a priority, consider patterns that
-promote testable code.
+  promote testable code.
 - Flexibility and Reusability: Some patterns provide better flexibility for code
-reuse and modification. Patterns like Decorator or Strategy make it easier to
-add or modify behaviors without extensive code changes.
+  reuse and modification. Patterns like Decorator or Strategy make it easier to
+  add or modify behaviors without extensive code changes.
 - Team Experience and Consistency: Consider the team's familiarity with certain patterns.
 - Scalability and Performance: Some patterns can be more demanding on resources,
-so consider the performance needs of your app.
+  so consider the performance needs of your app.
 
 You can start by asking questions like:
 
@@ -96,11 +96,11 @@ The most widespread use of multitier architecture is the three-tier architecture
 The following four are the most common layers:
 
 - **Presentation** layer (a.k.a. UI layer, view layer, presentation tier in
-multitier architecture)
+  multitier architecture)
 - **Application** layer (a.k.a. service layer or GRASP Controller Layer)
 - **Business** layer (a.k.a. business logic layer (BLL), domain logic layer)
 - **Data** access layer (a.k.a. persistence layer, logging, networking, and other
-services which are required to support a particular business layer)
+  services which are required to support a particular business layer)
 
 The more usual convention is that the application layer (or service layer) is
 considered a sub-layer of the business layer, typically encapsulating the API
@@ -128,7 +128,7 @@ Disadvantages:
 
 - **Overhead:** Can introduce unnecessary complexity for simple applications.
 - **Latency:** Increases the number of interactions between layers, potentially
-adding latency.
+  adding latency.
 
 ## Service-Oriented Architecture (SOA)
 
@@ -157,7 +157,7 @@ architecture of an application and classifies objects according to the general
 roles they play in an application. It is also a compound pattern in that it
 comprises several, more elemental patterns. The MVC design pattern considers
 there to be three types of objects: model objects, view objects, and controller
-objects<sup>[*](https://developer.apple.com/library/archive/documentation/General/Conceptual/CocoaEncyclopedia/Model-View-Controller/Model-View-Controller.html#//apple_ref/doc/uid/TP40010810-CH14-SW1)</sup>.
+objects<sup>[\*](https://developer.apple.com/library/archive/documentation/General/Conceptual/CocoaEncyclopedia/Model-View-Controller/Model-View-Controller.html#//apple_ref/doc/uid/TP40010810-CH14-SW1)</sup>.
 
 - Model: model objects encapsulate data and basic behaviors.
 - View: view objects present information to the user.
@@ -171,12 +171,12 @@ providing a reference to itself.
 Model–view–presenter (MVP) is a derivation of the model–view–controller (MVC)
 architectural pattern, and is used mostly for building user interfaces.
 
-- The *model* is an interface defining the data to be displayed or otherwise acted
-upon in the user interface.
-- The *view* is a passive interface that displays data (the model) and routes user
-commands (events) to the presenter to act upon that data.
-- The *presenter* acts upon the model and the view. It retrieves data from
-repositories (the model), and formats it for display in the view.
+- The _model_ is an interface defining the data to be displayed or otherwise acted
+  upon in the user interface.
+- The _view_ is a passive interface that displays data (the model) and routes user
+  commands (events) to the presenter to act upon that data.
+- The _presenter_ acts upon the model and the view. It retrieves data from
+  repositories (the model), and formats it for display in the view.
 
 ## Model–View–ViewModel (MVVM)
 
@@ -186,18 +186,20 @@ UI and business logic, resulting in modular, testable, and maintainable code.
 - Model: represents the core data or business logic of the application. It contains
   the data structure and any operations or transformations related to the data.
   This layer should be isolated and independent of any UI code to keep business
-  logic separate from presentation logic​.
+  logic separate from presentation logic​. Data models typically contain complex
+  data that needs to be trimmed down and modified to be used by the Presenter
 - View: this layer includes the user interface, typically implemented through
-SwiftUI views or UIKit components, depending on the framework. It doesn’t
-directly interact with the Model. Instead, it relies on the ViewModel to mediate
-data changes and interactions​.
+  SwiftUI views or UIKit components, depending on the framework. It doesn’t
+  directly interact with the Model. Instead, it relies on the ViewModel to mediate
+  data changes and interactions​. This layer is typically charged with interacting
+  with first party layout code, e.g., UIKit.
 - ViewModel: Acts as the intermediary between the Model and the View. The
-ViewModel transforms data from the Model into a format that is easy for the View
-to display. It also interprets user interactions from the View, updating the Model
-as needed.
+  ViewModel transforms data from the Model into a format that is easy for the View
+  to display. It also interprets user interactions from the View, updating the Model
+  as needed.
 
 In MVVM, the responsibility for fetching data from the BE and mapping
-it to models typically falls within a *service layer* or *repository layer* outside
+it to models typically falls within a _service layer_ or _repository layer_ outside
 of the Model-View-ViewModel triad. This layer interacts with the backend, parses
 the data into model objects, and provides them to the ViewModel.
 
@@ -214,10 +216,10 @@ often with declarative bindings.
 Here's a few advantages of MVVM compared to MVP:
 
 - Decouples the View and the business logic further, making it easier to test the
-ViewModel without the View.
+  ViewModel without the View.
 - Provides a clean separation of responsibilities.
 - Reactive bindings (e.g., via Combine) reduce the need for manual synchronization
-between the View and ViewModel.
+  between the View and ViewModel.
 
 ## Dependency Injection
 
@@ -241,11 +243,11 @@ implicit dependencies explicit. In short, dependency injection is done to achiev
 
 - Isolation: the code for creating the dependency lives in one place.
 - Reusability: goes hand-in-hand with isolation. More places can use a common
-interface that hands over the dependency.
+  interface that hands over the dependency.
 - Testability:
   - Tests can inject mocks in place of real dependency
   - Exercise type under test in isolation; so that your test isn't testing the
-  entire codebase
+    entire codebase
   - Changes to other types shouldn't break your test
 
 When picking an approach, note that there's no "one size fits all" solution.
@@ -257,10 +259,10 @@ Some of the common ways to do dependency injections:
 <sup>1</sup> A loosely coupled system is one:
 
 - in which components are weakly associated (have breakable relationships) with each
-other, and thus changes in one component least affect existence or performance
-of another component.
+  other, and thus changes in one component least affect existence or performance
+  of another component.
 - in which each of its components has, or makes uses of, little or no knowledge
-of the definitions of other separate components.
+  of the definitions of other separate components.
 
 ### Initializer Injection
 
@@ -318,7 +320,7 @@ Incremental adoption can be difficult and it's just one dependency to rule them 
 ### Instance Creation
 
 The goal is to separate business logic from instance creation responsibility.
-This aligns well with the *Single Responsibility Principle*.
+This aligns well with the _Single Responsibility Principle_.
 
 This approach is based on the principle provided by [Patrick Barry from Lyft](https://www.youtube.com/watch?v=dA9rGQRwHGs).
 A DI system, at a high level, creates an instance like this:
@@ -333,14 +335,14 @@ However, this code doesn't state how to create an instance; so, let's add that:
 (() -> T) -> () -> T
 ```
 
- The first closure is actually creating the instance and returning a concrete
- type whereas the second one returns an interface. But then the compiler might
- return the same closure again. So, the compiler needs to know what type is
- expected to get back, which is the abstract interface:
+The first closure is actually creating the instance and returning a concrete
+type whereas the second one returns an interface. But then the compiler might
+return the same closure again. So, the compiler needs to know what type is
+expected to get back, which is the abstract interface:
 
- ```Swift
+```Swift
 bind<T>(_ type: T.Type, to instantiator: @escaping () -> T) -> () -> T
- ```
+```
 
 ## Key-Value Observation (KVO)
 
@@ -368,11 +370,11 @@ or more properties.
 class MyObserver: NSObject {
   @objc var objectToObserve: MyObjectToObserve
   var observation: NSKeyValueObservation?
-  
+
   init(object: MyObjectToObserve) {
     objectToObserve = object
     super.init()
-    
+
     observation = observe(
       \.objectToObserve.myDate,
        options: [.old, .new]
@@ -393,15 +395,15 @@ or databases, where multiple instances could cause inconsistencies or conflicts.
 Some cons of using singletons are:
 
 - **Global State Dependency:** Global access can make testing and debugging
-difficult, as parts of the code become dependent on shared state, leading to
-tight coupling.
+  difficult, as parts of the code become dependent on shared state, leading to
+  tight coupling.
 - **Limited Flexibility:** Since only one instance exists, replacing it for
-testing or extending it for other purposes can be challenging.
+  testing or extending it for other purposes can be challenging.
 - **Hidden Dependencies:** Singleton introduces hidden dependencies, as code
-relying on a singleton may indirectly depend on the singleton’s state, making
-code behavior less predictable.
+  relying on a singleton may indirectly depend on the singleton’s state, making
+  code behavior less predictable.
 - **Multithreading Issues:** Without proper thread-safety mechanisms, singletons
-can cause race conditions in multithreaded contexts.
+  can cause race conditions in multithreaded contexts.
 
 ## Circuit Breaker
 
@@ -423,15 +425,15 @@ process can create different representations.
 The builder design pattern solves problems like:
 
 - How can a class (the same construction process) create different
-representations of a complex object?
+  representations of a complex object?
 - How can a class that includes creating a complex object be simplified?
 
 The builder design pattern describes how to solve such problems:
 
 - Encapsulate creating and assembling the parts of a complex object in a
-separate `Builder` object.
+  separate `Builder` object.
 - A class delegates object creation to a `Builder` object instead of creating
-the objects directly.
+  the objects directly.
 
 A class (the same construction process) can delegate to different `Builder`
 objects to create different representations of a complex object.
@@ -448,7 +450,7 @@ Disadvantages of the builder pattern include:
 - Builder classes must be mutable.
 - May hamper/complicate dependency injection.
 - In many null-safe languages, the builder pattern defers
-compile-time errors for unset fields to runtime.
+  compile-time errors for unset fields to runtime.
 
 ## Factory Pattern
 
@@ -505,12 +507,12 @@ REST APIs are usually designed with fixed endpoints and responses,
 which can lead to:
 
 - **Over-fetching:** Clients receive more data than they need because
-response may include unnecessary fields.
+  response may include unnecessary fields.
 - **Under-fetching:** Clients make multiple requests to different endpoints to
-gather all required data.
+  gather all required data.
 - **Scalability Issues**: As applications grow, managing numerous endpoints
-for different entities and operations can become cumbersome. Also, new features
-would need new endpoints.
+  for different entities and operations can become cumbersome. Also, new features
+  would need new endpoints.
 
 #### Authentication
 
@@ -518,10 +520,10 @@ would need new endpoints.
 Two common schemes are:
 
 - **Basic authentication:** HTTP basic authentication (BA) is a simple technique
-for controlling access to web resources. It doesn’t require cookies, session
-identifiers, or login pages. Instead, it uses standard fields in the HTTP header.
+  for controlling access to web resources. It doesn’t require cookies, session
+  identifiers, or login pages. Instead, it uses standard fields in the HTTP header.
 - **Bearer authentication:** Bearer authentication, also known as token authentication,
-is an HTTP authentication scheme that involves the use of bearer tokens for security.
+  is an HTTP authentication scheme that involves the use of bearer tokens for security.
 
 **API keys:** One way to authenticate REST APIs is with API keys.
 When a client connects to a server for the first time, it is given a
@@ -558,7 +560,7 @@ in traditional RESTful apps).
 
 - Schema-based typed queries - clients can verify data integrity and format.
 - Highly customizable - clients can request specific data and reduce the amount of
-HTTP-traffic.
+  HTTP-traffic.
 - Bi-directional communication with GraphQL Subscriptions (WebSocket based).
 
 **Cons:**
@@ -566,7 +568,7 @@ HTTP-traffic.
 - More complex backend implementation.
 - "Leaky-abstraction" - clients become tightly coupled to the backend.
 - The performance of a query is bound to the performance of the slowest service
-on the backend (in case the response data is federated between multiple services).
+  on the backend (in case the response data is federated between multiple services).
 
 ### gRPC
 
@@ -581,14 +583,14 @@ Some of the key features of gRPC are:
 - Efficient serialization and deserialization.
 - Supports various types of streaming (unary, server-side, client-side, and bidirectional).
 - Supports multiple programming languages, making it suitable for cross-platform
-systems.
+  systems.
 - APIs are defined using Protobuf, ensuring a strict contract between client and
-server.
+  server.
 
 Some of the use-cases of gRPC are:
 
 - **Microservices Communication:** Ideal for low-latency, efficient communication
-between services.
+  between services.
 - **Real-Time Applications:** Bidirectional streaming for chat apps, gaming, or IoT.
 - **Mobile and IoT:** Efficient communication where bandwidth is limited.
 - **Polyglot Environments:** Teams working with different programming languages.
@@ -598,7 +600,7 @@ Limitations of gRPC are:
 - **Steeper Learning Curve:** Requires understanding of Protobuf and streaming concepts.
 - **Debugging:** Harder to debug compared to REST (binary payloads are less human-readable).
 - **Limited Browser Support:** gRPC-Web is required for frontend use, which adds
-complexity.
+  complexity.
 
 ## Pagination
 
@@ -615,7 +617,7 @@ append them to the end of the list.
 Some of the use-cases are:
 
 - For channels or public groups with high traffic where the focus is on
-keeping up with the conversation.
+  keeping up with the conversation.
 - For live chat scenarios, where new messages are expected frequently.
 
 Some of the challenges are:
@@ -633,7 +635,7 @@ Some of the use-cases are:
 
 - When a user wants to view message history.
 - Most common in private chats or low-traffic public channels where users may
-want to reference past conversations.
+  want to reference past conversations.
 
 Some of the challenges:
 
@@ -649,13 +651,13 @@ cursors for bidirectional data loading.
 Some of the use-cases are:
 
 - For group chats where users join at an arbitrary point in the conversation
-and might scroll both forward and backward.
+  and might scroll both forward and backward.
 - When implementing features like "jump to a specific message" or "unread messages."
 
 Some of the challenges are:
 
 - Requires careful handling of scroll positions when adding data to both ends
-of the list.
+  of the list.
 
 ### Infinite Scroll
 
@@ -684,7 +686,7 @@ Pros:
 Cons:
 
 - bad performance on large offset values (the database needs to skip offset
-rows before returning the paginated result).
+  rows before returning the paginated result).
 - inconsistent when adding new rows into the database (Page Drift).
 
 ### Cursor Pagination
@@ -695,25 +697,25 @@ real-time data that might change frequently.
 
 ### **Cursor Pagination vs. Offset Pagination**
 
-| **Aspect** | **Cursor Pagination** | **Offset Pagination** |
-|-|-|-|
-| **Example** | `feed?after_id=p1b2&limit=10` | `feed?after_page=2&limit=10` |
-| **Navigation** | Cursor-based | Offset-based|
-| **Performance** | Efficient for large datasets| Slower with larger datasets |
-| **Dynamic Data** | Handles real-time updates gracefully | May skip or duplicate data |
-| **Complexity** | More complex to implement | Simple to implement |
-| **Random Access** | Not possible | Easy to jump to any page |
+| **Aspect**        | **Cursor Pagination**                | **Offset Pagination**        |
+| ----------------- | ------------------------------------ | ---------------------------- |
+| **Example**       | `feed?after_id=p1b2&limit=10`        | `feed?after_page=2&limit=10` |
+| **Navigation**    | Cursor-based                         | Offset-based                 |
+| **Performance**   | Efficient for large datasets         | Slower with larger datasets  |
+| **Dynamic Data**  | Handles real-time updates gracefully | May skip or duplicate data   |
+| **Complexity**    | More complex to implement            | Simple to implement          |
+| **Random Access** | Not possible                         | Easy to jump to any page     |
 
 Some of the use-cases are:
 
 - Real-time applications (e.g., chat, news feeds).
 - Large datasets where offset pagination becomes inefficient.
 - Systems that frequently update or delete data, causing inconsistencies
-in offset-based pagination.
+  in offset-based pagination.
 
 Cursor-based pagination comes with [tradeoffs](https://slack.engineering/evolving-api-pagination-at-slack/):
 
 - The cursor must be based on a unique, sequential column (or columns)
-in the source table.
+  in the source table.
 - There is no concept of the total number of pages or results in the set.
 - The client can’t jump to a specific page.
