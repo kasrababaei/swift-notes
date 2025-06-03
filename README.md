@@ -21,5 +21,7 @@ and more.
 - [SwiftUI](SwiftUI.md)
 - [Swift](Swift.md)
 - [Swift Package Manager](swift-package-manager.md)
+- [Tuist](tuist.md)
+- [UIKit](UIKit.md)
 - [Xcode and simulator](xcode-and-simulator.md)
 - [Xcode project settings and simulator](xcode-project-settings-and-simulator.md)
