@@ -7,6 +7,8 @@
   - [Errors](#errors)
   - [Date Formats](#date-formats)
   - [Content Delivery Network (CDN)](#content-delivery-network-cdn)
+  - [Logging](#logging)
+  - [Code Review](#code-review)
 
 ## Download Test Files
 
@@ -64,3 +66,23 @@ This includes the icon and also the tooltip that shows up when hovering over:
 - `notice` is just like `default`
 - `error` is just like `warning`
 - `fault` is just like `critical`
+
+## Code Review
+
+> In general, reviewers should favor approving a diff once it is in a state
+> where it definitely improves the overall code health of the system being
+> worked on, even if the diff isn’t perfect”.
+>
+> _(Google Engineering Practices documentation)_
+
+The purpose of the review is to keep the quality of the codebase at
+or above current levels across reliability, functionality, and
+maintainability. The purpose is not to create un-constructive
+criticism or start philosophical engineering discussions.
+
+As a developer, create small diffs. Your reviewer will need less context
+and review it for you faster. No one ever said this engineer must be very
+smart because his/her diffs are always huge.
+
+Be courteous and respectful to your fellow colleagues. Your comments should
+be about the code and not the developer who wrote it. Use the appropriate word choices.
