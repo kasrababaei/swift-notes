@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_atomic</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>All</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>@dynamicMemberLookup
+final class Atomic&lt;T&gt;: @unchecked Sendable {
+    private let lock: NSLock = .init()
+    private var _value: T
+    
+    init(_ value: T) {
+        self._value = value
+    }
+    
+    subscript&lt;R: Sendable&gt;(dynamicMember keyPath: KeyPath&lt;T, R&gt;) -&gt; R where T: Sendable {
+        withLock { $0[keyPath: keyPath] }
+    }
+    
+    /// Overwrites the isolated value with a new value.
+    /// &gt; Tip: Use the closure parameter if the new value is derived from the current value instead
+    /// &gt; of using the subscript.
+    /// &gt; For instance:
+    /// &gt; ```swift
+    /// &gt; counter.withLock { $0.count += 1 }
+    /// &gt; ```
+    /// &gt; instead of:
+    /// &gt; ```swift
+    /// &gt; counter.withLock { $0.count = counter.count + 1 }
+    /// &gt; ```
+    /// &gt; which causes a deadlock.
+    @discardableResult
+    func withLock&lt;R&gt;(_ closure: (inout T) -&gt; R) -&gt; R {
+        lock.lock()
+        defer { lock.unlock() }
+        
+        return closure(&amp;_value)
+    }
+}
+
+extension Atomic where T: Sendable {
+    /// The lock-isolated value.
+    var value: T {
+        withLock { $0 }
+    }
+}
+
+extension Atomic&lt;Bool&gt;: ExpressibleByBooleanLiteral {
+    convenience init(booleanLiteral value: BooleanLiteralType) {
+        self.init(value)
+    }
+}
+
+extension Atomic&lt;Int&gt;: ExpressibleByIntegerLiteral {
+    convenience init(integerLiteral value: IntegerLiteralType) {
+        self.init(value)
+    }
+}</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>968E04B6-DE67-4851-A0D6-1636761FC90C</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>A type that uses NSLock to control access</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>Atomic</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

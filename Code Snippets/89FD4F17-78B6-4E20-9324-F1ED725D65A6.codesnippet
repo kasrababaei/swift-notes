@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_ListNode</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>All</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>final class ListNode&lt;T&gt;: @unchecked Sendable {
+    var value: T?
+    var next: ListNode?
+    
+    init(_ value: T? = nil, _ next: ListNode? = nil) {
+        self.value = value
+        self.next = next
+    }
+}</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>89FD4F17-78B6-4E20-9324-F1ED725D65A6</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>A ListNode with a generic value</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>ListNode</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

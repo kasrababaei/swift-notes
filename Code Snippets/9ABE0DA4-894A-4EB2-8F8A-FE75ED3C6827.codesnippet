@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_clipShapeWithBorder</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>All</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>extension View {
+  func clipShape&lt;S: InsettableShape, U: ShapeStyle&gt;(_ shape: S, style: U, lineWidth: Double = 1) -&gt; some View {
+    modifier(ClipShapeWithBorder(shape: shape, style: style, lineWidth: lineWidth))
+  }
+}
+
+struct ClipShapeWithBorder&lt;S: InsettableShape, U: ShapeStyle&gt;: ViewModifier {
+  let shape: S
+  let style: U
+  let lineWidth: Double
+  
+  func body(content: Content) -&gt; some View {
+    content
+      .clipShape(shape)
+      .overlay {
+        shape
+          .strokeBorder(style, lineWidth: lineWidth)
+      }
+  }
+}</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>9ABE0DA4-894A-4EB2-8F8A-FE75ED3C6827</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string></string>
+	<key>IDECodeSnippetTitle</key>
+	<string>ClipShapeWithBorder</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

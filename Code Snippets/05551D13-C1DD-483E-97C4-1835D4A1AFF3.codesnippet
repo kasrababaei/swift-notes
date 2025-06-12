@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_indirect_instantiator</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>TopLevel</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>import Foundation
+
+@Sendable
+func bind&lt;T&gt;(
+  _ type: T.Type,
+  lifetime: Lifetime&lt;T&gt; = .unique,
+  to instantiator: @escaping () -&gt; T
+) -&gt; @Sendable () -&gt; T {
+  Instantiator.bind(type, lifetime: lifetime, to: instantiator)
+}
+
+enum Instantiator {
+  private typealias TypeInstantiator = () -&gt; Any
+  
+  private static let instantiators: Atomic&lt;[TypeIdentifier: TypeInstantiator]&gt; = .init([:])
+}
+
+private extension Instantiator {
+  @Sendable
+  static func bind&lt;T&gt;(
+    _ type: T.Type,
+    lifetime: Lifetime&lt;T&gt; = .unique,
+    to instantiator: @escaping () -&gt; T
+  ) -&gt; @Sendable () -&gt; T {
+    instantiators.withLock { dictionary in
+      let key = TypeIdentifier(type)
+      
+      if dictionary[key] == nil {
+        dictionary[key] = { lifetime.instance(instantiator) }
+      }
+    }
+    
+    return instance
+  }
+  
+  @Sendable
+  private static func instance&lt;T&gt;() -&gt; T {
+    if let mockInstance: T = mockInstance() {
+      return mockInstance
+    }
+    
+    let instantiator = instantiators.withLock { $0[TypeIdentifier(T.self)] }
+    return instantiator!() as! T
+  }
+}
+
+// MARK: - Mocking
+func mock&lt;T&gt;(_ type: T.Type, to instantiator: @escaping () -&gt; T) {
+  Instantiator.mock(type, to: instantiator)
+}
+
+extension Instantiator {
+  private static let mockInstantiators: Atomic&lt;[TypeIdentifier: TypeInstantiator]&gt; = .init([:])
+  
+  fileprivate static func mock&lt;T&gt;(_ type: T.Type, to instantiator: @escaping () -&gt; T) {
+    mockInstantiators.withLock { $0[TypeIdentifier(type)] = instantiator }
+  }
+  
+  static func unmock() {
+    mockInstantiators.withLock { $0 = [:] }
+  }
+  
+  private static func mockInstance&lt;T&gt;() -&gt; T? {
+    guard case let .enabled(required) = mocking.withLock({ $0 })
+    else { return nil }
+    
+    guard let instantiator = mockInstantiators.withLock({ $0[TypeIdentifier(T.self)] }),
+          let instance = instantiator() as? T
+    else {
+      if required {
+        assertionFailure("Missing mock for \(T.self)")
+      }
+      return nil
+    }
+    
+    return instance
+  }
+}
+
+extension Instantiator {
+  enum Mocking: Sendable {
+    case disabled
+    case enabled(required: Bool)
+  }
+  
+  static let mocking: Atomic&lt;Mocking&gt; = .init(.disabled)
+}
+
+struct TypeIdentifier: Hashable, Sendable {
+  let name: String
+  let identifier: ObjectIdentifier
+  
+  init(_ type: Any.Type) {
+    self.name = "\(type)"
+    self.identifier = ObjectIdentifier(type)
+  }
+}
+
+struct Lifetime&lt;T&gt; {
+  typealias Factory = () -&gt; T
+  
+  let instance: (Factory) -&gt; T
+  
+  init(instance: @escaping (Factory) -&gt; T) {
+    self.instance = instance
+  }
+}
+
+extension Lifetime {
+  static var singleton: Lifetime&lt;T&gt; {
+    let value = Atomic&lt;T?&gt;(nil)
+    return Lifetime { factory -&gt; T in
+      value.withLock { value in
+        let returnedValue = value ?? factory()
+        value = returnedValue
+        return returnedValue
+      }
+    }
+  }
+  
+  static var unique: Lifetime&lt;T&gt; {
+    Lifetime { factory -&gt; T in factory() }
+  }
+}</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>05551D13-C1DD-483E-97C4-1835D4A1AFF3</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>A global function that allows dependency injection.</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>IndirectInstantiator</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

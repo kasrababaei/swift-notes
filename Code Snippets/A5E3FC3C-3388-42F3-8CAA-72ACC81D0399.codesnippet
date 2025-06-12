@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_logger</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>All</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>enum Logger {
+  static func log(file: String = #file, function: String = #function, line: Int = #line, _ message: Any?...) {
+    let joinedMessage = message.map { value in
+      switch value {
+      case let .some(message): String(describing: message)
+      case .none: "nil"
+      }
+    }.joined(separator: " ")
+    
+    let log = [
+      "🔶",
+      file.components(separatedBy: "/").last ?? "",
+      function,
+      "\(line)",
+      joinedMessage
+    ].joined(separator: " ")
+    
+    print(log)
+  }
+}</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>A5E3FC3C-3388-42F3-8CAA-72ACC81D0399</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>A helper method that prints annotated logs.</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>Logger</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

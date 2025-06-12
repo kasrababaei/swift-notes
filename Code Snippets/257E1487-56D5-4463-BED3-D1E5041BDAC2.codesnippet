@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_constraintBuilder</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>TopLevel</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>import UIKit
+
+extension UIView {
+  func buildConstraints(
+    @ConstraintBuilder _ constraints: (_ dimension: LayoutDimension) -&gt; [NSLayoutConstraint]
+  ) {
+    if translatesAutoresizingMaskIntoConstraints {
+      translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    let layoutDimension = LayoutDimension(view: self)
+    let constraints = constraints(layoutDimension)
+    NSLayoutConstraint.activate(constraints)
+  }
+}
+
+@resultBuilder
+struct ConstraintBuilder {
+  static func buildBlock(_ dimensions: [NSLayoutConstraint]...) -&gt; [NSLayoutConstraint] {
+    dimensions.flatMap(\.self)
+  }
+  
+  static func buildArray(_ dimensions: [[NSLayoutConstraint]]) -&gt; [NSLayoutConstraint] {
+    dimensions.flatMap(\.self)
+  }
+}
+
+struct LayoutDimension {
+  private let view: UIView
+  
+  init(view: UIView) {
+    self.view = view
+  }
+  
+  func edges(
+    equalTo view: UIView,
+    insets: UIEdgeInsets = .zero
+  ) -&gt; [[NSLayoutConstraint]] {
+    [
+      leading(equalTo: view.leadingAnchor, constant: insets.left),
+      top(equalTo: view.topAnchor, constant: insets.top),
+      trailing(equalTo: view.trailingAnchor, constant: -insets.right),
+      bottom(equalTo: view.bottomAnchor, constant: -insets.bottom)
+    ]
+  }
+  
+  func edges(
+    equalTo layoutGuide: UILayoutGuide,
+    insets: UIEdgeInsets = .zero
+  ) -&gt; [NSLayoutConstraint] {
+    horizontally(equalTo: layoutGuide, insets: insets)
+    + vertically(equalTo: layoutGuide, insets: insets)
+  }
+  
+  func horizontally(
+    equalTo layoutGuide: UILayoutGuide,
+    insets: UIEdgeInsets = .zero
+  ) -&gt; [NSLayoutConstraint] {
+    [
+      view.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor, constant: insets.left),
+      view.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: -insets.right),
+    ]
+  }
+  
+  func vertically(
+    equalTo layoutGuide: UILayoutGuide,
+    insets: UIEdgeInsets = .zero
+  ) -&gt; [NSLayoutConstraint] {
+    [
+      view.topAnchor.constraint(equalTo: layoutGuide.topAnchor, constant: insets.left),
+      view.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor, constant: -insets.right),
+    ]
+  }
+  
+  func leading(
+    equalTo layoutGuide: NSLayoutAnchor&lt;NSLayoutXAxisAnchor&gt;,
+    constant: CGFloat = 0
+  ) -&gt; [NSLayoutConstraint] {
+    [
+      view.leadingAnchor.constraint(equalTo: layoutGuide, constant: constant)
+    ]
+  }
+  
+  func trailing(
+    equalTo layoutGuide: NSLayoutAnchor&lt;NSLayoutXAxisAnchor&gt;,
+    constant: CGFloat = 0
+  ) -&gt; [NSLayoutConstraint] {
+    [
+      view.trailingAnchor.constraint(equalTo: layoutGuide, constant: -constant)
+    ]
+  }
+  
+  func top(
+    equalTo layoutGuide: NSLayoutAnchor&lt;NSLayoutYAxisAnchor&gt;,
+    constant: CGFloat = 0
+  ) -&gt; [NSLayoutConstraint] {
+    [
+      view.topAnchor.constraint(equalTo: layoutGuide, constant: constant)
+    ]
+  }
+  
+  func bottom(
+    equalTo layoutGuide: NSLayoutAnchor&lt;NSLayoutYAxisAnchor&gt;,
+    constant: CGFloat = 0
+  ) -&gt; [NSLayoutConstraint] {
+    [
+      view.bottomAnchor.constraint(equalTo: layoutGuide, constant: -constant)
+    ]
+  }
+  
+  func width(
+    equalTo anchor: NSLayoutDimension,
+    multiplier: CGFloat = 1,
+    constant: CGFloat = 0
+  ) -&gt; [NSLayoutConstraint] {
+    [
+      view.widthAnchor.constraint(equalTo: anchor, multiplier: multiplier, constant: constant)
+    ]
+  }
+  
+  func height(
+    equalTo anchor: NSLayoutDimension,
+    multiplier: CGFloat = 1,
+    constant: CGFloat = 0
+  ) -&gt; [NSLayoutConstraint] {
+    [
+      view.widthAnchor.constraint(equalTo: anchor, multiplier: multiplier, constant: constant)
+    ]
+  }
+  
+  func size(equalTo size: Double) -&gt; [NSLayoutConstraint] {
+    [
+      view.widthAnchor.constraint(equalToConstant: size),
+      view.heightAnchor.constraint(equalTo: view.widthAnchor, multiplier: 1)
+    ]
+  }
+}
+</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>257E1487-56D5-4463-BED3-D1E5041BDAC2</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetPlatformFamily</key>
+	<string>iphoneos</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>Helper functions for creating NSLayoutConstraint using a result builder</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>ConstraintBuilder</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

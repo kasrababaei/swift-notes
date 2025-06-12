@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_window</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>CodeBlock</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>guard let scene = (scene as? UIWindowScene) else { return }
+window = UIWindow(windowScene: scene)
+let rootView = &lt;#RootView#&gt;
+window?.rootViewController = UIHostingController(rootView: rootView)
+window?.makeKeyAndVisible()</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>C8DD8AAD-5458-4E34-A04B-60C3DD05A3E5</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>Creates a UIWindow using a UIWindowScene</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>UIWindow Setup</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

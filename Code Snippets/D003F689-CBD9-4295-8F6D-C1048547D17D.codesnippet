@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_advent_of_code_test</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>All</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>import Testing
+@testable import AdventOfCode
+
+struct Y2024Day&lt;#00#&gt;Tests {
+  let testData = """
+  &lt;#Data#&gt;
+  """
+  
+  @Test func testPart1() async throws {
+    &lt;##expect()#&gt;
+  }
+  
+  @Test func testPart2() async throws {
+    &lt;##expect()#&gt;
+  }
+}
+</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>D003F689-CBD9-4295-8F6D-C1048547D17D</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>Template for testing the Advent of Code solution</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>AdventDayTests</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

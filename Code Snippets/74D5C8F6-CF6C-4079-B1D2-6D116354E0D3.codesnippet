@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_anycodingkey</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>All</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>struct AnyCodingKey: CodingKey, ExpressibleByStringLiteral {
+  var stringValue: String
+  var intValue: Int?
+  
+  init?(intValue: Int) {
+    nil
+  }
+  
+  init(stringLiteral value: StringLiteralType) {
+    self.stringValue = value
+  }
+  
+  init(stringValue: String) {
+    self.stringValue = stringValue
+  }
+}
+</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>74D5C8F6-CF6C-4079-B1D2-6D116354E0D3</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>A CodingKey that is expressible by string literals</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>AnyCodingKey</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

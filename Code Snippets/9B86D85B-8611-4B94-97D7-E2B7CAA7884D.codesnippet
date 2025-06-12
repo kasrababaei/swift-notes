@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_advent_of_code</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>All</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>import Foundation
+
+struct Y2024Day&lt;#00#&gt;: AdventDay {
+  let data: String
+  
+  func part1() -&gt; Any {
+    return &lt;#"Value"#&gt;
+  }
+  
+  func part2() -&gt; Any {
+    return &lt;#"Value"#&gt;
+  }
+}
+</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>9B86D85B-8611-4B94-97D7-E2B7CAA7884D</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>Template for solving Advent of Code</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>AdventDay</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>

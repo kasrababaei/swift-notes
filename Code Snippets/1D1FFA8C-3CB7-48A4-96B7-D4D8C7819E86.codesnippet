@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>_viewmodel</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>All</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>struct &lt;#ViewModel#&gt;: &lt;#Protocol#&gt; {
+  var &lt;#property#&gt;: &lt;#Type#&gt; = &lt;#Value#&gt;
+}</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>1D1FFA8C-3CB7-48A4-96B7-D4D8C7819E86</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>A value type view model that conforms to a protocol</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>ViewModel</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>
