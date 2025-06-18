@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Check if input file is provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 <input_file>"
+    exit 1
+fi
+
+# Check if input file exists
+if [ ! -f "$1" ]; then
+    echo "Input file not found: $1"
+    exit 1
+fi
+
+# Verify ffmpeg is installed
+if ! command -v ffmpeg &> /dev/null; then
+    echo "ffmpeg is not installed. Installing..."
+    if ! command -v brew &> /dev/null; then
+        echo "Homebrew is not installed. Please install Homebrew first."
+        exit 1
+    fi
+    if ! brew install ffmpeg;
+    then
+        echo "Failed to install ffmpeg. Please check your internet connection or try again later."
+        exit 1
+    fi
+fi
+
+# Get the input file name and extension
+input_file="$1"
+filename=$(basename -- "$input_file")
+extension="${filename##*.}"
+filename="${filename%.*}"
+
+# Output file name
+output_file="${filename}-scaled.${extension}"
+
+# Scale the input to half size:
+ffmpeg -i "$input_file" -vf "scale=w=iw/2:h=ih/2:force_original_aspect_ratio=decrease:force_divisible_by=2" "$output_file"
+
+echo "Output file generated: $output_file"
