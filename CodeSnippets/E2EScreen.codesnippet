@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDECodeSnippetCompletionPrefix</key>
+	<string>E2EScreen</string>
+	<key>IDECodeSnippetCompletionScopes</key>
+	<array>
+		<string>TopLevel</string>
+	</array>
+	<key>IDECodeSnippetContents</key>
+	<string>import Foundation
+import ScreenTesting
+import XCTest
+
+public final class &lt;#Screen Name#&gt;: Screen {
+
+    // MARK: - Properties
+
+    public var app: XCUIApplication!
+    public let viewType: XCUIElement.ElementType = .any
+    public let viewIdentifier: String = &lt;#replace me#&gt;
+
+    // MARK: - Init
+
+    public init() {}
+
+    // MARK: - Actions
+
+    public func &lt;#do something#&gt;(
+        file: StaticString = #file,
+        line: UInt = #line
+    ) {
+        button(.containsText(&lt;#an example#&gt;)).tap()
+    }
+}</string>
+	<key>IDECodeSnippetIdentifier</key>
+	<string>E4675460-90D8-44E2-94FD-A4B024D72577</string>
+	<key>IDECodeSnippetLanguage</key>
+	<string>Xcode.SourceCodeLanguage.Swift</string>
+	<key>IDECodeSnippetSummary</key>
+	<string>A skeleton for an E2E "Screen".</string>
+	<key>IDECodeSnippetTitle</key>
+	<string>E2E Screen</string>
+	<key>IDECodeSnippetUserSnippet</key>
+	<true/>
+	<key>IDECodeSnippetVersion</key>
+	<integer>2</integer>
+</dict>
+</plist>
