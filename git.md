@@ -287,3 +287,83 @@ git diff | pbcopy
 ```bash
 pbpaste | git apply
 ```
+
+## Transferring Keys
+
+Make sure only the owner of the file has full read and write access to it
+
+```bash
+chmod 600 id_rsa
+```
+
+To add a passphrase to an existing private key:
+
+```bash
+ssh-keygen -p -f id_rsa
+```
+
+To add add the key to the SSH Agent
+
+```bash
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa
+```
+
+To test the connection
+
+```bash
+ssh -T git@github.com
+```
+
+To install GNUPG
+
+```bash
+brew reinstall gnupg
+```
+
+Assuming the GPG private key is exported into a file named `private.key`,
+to import the key:
+
+```bash
+gpg --import ~/Downloads/private.key
+```
+
+If it's not exported then:
+
+```bash
+gpg --export-secret-keys --armor KEY_ID > filename.asc
+```
+
+The `KEY_ID` can be found by running:
+
+```bash
+gpg --list-secret-keys --keyid-format=long
+```
+
+Example Output:
+
+```bash
+[keyboxd]
+---------
+sec   ed25519/0000RANDOM5F7543C 2023-02-10 [SC]
+      0000000RANDOM0000EEA5A97521B2F1000000000
+uid                 [ unknown] FULL NAME <email@gmail.com>
+ssb   cv25219/RANDOMC000000000 2023-02-10 [E]
+```
+
+where `0000RANDOM5F7543C` is the key.
+
+To set git config to use this key for singing:
+
+```bash
+git config --global user.signingkey RANDOMC000000000
+git config --global commit.gpgsign true
+git config --global user.name "FULL NAME"
+git config --global user.email "email@gmail.com"
+```
+
+To tell Git exactly what to use for GPG:
+
+```bash
+git config --global gpg.program $(which gpg)
+```
