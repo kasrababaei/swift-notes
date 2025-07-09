@@ -1,5 +1,6 @@
 # SwiftUI
 
+> [!NOTE]
 > Views are functions of state, not of a sequence of events.
 
 - [SwiftUI](#swiftui)

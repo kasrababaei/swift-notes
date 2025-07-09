@@ -21,6 +21,7 @@
   - [Type Checking](#type-checking)
   - [Reducing Dynamic Dispatch](#reducing-dynamic-dispatch)
   - [Struct vs Class](#struct-vs-class)
+  - [Writing Symbol Documentation](#writing-symbol-documentation)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -558,3 +559,48 @@ There are three ways to improve performance by eliminating dynamic dispatch<sup>
 
 Structs are value types. Value types are infinitely understandable since they
 have such well-defined semantics.
+
+## Writing Symbol Documentation
+
+Writing symbol documentation in your source files:
+
+- [developer.apple.com](https://developer.apple.com/documentation/xcode/writing-symbol-documentation-in-your-source-files)
+- [swift.org](https://www.swift.org/documentation/docc/writing-symbol-documentation-in-your-source-files)
+
+Adding tips to the symbol documentation:
+
+```Swift
+/// Overwrites the isolated value with a new value.
+/// > Tip: Use the closure parameter if the new value is 
+/// > derived from the current value instead of using the subscript.
+/// > For instance:
+/// > ```swift
+/// > counter.withLock { $0.count += 1 }
+/// > ```
+/// > instead of:
+/// > ```swift
+/// > counter.withLock { $0.count = counter.count + 1 }
+/// > ```
+/// > which causes a deadlock.
+@discardableResult
+func withLock<R>(_ closure: (inout T) -> R) -> R {
+    lock.lock()
+    defer { lock.unlock() }
+
+    return closure(&_value)
+}
+```
+
+By adding tags, it's possible to [link symbols](https://swiftpackageindex.com/swiftlang/swift-docc/main/documentation/swiftdocc/linkresolution):
+
+```Swift
+/// Instantiates and returns a [Bar](x-source-tag://Bar).
+func bar() -> Bar {
+  let bar = Bar()
+  return bar
+}
+
+/// A container
+/// - Tag: Bar
+struct Bar {}
+```

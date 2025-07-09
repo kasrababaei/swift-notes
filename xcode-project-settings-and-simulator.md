@@ -21,7 +21,6 @@
   - [Code Snippets](#code-snippets)
   - [Provisioning Profiles](#provisioning-profiles)
   - [Running custom scripts during a build](#running-custom-scripts-during-a-build)
-  - [Writing Symbol Documentation](#writing-symbol-documentation)
 
 ## iOS Keys for Info.plist
 
@@ -373,34 +372,3 @@ Adding a bogus file to the derived files folder, as the output can indicate that
 the script has run. It has the effect of causing a “clean” of the project to wipe
 out the artificial file and thus cause the script phase to run again even
 though none of the input files may have changed.
-
-## Writing Symbol Documentation
-
-Writing symbol documentation in your source files:
-
-- [developer.apple.com](https://developer.apple.com/documentation/xcode/writing-symbol-documentation-in-your-source-files)
-- [swift.org](https://www.swift.org/documentation/docc/writing-symbol-documentation-in-your-source-files)
-
-Adding tips to the symbol documentation:
-
-```Swift
-/// Overwrites the isolated value with a new value.
-/// > Tip: Use the closure parameter if the new value is 
-/// > derived from the current value instead of using the subscript.
-/// > For instance:
-/// > ```swift
-/// > counter.withLock { $0.count += 1 }
-/// > ```
-/// > instead of:
-/// > ```swift
-/// > counter.withLock { $0.count = counter.count + 1 }
-/// > ```
-/// > which causes a deadlock.
-@discardableResult
-func withLock<R>(_ closure: (inout T) -> R) -> R {
-    lock.lock()
-    defer { lock.unlock() }
-
-    return closure(&_value)
-}
-```
