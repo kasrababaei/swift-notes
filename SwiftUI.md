@@ -635,6 +635,19 @@ For debugging a view:
 2. Alternatively, can add an overlay with a geometry reader to also render the
 size of the view.
 
+It's also to add the following statement to find out what caused a re-render:
+
+```swift
+struct ContentView: View {
+ @StateObject private var evilObject = EvilStateObject()
+
+ var body: some View {
+  let _ = Self._printChanges()
+  Text("What could possibly go wrong?")
+ }
+}
+```
+
 #### Shapes
 
 Most built-in shapes (`Rectangle`, `RoundedRectangle`, `Capsule`, and `Ellipse`)
