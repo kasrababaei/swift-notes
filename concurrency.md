@@ -332,6 +332,35 @@ Retaining a task object doesn't indefinitely retain the closure, because any
 references that a task holds are released after the task completes. Consequently,
 tasks rarely need to capture `weak` references to values.
 
+Matt Massicotte explains the async-await pair as:
+
+> `async`: I may cause a suspension
+> `await`: I can tolerate a suspension, i.e., there could be a suspension
+>
+> A function that's annotated with the `async` keyword, might never suspend and
+> that's fine similar to how a method can be annotated by the keyword `throws`
+> and never actually throws but all the call sites must do a `do-catch`.
+>
+> Another example is a protocol with a throwing method and can satisfy it by
+> a default implementation that doesn't throw. Then all the conforming types
+> won't need to implement it. Example:
+
+```swift
+protocol Foo {
+  func run() throws
+}
+
+extension Foo {
+  func run() {
+      print("Default implementation.")
+  }
+}
+
+struct AnyFoo: Foo { }
+
+AnyFoo().run() // prints Default implementation.
+```
+
 Every asynchronous function is executing in a task. In other words, a task is
 to asynchronous functions, what a thread is to synchronous functions.
 
