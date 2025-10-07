@@ -15,7 +15,7 @@
 
 ## Min-max heap
 
-In computer science, a [heap](https://en.wikipedia.org/wiki/Heap_(data_structure))
+In computer science, a [heap](<https://en.wikipedia.org/wiki/Heap_(data_structure)>)
 is a tree-based data structure that satisfies the heap property: In a max heap,
 for any given node `C`, if `P` is a parent node of `C`, then the key (the value)
 of `P` is greater than or equal to the key of `C`. In a min heap, the key
@@ -35,12 +35,12 @@ The root element is the smallest element in the min-max heap.
 One of the two elements in the second level, which is a max (or odd) level,
 is the greatest element in the min-max heap.
 
-Let *x* be any node in a min-max heap.
+Let _x_ be any node in a min-max heap.
 
-- If *x* is on a min (or even) level, then *x.key* is the minimum key
-among all keys in the subtree with root *x*.
-- If *x* is on a max (or odd) level, then *x.key* is the maximum key
-among all keys in the subtree with root *x*.
+- If _x_ is on a min (or even) level, then _x.key_ is the minimum key
+  among all keys in the subtree with root _x_.
+- If _x_ is on a max (or odd) level, then _x.key_ is the maximum key
+  among all keys in the subtree with root _x_.
 
 A node on a min (max) level is called a min (max) node.
 
@@ -53,18 +53,18 @@ stored at the root, and the smallest value is stored at one of the root's childr
 
 Array and string questions are often interchangeable.
 
-A *hash table* is a data structure that maps keys to values for highly
+A _hash table_ is a data structure that maps keys to values for highly
 efficient lookup. To insert a new key and value, we do the following:
 
-1. Computed the key's hash code, which will usually be an int or long. Note that
-two different keys could have the same hash code, as there may be an
-infinite number of keys and a finite number of `int`s.
-This is [known as Hash collision](https://en.wikipedia.org/wiki/Hash_collision),
+1. Compute the key's hash code, which will usually be an int or long. Note that
+   two different keys could have the same hash code, as there may be an
+   infinite number of keys and a finite number of `int`s.
+   This is [known as Hash collision](https://en.wikipedia.org/wiki/Hash_collision),
 2. Map the hash code to an index in the array.
 3. At this index, there is a linked list of keys and values. Store the
-key and value in this index. We must use a linked list because of
-collisions: you could have two different keys with the same hash code,
-or two different hash codes that map to the same index.
+   key and value in this index. We must use a linked list because of
+   collisions: you could have two different keys with the same hash code,
+   or two different hash codes that map to the same index.
 
 If the number of collisions is very high the worst case runtime is
 `O(N)`, where `N` is the number of keys. However, we generally assume a good
@@ -93,20 +93,20 @@ the `Sequence` protocol.
 
 In Swift, this is kinda similar to using an `inout` parameter. In other words,
 have to modify the input directly instead of copying the whole input, i.e.,
-allocating more memory. For example, given an array of *n* elements, to
+allocating more memory. For example, given an array of _n_ elements, to
 reverse it in-place, can swap the elements using the indices:
 
 ```Swift
 func reverseArray(_ array: inout [Int]) {
   var left = 0
   var right = array.count - 1
-  
+
   while left < right {
     // Could also use the built-in swap(_:_:) method.
     let temp = array[left]
     array[left] = array[right]
     array[right] = temp
-    
+
     left += 1
     right -= 1
   }
@@ -193,16 +193,16 @@ So the time complexity of deleting a node will be `O(N)`.
 
 The space complexity is `O(1)` because we only need constant space to store our pointers.
 
-If we want to delete the first node, we can simply *assign the next node to head*.
+If we want to delete the first node, we can simply _assign the next node to head_.
 
 ### Two-pointer in Linked List
 
 The two-pointer technique in a linked list is effective for:
 
 - **Finding the middle of a linked list**: A slow pointer and a fast pointer
-help locate the middle by advancing at different rates.
+  help locate the middle by advancing at different rates.
 - **Detecting cycles**: The fast pointer moving faster will catch up to the
-slow pointer if a cycle exists.
+  slow pointer if a cycle exists.
 
 #### 1. Finding the middle of a linked list
 
@@ -233,7 +233,7 @@ func findMiddle(_ head: ListNode?) -> ListNode? {
 
 - In this example, `slow` will point to the middle node when `fast` reaches the end.
 - If the list has an even number of elements, `slow` will be at the second
-of the two middle nodes.
+  of the two middle nodes.
 
 #### 2. Detecting a cycle in a linked list (floyd's cycle detection algorithm)
 
@@ -241,9 +241,9 @@ To detect a cycle in a linked list, you can use the **slow and fast pointer**
 approach, also known as [Floyd's Cycle Detection Algorithm](https://en.wikipedia.org/wiki/Cycle_detection#Floyd's_tortoise_and_hare).
 
 - Again, you use two pointers: the slow pointer moves one step at a time, while
-the fast pointer moves two steps at a time.
+  the fast pointer moves two steps at a time.
 - If there is a cycle, eventually, the fast pointer will "lap" the slow pointer,
-and they will meet at some point within the cycle.
+  and they will meet at some point within the cycle.
 - If there is no cycle, the fast pointer will reach the end of the list (`nil`).
 
 **Example:**
@@ -291,7 +291,7 @@ that they are added. A queue can be implemented with a linked list. In fact,
 they are essentially the same thing, as long as items are added and removed
 from opposite sides.
 
-A queue, as a *front* (that is, the element at index zero) and a *back* which
+A queue, as a _front_ (that is, the element at index zero) and a _back_ which
 is the index of the last element.
 
 It's possible to implement a queue using an Array. However, in an array-based
@@ -300,13 +300,14 @@ removed, all the other elements need to be shifted. A more efficient
 implementation is using a doubly linked list.
 
 ```markdown
-+----+------+    +----+------+    +----+------+
-| P  |  N   |<-->| P  |  N   |<-->| P  |  N   |
-+----+------+    +----+------+    +----+------+
-| 1  |  o---|--->| 2  |  o---|--->| 3  |  o   |
-+----+------+    +----+------+    +----+------+
++----+------+ +----+------+ +----+------+
+| P | N |<-->| P | N |<-->| P | N |
++----+------+ +----+------+ +----+------+
+| 1 | o---|--->| 2 | o---|--->| 3 | o |
++----+------+ +----+------+ +----+------+
 
 Key:
+
 - P: Pointer to the previous node.
 - N: Pointer to the next node.
 - o: Data stored in the node (in this case, values 1, 2, 3).
@@ -319,4 +320,4 @@ Each node in the doubly linked list contains:
 - A pointer to the next node (`N`).
 - A pointer to the previous node (`P`).
 - This allows traversal in both directions: from the head to the tail and from
-the tail to the head.
+  the tail to the head.

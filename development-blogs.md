@@ -28,3 +28,4 @@ retention studies:
 - **National Taiwan University:** [Assessing User Retention of a Mobile
   App: Survival Analysis](https://pmc.ncbi.nlm.nih.gov/articles/PMC7728530/?utm_source=chatgpt.com)
 - [Pol](https://www.polpiella.dev)
+- [Scott Berrevoets](https://www.scottberrevoets.com)

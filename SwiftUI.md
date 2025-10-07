@@ -45,6 +45,7 @@
       - [Alignment](#alignment)
       - [Modifying Alignment Guides](#modifying-alignment-guides)
       - [Custom Alignment Identifiers](#custom-alignment-identifiers)
+  - [PreferenceKey: A named value produced by a view](#preferencekey-a-named-value-produced-by-a-view)
 
 ## General Notes
 
@@ -220,6 +221,11 @@ HStack
 ```
 
 ## State
+
+A property wrapper type that can read and write a value managed by SwiftUI.
+
+Declare state as private to prevent setting it in a memberwise initializer,
+which can conflict with the storage management that SwiftUI provides.
 
 As of iOS 17, SwiftUI doesn't depend on `Combine` and instead uses macro-based
 solution. `@State` property wrapper is now used for values and objects, whereas
@@ -1381,3 +1387,32 @@ back tot he default value. This means that the `HStack` will return the explicit
 alignment guide we specified on the `CircleButton` when asked for its `.menu`
 alignment guide. In other words, the subview's explicit alignment guide is used
 instead of the stack's implicit alignment guide.
+
+## PreferenceKey: A named value produced by a view
+
+A view with multiple children automatically combines its values for a
+given preference into a single value visible to its ancestors<sup>[*](https://developer.apple.com/documentation/swiftui/preferencekey)</sup>.
+
+PreferenceKey has two requirements, default value for preference and reduce
+method. Reduce method maintains the logic that combines multiple values
+into a single one. You might need to replace or append values.
+
+Here's a possible implementation of `navigationBarTitle`:
+
+```swift
+import SwiftUI
+
+struct NavigationBarTitleKey: PreferenceKey {
+  static var defaultValue: String = ""
+
+  static func reduce(value: inout String, nextValue: () -> String) {
+      value = nextValue()
+  }
+}
+
+extension View {
+    unc navigationBarTitle(_ title: String) -> some View {
+      self.preference(key: NavigationBarTitleKey.self, value: title)
+  }
+}
+```

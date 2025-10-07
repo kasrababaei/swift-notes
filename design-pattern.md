@@ -471,6 +471,13 @@ There's various protocols and technologies when it comes to establishing
 a communication channel with the backend to send/receive data by hitting
 the API endpoints.
 
+For real-time Notifications, can use:
+
+- SSE
+- Push Notifications
+- WebSockets
+- HTTP-Polling
+
 ### Server-Sent Events
 
 Server-Sent Events (SSE) is a standard for unidirectional communication where a
@@ -478,12 +485,18 @@ server pushes real-time updates to a client over an HTTP connection.
 It is part of the HTML5 specification and provides an efficient way for a
 server to send event-driven data to the client.
 
-The advantages of using SSE is that it can automatically reconnect when
-the connection drops and it removes the need for a constant polling
-(the server will notify the client when there's an update).
-However, it doesn't support client-to-server communication, supports only
-text (not data), and buffering is annoying, you can receive partial
-packets and need to buffer it up until you know you've got a full event.
+Pros:
+
+- Automatic reconnection: The advantages of using SSE is that it can
+  automatically reconnect when the connection drops and it removes the
+  need for a constant polling (the server will notify the client when
+  there's an update).
+
+Cons:
+
+- However, it doesn't support client-to-server communication, supports only
+  text (not data), and buffering is annoying, you can receive partial
+  packets and need to buffer it up until you know you've got a full event.
 
 ### REST
 
@@ -601,6 +614,44 @@ Limitations of gRPC are:
 - **Debugging:** Harder to debug compared to REST (binary payloads are less human-readable).
 - **Limited Browser Support:** gRPC-Web is required for frontend use, which adds
   complexity.
+
+- Push Notifications
+
+Push user-facing notifications to the user’s device from a server, or generate
+them locally from your app.
+
+User-facing notifications communicate important information to users of your app,
+regardless of whether your app is running on the user’s device. Notifications can
+also tell your app to download information and update its interface. Notifications
+can display an alert, play a sound, or badge the app’s icon.
+
+You can generate notifications locally from your app or remotely from a server
+that you manage. For remote notifications, your company’s server generates push
+notifications, and Apple Push Notification service (APNs) handles the delivery
+of those notifications to the user’s devices. The system makes every attempt to
+deliver local and remote notifications in a timely manner, but delivery isn’t guaranteed.
+
+Pros:
+
+- Easier to implement: Requires less client-side and server-side engineering
+  effort compared to persistent connections.
+- Can wake the app in the background: Allows delivery of updates even when the
+  app is not actively running (within OS limitations).
+- Battery efficient (when used correctly): The OS manages the connection and
+  delivery, optimizing for battery life.
+
+Cons:
+
+- Not 100% reliable: Delivery is not guaranteed due to network conditions,
+  device state, or platform limitations (e.g., Doze mode on Android).
+- May have delays: Delivery latency can vary depending on network conditions
+  and the push notification provider.
+- Relies on 3rd-party service: Dependent on Apple's APNs (iOS) or Google's FCM
+  (Android), introducing a point of failure and potential vendor lock-in.
+- Users can opt-out: Users can disable push notifications at the OS level or
+  within the app.
+- Potential for abuse (spam): Can be easily misused to send irrelevant or
+  excessive notifications, leading to user frustration and app uninstalls.
 
 ## Pagination
 
