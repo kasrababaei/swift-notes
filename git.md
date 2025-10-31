@@ -334,7 +334,15 @@ pbpaste | git apply
 Make sure only the owner of the file has full read and write access to it
 
 ```bash
+chmod 700 ~/.ssh
 chmod 600 id_rsa
+chmod 644 id_rsa.pub
+```
+
+Copy and paste the public and private keys. To verify if the private key has a passphrase:
+
+```bash
+ssh-keygen -y -f id_rsa
 ```
 
 To add a passphrase to an existing private key:
