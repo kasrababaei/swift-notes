@@ -17,6 +17,12 @@ A shell script is a computer program designed to be run by a Unix shell, a
 command-line interpreter. Typical operations performed by shell scripts
 include file manipulation, program execution, and printing text.
 
+To find which shell is currently being used, use this command:
+
+```bash
+echo $0
+```
+
 ## Shebang or hash-bang
 
 In computing, a shebang is the character sequence `#!`, consisting of the
