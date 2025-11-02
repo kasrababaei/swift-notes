@@ -12,6 +12,7 @@ Here's a list of development blogs:
 - [Lyft](https://www.lyft.com/blog)
 - [Fatbobman's blog](https://fatbobman.com/en/)
 - [Saagar Jha](https://saagarjha.com)
+- [WTF Auto Layout](https://www.wtfautolayout.com/)
 
 ## User Retention
 
