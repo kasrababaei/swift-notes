@@ -383,6 +383,38 @@ If it's not exported then:
 gpg --export-secret-keys --armor KEY_ID > filename.asc
 ```
 
+or just
+
+```bash
+gpg --export --armor KEY_ID
+```
+
+You'll need to upload the new public key on Github. However,
+if the new public key already exists on Github and only a new
+UID (email identity) or subkey is added, Github might show an
+error due to the conflict. You can delete the previous GPG key
+and upload the public key again.
+
+To verify your commits are signed, run:
+
+```bash
+github log --show-signature
+```
+
+and if the log shows something along this message:
+
+```text
+gpg: There is no indication that the signature belongs to the owner.
+```
+
+You'll need to mark the key as **trusted** by:
+
+```bash
+gpg edit KEY_ID
+trust
+save
+```
+
 The `KEY_ID` can be found by running:
 
 ```bash
