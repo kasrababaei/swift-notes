@@ -22,6 +22,7 @@
   - [Reducing Dynamic Dispatch](#reducing-dynamic-dispatch)
   - [Struct vs Class](#struct-vs-class)
   - [Writing Symbol Documentation](#writing-symbol-documentation)
+  - [Non-breaking Space](#non-breaking-space)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -603,4 +604,12 @@ func bar() -> Bar {
 /// A container
 /// - Tag: Bar
 struct Bar {}
+```
+
+## Non-breaking Space
+
+A narrow non-breaking space, `\u{202F}`, is not equal to a normal space.
+
+```swift
+print("\u{202F}" == " ") // returns false
 ```

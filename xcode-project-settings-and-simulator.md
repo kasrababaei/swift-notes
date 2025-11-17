@@ -244,6 +244,9 @@ code but with different Xcode versions or build settings, the build UUIDs
 for the two binaries won't match. A binary and a dSYM file are only
 compatible with each other when they have identical build UUIDs<sup>[*](https://developer.apple.com/documentation/xcode/building-your-app-to-include-debugging-information#Overview)</sup>.
 
+Use DWARF to speed up build times and provide full debug symbols directly
+in object files (`.o`) (no `.dSYM` needed for normal debugging).
+
 Before building your app for distribution, verify that the [Debug Information Format](https://developer.apple.com/documentation/xcode/build-settings-reference#Debug-Information-Format)
 build setting is set to DWARF with dSYM File. This generates the
 necessary dSYM files, so you can diagnose crashes after releasing your app.
