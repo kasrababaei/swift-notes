@@ -12,6 +12,7 @@
   - [Generate XCFileList](#generate-xcfilelist)
   - [Download and Unzip](#download-and-unzip)
   - [Sparse Checkout](#sparse-checkout)
+  - [Swift Format in pre-commit](#swift-format-in-pre-commit)
 
 A shell script is a computer program designed to be run by a Unix shell, a
 command-line interpreter. Typical operations performed by shell scripts
@@ -146,6 +147,41 @@ To get the directory where the bash script is located at:
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ```
 
+If the shebang is set to use zsh, then should use:
+
+```zsh
+# Executed as a script (not sourced):
+SCRIPT_DIR="${0:A:h}"
+```
+
+- **:A** resolves to an absolute, normalized path (resolves symlinks where possible).
+- **:h** is the “head” (dirname).
+
+A cross-shell approach:
+
+```bash
+if [ -n "$BASH_VERSION" ]; then
+  SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+elif [ -n "$ZSH_VERSION" ]; then
+  # shellcheck disable=SC2296 # zsh-specific expansion
+  SCRIPT_DIR="${${(%):-%x}:A:h}"
+else
+  SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd -P)"
+fi
+```
+
+To get the directory of the `.git` folder:
+
+```bash
+GIT_DIR=$(git rev-parse --absolute-git-dir 2>/dev/null)
+```
+
+To get the filename only:
+
+```bash
+FILENAME=$(basename "$0")
+```
+
 ## Working with Strings and Files
 
 To read content a file and assign it to a variable:
@@ -201,7 +237,7 @@ Double brackets are a Bash-only (and Zsh/Ksh) enhancement. Safer and more powerf
 
 The following script can create an XCFileList of Swift files that created/modified/copied
 which then can be fed to lint tools such as SwiftLint. It also maps wildcards
-such as `**` or `*` to regex because
+such as `**` or `*` to regex
 
 ```Bash
 #!/bin/bash
@@ -332,4 +368,49 @@ cp -f "${TEMP_DIR}/${FILENAME}" "${NEW_DIR}/${FILENAME}" || {
   echo "error: Failed to copy ${FILENAME}." >&2
   exit 1
 }
+```
+
+## Swift Format in pre-commit
+
+The following bash script uses [SwiftFormat](https://github.com/swiftlang/swift-format)
+to lint the Swift files that are added/modified/copied files in the current git commit.
+
+```bash
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT_DIR="$(realpath "$DIR/../../")"
+
+# Path to the configuration file
+CONFIG_PATH="$ROOT_DIR/Utilities/SwiftFormat/.swift-format"
+
+if [[ ! -e "$CONFIG_PATH" ]]; then
+    echo "SwiftFormat configuration file not found at $CONFIG_PATH"
+    exit 1
+fi
+
+FILE_PATHS=$(git diff --name-only -C -M --diff-filter=ACM HEAD -- '*.swift' || true)
+
+if [[ -z "${FILE_PATHS}" ]]; then
+  echo "No Swift files changed in the last commit."
+  exit 0
+fi
+
+declare -a EXPANDED_FILE_PATHS=()
+
+while read -r line; do
+    if [[ -z "$line" ]]; then
+        continue
+    fi
+    FILE_PATH="${ROOT_DIR}/${line#}"
+    EXPANDED_FILE_PATHS+=("$FILE_PATH")
+done <<< "$FILE_PATHS"
+
+# Get the exit code of swift format lint
+swift format lint --strict --parallel --recursive --configuration "$CONFIG_PATH" "${EXPANDED_FILE_PATHS[@]}" 2>&1 || {
+  echo "SwiftFormat lint failed." >&2
+  exit 1
+}
+
+exit 0
 ```
