@@ -17,6 +17,7 @@
   - [XCConfig](#xcconfig)
   - [Home Directory](#home-directory)
   - [Simulator List](#simulator-list)
+    - [Launch Using URL](#launch-using-url)
     - [Simulator Cache Dir](#simulator-cache-dir)
   - [Code Snippets](#code-snippets)
   - [Provisioning Profiles](#provisioning-profiles)
@@ -317,6 +318,16 @@ To list all the frameworks, including the private ones, in iOS:
 ls \"$(xcode-select -p)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks\"
 ```
 
+### Launch Using URL
+
+To launch your app using a URL Scheme or some deep link:
+
+```bash
+xcrun simctl openurl booted <URL>
+// Example 1: xcrun simctl openurl booted foo://
+// Example 1: xcrun simctl openurl booted "foo://page-one"
+```
+
 ### Simulator Cache Dir
 
 The following directory contains the cache for the simulators:
@@ -352,8 +363,8 @@ Xcode uses the following format for displaying warning/error/note[<sup>*</sup>](
 [filename]:[linenumber]: error | warning | note : [message]
 ```
 
-It's possible to increase custom script run phase by introducing INPUT and
-OUTPUT files. Here’s the low down on the impact of specifying input and output
+It's possible to speed up custom script run phase by introducing INPUT and
+OUTPUT files. Here’s the impact of specifying input and output
 files with script phases in Xcode[<sup>*</sup>](https://indiestack.com/2014/12/speeding-up-custom-script-phases/):
 
 - Lack of modification to any of the listed input files encourages Xcode not

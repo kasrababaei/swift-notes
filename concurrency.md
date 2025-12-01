@@ -16,6 +16,7 @@
       - [Isolation inheritance](#isolation-inheritance)
       - [`sending` parameter and result values](#sending-parameter-and-result-values)
     - [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
+    - [SendableClosureCaptures](#sendableclosurecaptures)
   - [Concurrency-safe singletons](#concurrency-safe-singletons)
   - [Actor](#actor)
   - [@MainActor](#mainactor)
@@ -1145,6 +1146,51 @@ It is also possible to make the whole function be `Sendable`
 }
 ```
 
+### SendableClosureCaptures
+
+`@Sendable` closures can be called multiple times concurrently, so any captured
+values must also be safe to access concurrently. To prevent data races, the
+compiler prevents capturing mutable values in a `@Sendable` closure. This
+will show the following error:
+
+> Captures in a `@Sendable` closure
+
+If you manually ensure data-race safety, such as by using an external
+synchronization mechanism, you can use nonisolated(unsafe) to opt out
+of concurrency checking [*](https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures/):
+
+```swift
+func callConcurrently(
+  _ closure: @escaping @Sendable () -> Void
+) { ... }
+
+
+func capture() {
+  var result = 0
+  result += 1
+
+
+  callConcurrently {
+    nonisolated(unsafe) let result = result
+    print(result)
+  }
+}
+
+func callConcurrently(
+  _ closure: @escaping @Sendable () -> Void
+) {
+  Task {
+    await withDiscardingTaskGroup { group in
+      for _ in 0..<10 {
+        group.addTask {
+          closure()
+        }
+      }
+    }
+  }
+}
+```
+
 ## Concurrency-safe singletons
 
 There's three options:
@@ -1216,7 +1262,8 @@ that actor-isolated state can change across an `await` when an interleaved
 task mutates that state, meaning that developers must be sure not to
 break invariants across an await. In general, this is the reason for
 requiring `await` on asynchronous calls, because various state (e.g.,
-global state) can change when a call suspends.
+global state) can change when a call suspends. A good example of
+[Actor Reentrancy Problem](https://swiftsenpai.com/swift/actor-reentrancy-problem/).
 
 ## @MainActor
 

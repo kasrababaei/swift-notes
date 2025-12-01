@@ -23,6 +23,7 @@
   - [Struct vs Class](#struct-vs-class)
   - [Writing Symbol Documentation](#writing-symbol-documentation)
   - [Non-breaking Space](#non-breaking-space)
+  - [@\_spi Attribute](#_spi-attribute)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -612,4 +613,36 @@ A narrow non-breaking space, `\u{202F}`, is not equal to a normal space.
 
 ```swift
 print("\u{202F}" == " ") // returns false
+```
+
+## @_spi Attribute
+
+Functions marked as `@_spi(RawSyntax)` (where `RawSyntax` can be any name) are
+considered SPI (System Programming Interface) and are only accessible if
+the module that declares them is imported as `@_spi(RawSyntax)`.
+
+Since functions marked as SPI are not part of the public API, swift-syntax
+makes no guarantee to their source stability. swift-syntax makes no effort
+to keep its SPI stable [Source](https://swiftpackageindex.com/swiftlang/swift-syntax/600.0.1/documentation/swiftsyntax/spi).
+
+[Example](https://forums.swift.org/t/implement-a-private-api-in-swift/47920/3):
+
+```swift
+public struct MyStruct {
+  public init() {}
+
+  @_spi(Private) public func myPrivateFunc() {}
+}
+```
+
+Clients that just import `ThisFramework` will have access to MyStruct and
+`MyStruct.init`, but if they want to call `myPrivateFunc`, they need to
+annotate their import with a corresponding `@_spi` annotation with the
+same Private "SPI tag":
+
+```swift
+@_spi(Private) import ThisFramework
+
+let s = MyStruct()
+s.myPrivateFunc()
 ```
