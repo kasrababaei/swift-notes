@@ -896,6 +896,36 @@ actor via a call to `notIsolated()`. To close this safety hole, a dynamic check
 is inserted at the call-site of `onMain()` when ModuleB is recompiled against
 ModuleA after ModuleA has migrated to the Swift 6 language mode.
 
+When calling an actor non-isolated function from an actor isolated context,
+based on [0420 proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0420-inheritance-of-actor-isolation.md):
+
+> Non-isolated synchronous functions dynamically inherit the isolation of their caller.
+
+However, it only inherits the static isolation, not the dynamic context.
+That is why in the following code, the first `assertIsolated` doesn't throw
+but the second one that's created inside the `Task` throws a runtime error:
+
+```Swift
+class FooViewController: UIViewController {
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
+    MainActor.assumeIsolated { Foo().load() }
+  }
+}
+
+class Foo {
+  func load() {
+    MainActor.assertIsolated() // Fine...
+    Task {
+      MainActor.assertIsolated() // Runtime error: EXC_BREAKPOINT...
+    }
+  }
+}
+```
+
+The [0338 proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0338-clarify-execution-non-actor-async.md)
+introduced this to clarify exactly this kind of situation.
+
 #### Explicit isolation
 
 Currently, [there's a proposal](https://github.com/sophiapoirier/swift-evolution/blob/closure-isolation/proposals/nnnn-closure-isolation-control.md)
