@@ -35,6 +35,7 @@
     - [Offset Pagination](#offset-pagination)
     - [Cursor Pagination](#cursor-pagination)
     - [Cursor Pagination vs. Offset Pagination](#cursor-pagination-vs-offset-pagination)
+  - [Modularization](#modularization)
 
 In software engineering, a design pattern describes a relatively small,
 well-defined aspect (i.e. functionality) of a computer program in terms of
@@ -832,3 +833,37 @@ Cursor-based pagination comes with [tradeoffs](https://slack.engineering/evolvin
   in the source table.
 - There is no concept of the total number of pages or results in the set.
 - The client can’t jump to a specific page.
+
+## Modularization
+
+A few key benefits of modularizing a project:
+
+- [Faster build times](https://developer.apple.com/documentation/xcode/improving-the-speed-of-incremental-builds?utm_source=chatgpt.com)
+  - Smaller modules compile independently
+  - Better use of Xcode’s incremental builds
+- Improved code separation & clarity
+  - Clear ownership of features (Feature / Domain / Core modules)
+  - Reduced coupling between components
+- Clear dependency graph
+  - Prevents cyclic dependencies
+
+However, when a low level module becomes incredibly large, and many
+higher modules depend on it, the followings could happen:
+
+- God module / tight coupling
+  - Becomes a dumping ground for unrelated responsibilities
+  - High-level modules implicitly coupled through shared internals
+- Change amplification
+  - Small changes trigger rebuilds of many dependents
+  - Higher risk of regressions across the app
+- Slower build times
+  - Any modification invalidates many modules
+  - Hurts incremental builds and CI performance
+- Hidden architectural violations
+  - Feature-specific logic sneaks into “core”
+
+When a target has many dependencies, or when it depends on large,
+monolithic modules, Xcode must serialize more tasks.
+To improve build performance, simplify your target’s dependency
+list, and break up monolithic targets so that Xcode can do more
+work in parallel<sup>[\*](https://developer.apple.com/documentation/xcode/improving-the-speed-of-incremental-builds?utm_source=chatgpt.com#Refactor-your-targets-to-improve-parallelism)</sup>.
