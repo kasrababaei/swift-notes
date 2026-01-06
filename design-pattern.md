@@ -7,6 +7,7 @@
   - [Model-View-Controller (MVC)](#model-view-controller-mvc)
   - [Model-View-Presenter (MVP)](#model-view-presenter-mvp)
   - [Model–View–ViewModel (MVVM)](#modelviewviewmodel-mvvm)
+    - [Semantic vs Structural Coupling](#semantic-vs-structural-coupling)
     - [MVP vs MVVM](#mvp-vs-mvvm)
   - [Dependency Injection](#dependency-injection)
     - [Initializer Injection](#initializer-injection)
@@ -33,7 +34,7 @@
     - [Infinite Scroll](#infinite-scroll)
     - [Offset Pagination](#offset-pagination)
     - [Cursor Pagination](#cursor-pagination)
-    - [**Cursor Pagination vs. Offset Pagination**](#cursor-pagination-vs-offset-pagination)
+    - [Cursor Pagination vs. Offset Pagination](#cursor-pagination-vs-offset-pagination)
 
 In software engineering, a design pattern describes a relatively small,
 well-defined aspect (i.e. functionality) of a computer program in terms of
@@ -203,11 +204,72 @@ it to models typically falls within a _service layer_ or _repository layer_ outs
 of the Model-View-ViewModel triad. This layer interacts with the backend, parses
 the data into model objects, and provides them to the ViewModel.
 
+MVVM does not eliminate coupling, it makes coupling intentional, directional,
+and explicit. Remember:
+
+- Keep the view a pure rendering component.
+- Be able to change the behavior (business logic) without touching the view.
+- Be able to replace the ViewModel freely.
+- No conditional compilation (when View or ViewModel changes)
+- Decoupling the view and view model (both ways), means:
+  - No async work
+  - No service (if using service locator pattern)
+  - Deterministic rendering
+  - Zero flakiness when testing
+  - No service configuration for Previews
+  - No global mutation
+  - Faster Previews since view's preview becomes self-contained
+  - Internal ViewModel changes don’t ripple outward; so, faster refactors
+  - The View expresses what it needs, not who provides it
+  - Coupling becomes semantic, not structural
+  - This keeps the View stable while behavior evolves
+  - This keeps the ViewModel stable while the rendering evolves.
+    Example: a UIKit View gets refactored to a SwiftUI View
+  - Replacement becomes mechanical, i.e., no reasoning required, no
+    architectural decisions, no conditions, no branching, no refactoring.
+    You _don't_ think, you swap.
+  - With mechanical replacement:
+    - Rollbacks become easier
+    - CoDe reviews become trivialC
+    - Changes are localized
+    - Junior developers can do it safely
+
+Suppose the View is coupled with a concreted ViewModel, now you need to:
+
+- Decide whether to subclass
+- Decide whether to mock services
+- Decide whether to disable async
+- Possibly add flags
+- Possibly modify the real ViewModel
+
+### Semantic vs Structural Coupling
+
+**Structural** coupling means depending on a specific shape:
+
+- A concrete type
+- Its stored properties
+- Its exact methods
+- Its initialization details
+
+**Semantic** coupling means depending on meaning:
+
+- “I need something that provides a title”
+- “I need something that can load data”
+- “I don’t care how that happens”
+
+In other words:
+
+> _Structural_ coupling answers who you depend on.
+> _Structural_ coupling ties you to an object.
+>
+> _Semantic_ coupling answers what you need.
+> _Semantic_ coupling ties you to an idea.
+
 ### MVP vs MVVM
 
-Unlike the Presenter in MVP, the ViewModel in MVVM is state-driven and does not directly
-"command" the View. It exposes observable properties (e.g., via Combine, RxSwift,
-or KVO) that the View listens to for updates.
+Unlike the Presenter in MVP, the ViewModel in MVVM is state-driven and does not
+directly "command" the View. It exposes observable properties (e.g., via Combine,
+RxSwift, or KVO) that the View listens to for updates.
 
 In MVVM, the View binds directly to these properties to reflect the state of the
 data. It listens to changes in the ViewModel and updates itself automatically,
@@ -746,7 +808,7 @@ The cursor pagination utilizes a pointer that refers to a specific database reco
 This approach is especially useful when dealing with large datasets or
 real-time data that might change frequently.
 
-### **Cursor Pagination vs. Offset Pagination**
+### Cursor Pagination vs. Offset Pagination
 
 | **Aspect**        | **Cursor Pagination**                | **Offset Pagination**        |
 | ----------------- | ------------------------------------ | ---------------------------- |
