@@ -24,6 +24,7 @@
   - [Writing Symbol Documentation](#writing-symbol-documentation)
   - [Non-breaking Space](#non-breaking-space)
   - [@\_spi Attribute](#_spi-attribute)
+  - [AttributedString](#attributedstring)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -646,3 +647,33 @@ same Private "SPI tag":
 let s = MyStruct()
 s.myPrivateFunc()
 ```
+
+## AttributedString
+
+In iOS 15, AttributedString was introduced which is a value type with
+attributes for portions of its text. It allows localization by using
+Markdown syntax in the text. For example:
+
+```Swift
+let visitString = AttributedString(localized: "_Please visit our [website](https://www.example.com)._")
+```
+
+In which the The resulting attributed string contains an `inlinePresentationIntent`
+attribute to apply the emphasized presentation intent over the entire string.
+It also applies the link attribute to the text.
+
+To apply the automatic grammar agreement feature when loading a localized
+string, use Apple’s Markdown extension syntax: `^[text to inflect](inflect: true)`.
+For example:
+
+```Swift
+let years = Int.random(in: 1...5)
+let suffix = "year"
+let string = AttributedString(localized: "^[\(years) \(suffix)](inflect: true)")
+// Prints out one of the followings:
+// 1 year
+// 5 years
+```
+
+When the string loads, the automatic grammar agreement feature adjusts the text
+for `year` to match the number.
