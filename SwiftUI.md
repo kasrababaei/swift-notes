@@ -46,6 +46,9 @@
       - [Modifying Alignment Guides](#modifying-alignment-guides)
       - [Custom Alignment Identifiers](#custom-alignment-identifiers)
   - [PreferenceKey: A named value produced by a view](#preferencekey-a-named-value-produced-by-a-view)
+  - [Back Deploy](#back-deploy)
+  - [Back deploy `scrollClipDisabled`](#back-deploy-scrollclipdisabled)
+  - [Back deploy `presentationBackground`](#back-deploy-presentationbackground)
 
 ## General Notes
 
@@ -1414,5 +1417,114 @@ extension View {
     unc navigationBarTitle(_ title: String) -> some View {
       self.preference(key: NavigationBarTitleKey.self, value: title)
   }
+}
+```
+
+## Back Deploy
+
+Often, an API is unavailable due to the current deployment version.
+The following code snippets, show a few back-ported APIs that aren't
+available in iOS 16:
+
+## Back deploy `scrollClipDisabled`
+
+```swift
+extension Backport where Content: View {
+    @ViewBuilder
+    nonisolated func scrollClipDisabled(_ disabled: Bool = true) -> some View {
+        if #available(iOS 17.0, *) {
+            content
+                .scrollClipDisabled(disabled)
+        } else {
+            content
+                .background {
+                    ClipDisablerView(clipsToBounds: !disabled)
+                }
+        }
+    }
+}
+
+private struct ClipDisablerView: UIViewRepresentable {
+    private let clipsToBounds: Bool
+
+    nonisolated init(clipsToBounds: Bool) {
+        self.clipsToBounds = clipsToBounds
+    }
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        DispatchQueue.main.async {
+            view.backport.scrollView?.clipsToBounds = self.clipsToBounds
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
+}
+
+extension Backport where Content: UIView {
+    /// Returns an instance of `HostingScrollView` which is owned by a `UIHostingContentView`.
+    var scrollView: UIView? {
+        var nextSuperview = content.superview
+        while let superview = nextSuperview {
+            if NSStringFromClass(type(of: superview)).contains("UIHostingContentView") {
+                return superview.subviews.first { subview in
+                    NSStringFromClass(type(of: subview)).contains("HostingScrollView")
+                }
+            }
+            nextSuperview = superview.superview
+        }
+        return nil
+    }
+}
+```
+
+## Back deploy `presentationBackground`
+
+```swift
+extension Backport where Content: View {
+    /// Sets the presentation background of the enclosing sheet using a shape style.
+    /// - Parameter style: The shape style to use as the presentation background.
+    @available(iOS, deprecated: 16.4, message: "Use the function added in iOS 16.4")
+    @ViewBuilder
+    nonisolated func presentationBackground<S: ShapeStyle>(_ style: S) -> some View {
+        if #available(iOS 16.4, *) {
+            content
+                .presentationBackground(style)
+        } else {
+            TransparentPresentationBackgroundView()
+                .background(style)
+                .overlay(content)
+        }
+    }
+}
+
+private struct TransparentPresentationBackgroundView: UIViewRepresentable {
+    nonisolated init() {}
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        DispatchQueue.main.async {
+            view.backport.hostingView?.backgroundColor = nil
+            view.backport.removeDropShadow()
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
+}
+
+extension Backport where Content: UIView {
+    /// Returns an instance of `_UIHostingView` which is owned by a `UIHostingController`.
+    var hostingView: UIView? {
+        var nextSuperview = content.superview
+        while let superview = nextSuperview {
+            if NSStringFromClass(type(of: superview)).contains("UIHostingView") {
+                return superview
+            }
+            nextSuperview = superview.superview
+        }
+        return nil
+    }
 }
 ```

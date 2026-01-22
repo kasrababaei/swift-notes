@@ -25,6 +25,7 @@
   - [Non-breaking Space](#non-breaking-space)
   - [@\_spi Attribute](#_spi-attribute)
   - [AttributedString](#attributedstring)
+  - [Conditional Compilation Block](#conditional-compilation-block)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -544,7 +545,7 @@ affecting compiler performance.
 
 ## Reducing Dynamic Dispatch
 
-There are three ways to improve performance by eliminating dynamic dispatch<sup>[*](https://developer.apple.com/swift/blog/?id=27)</sup>:
+There are three ways to improve performance by eliminating dynamic dispatch<sup>[*](https://github.com/swiftlang/swift/blob/main/docs/OptimizationTips.rst#advice-use-final-when-you-know-the-declaration-does-not-need-to-be-overridden)</sup>:
 
 1. Using the `final` keyword to indicate the class cannot be overridden.
    This allows the compiler to safely elide dynamic dispatch indirection.
@@ -677,3 +678,13 @@ let string = AttributedString(localized: "^[\(years) \(suffix)](inflect: true)")
 
 When the string loads, the automatic grammar agreement feature adjusts the text
 for `year` to match the number.
+
+## Conditional Compilation Block
+
+A conditional compilation block allows code to be conditionally compiled
+depending on the value of one or more compilation conditions <sup>[*](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/statements/#Conditional-Compilation-Block)</sup>.
+
+When creating blocks such as `#if DEBUG`, the word `DEBUG` needs to be added
+to the build settings. Either as `SWIFT_ACTIVE_COMPILATION_CONDITIONS` or
+as `OTHER_SWIFT_FLAGS` which is the legacy way for doing this and the flag
+name needs to be prefixed by `-D`, example: `-DDEBUG`.

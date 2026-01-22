@@ -231,7 +231,7 @@ and explicit. Remember:
     You _don't_ think, you swap.
   - With mechanical replacement:
     - Rollbacks become easier
-    - CoDe reviews become trivialC
+    - CoDe reviews become trivial
     - Changes are localized
     - Junior developers can do it safely
 

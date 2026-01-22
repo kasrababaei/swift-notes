@@ -31,6 +31,9 @@ your app at launch time and the behavior of your app once it is running.
 
 [List of iOS keys for Info.plist](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/iPhoneOSKeys.html#//apple_ref/doc/uid/TP40009252-SW1)
 
+You can also apply a setting conditionally (based on sdk, arch or config). Learn
+more in: [Apply a setting conditionally to a platform or architecture](https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project#Apply-a-setting-conditionally-to-a-platform-or-architecture)
+
 ### CFBundleDisplayName vs CFBundleName
 
 `CFBundleDisplayName`: this is the user-facing name of the app as it appears on

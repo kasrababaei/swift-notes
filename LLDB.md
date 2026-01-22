@@ -25,4 +25,10 @@ po [(UIView*)0x131e2c2a0 layoutIfNeeded]
 e [(UIStackView*) 0x14870bd70 setAlignment: UIStackViewAlignmentFill] // Need to do `e @import UIKit` first
 p (void)[0x136f17410 setNumberOfLines:2]
 p (UIEdgeInsets)[[0x16203ac00 view] safeAreaInsets]
+p (void)[(UIView*)0x12e3adce0 setClipsToBounds:NO]
+p (int)[[(UIView*)0x11de05be0 subviews] count]
+p (UIView*)[[(UIView*)0x11de05be0 subviews] objectAtIndex:0]
+// To import a framework
+e @import UIKit // For Objective-C code
+e import PrivateFramework // For Swift code
 ```
