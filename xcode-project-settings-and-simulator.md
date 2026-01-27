@@ -22,6 +22,7 @@
   - [Code Snippets](#code-snippets)
   - [Provisioning Profiles](#provisioning-profiles)
   - [Running custom scripts during a build](#running-custom-scripts-during-a-build)
+  - [Previews](#previews)
 
 ## iOS Keys for Info.plist
 
@@ -30,9 +31,6 @@ You use the keys associated with this framework to configure the appearance of
 your app at launch time and the behavior of your app once it is running.
 
 [List of iOS keys for Info.plist](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/iPhoneOSKeys.html#//apple_ref/doc/uid/TP40009252-SW1)
-
-You can also apply a setting conditionally (based on sdk, arch or config). Learn
-more in: [Apply a setting conditionally to a platform or architecture](https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project#Apply-a-setting-conditionally-to-a-platform-or-architecture)
 
 ### CFBundleDisplayName vs CFBundleName
 
@@ -50,6 +48,9 @@ A detailed list of individual Xcode build settings that control or change the
 way a target is built.
 
 [List of build settings for Xcode projects](https://developer.apple.com/documentation/xcode/build-settings-reference)
+
+You can also apply a setting conditionally (based on sdk, arch or config). Learn
+more in: [Apply a setting conditionally to a platform or architecture](https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project#Apply-a-setting-conditionally-to-a-platform-or-architecture)
 
 ## Dependencies
 
@@ -389,3 +390,29 @@ Adding a bogus file to the derived files folder, as the output can indicate that
 the script has run. It has the effect of causing a “clean” of the project to wipe
 out the artificial file and thus cause the script phase to run again even
 though none of the input files may have changed.
+
+## Previews
+
+Previews allow viewing two things: Views and Widgets. Previews also allow to
+use a physical device. For example, you want to access to the camera or to
+sensors. Another reason is that your device probably already has a lot of real
+data on it, for example, photos or files that you want to leverage. Previews
+can act as an entry point, think of as something similar to a Scene.
+
+Previews use three things to find which executable to use<sup>[*](https://developer.apple.com/videos/play/wwdc2023/10252?time=1023)</sup>:
+
+- Edited source files
+- Target dependencies
+- Selected schemes
+
+Previews only select an app that's in the current scheme. If the preview
+is in a library without and executable app, it'll create an app on your
+behalf called `XCPreviewAgent`. Previews in libraries help in two broad ways:
+
+- Modularizing your code into libraries and create smaller schemes to get
+  better build times or just to be able to focus on one part of your project
+- When modularized code into libraries, you can still provide things like
+  entitlements or Info.plist keys that your app target was providing.
+
+Assets that are passed to Previews can be stripped out when submitting to the
+App Store. This is done by a feature called Development Assets.
