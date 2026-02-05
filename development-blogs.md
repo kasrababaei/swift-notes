@@ -13,6 +13,7 @@ Here's a list of development blogs:
 - [Fatbobman's blog](https://fatbobman.com/en/)
 - [Saagar Jha](https://saagarjha.com)
 - [WTF Auto Layout](https://www.wtfautolayout.com/)
+- [SwiftUI Layout Guide](https://www.swiftuifieldguide.com/)
 
 ## User Retention
 

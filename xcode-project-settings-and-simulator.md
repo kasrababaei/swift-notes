@@ -115,7 +115,8 @@ standard system directories.
 ### Unused Dependencies
 
 Unused dependencies are typically not automatically removed by default.
-When dealing with dependencies, there are two items in *Build Settings* to look after:
+When dealing with dependencies, there are two items in *Build Settings* to
+look after:
 
 1. [LIBRARY_SEARCH_PATHS](https://developer.apple.com/documentation/xcode/build-settings-reference#Library-Search-Paths):
 This is a list of paths to folders to be searched by the linker for libraries

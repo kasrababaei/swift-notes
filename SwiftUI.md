@@ -47,8 +47,9 @@
       - [Custom Alignment Identifiers](#custom-alignment-identifiers)
   - [PreferenceKey: A named value produced by a view](#preferencekey-a-named-value-produced-by-a-view)
   - [Back Deploy](#back-deploy)
-  - [Back deploy `scrollClipDisabled`](#back-deploy-scrollclipdisabled)
-  - [Back deploy `presentationBackground`](#back-deploy-presentationbackground)
+    - [Back deploy `scrollClipDisabled`](#back-deploy-scrollclipdisabled)
+    - [Back deploy `presentationBackground`](#back-deploy-presentationbackground)
+    - [Back deploy `labelIconToTitleSpacing`](#back-deploy-labelicontotitlespacing)
 
 ## General Notes
 
@@ -260,9 +261,9 @@ struct Counter: View {
 ```
 
 The `State(initialValue:)` initializer makes it clear that the value 0 is just the
-_initial_ value of the state property. This is the value that will be used when the
-node for the counter view is first created in the render tree. Once the node is
-there, the initial value of the state property will be ignored.
+_initial_ value of the state property. This is the value that will be used when
+the node for the counter view is first created in the render tree. Once the node
+is there, the initial value of the state property will be ignored.
 
 ## StateObject
 
@@ -630,11 +631,11 @@ padding       Color
 
 1. The system proposes 320⨉480
 2. The background proposes the same size to its primary subview (the padding)
-3. The padding subtracts 10 points on each edge, and it proposed 300⨉460 to the text
+3. The padding subtracts 10p on each edge, and it proposed 300⨉460 to the text
 4. The text reports its size as 51⨉17
 5. The padding adds 10 points on each edge, and it reports its size as 71⨉37
 6. The background proposes the size of the padded text (71⨉73) to the secondary
-subview (color)
+   subview (color)
 7. The color accepts and reports the proposed 71⨉73
 8. The background reports the size of its primary subview (71⨉73)
 
@@ -927,7 +928,7 @@ available width among its subviews:
 2. The stack then sorts the subviews according to _flexibility_, from least
 flexible to most flexible. It keeps track of all the remaining subviews and
 the available remaining width.
-3. White there are remaining subviews, the stack proposes the remaining
+3. While there are remaining subviews, the stack proposes the remaining
 width, divided by the number of the remaining subviews.
 
 In the following `HStack`, the `Text` is the least flexible subview.
@@ -1426,7 +1427,7 @@ Often, an API is unavailable due to the current deployment version.
 The following code snippets, show a few back-ported APIs that aren't
 available in iOS 16:
 
-## Back deploy `scrollClipDisabled`
+### Back deploy `scrollClipDisabled`
 
 ```swift
 extension Backport where Content: View {
@@ -1479,7 +1480,7 @@ extension Backport where Content: UIView {
 }
 ```
 
-## Back deploy `presentationBackground`
+### Back deploy `presentationBackground`
 
 ```swift
 extension Backport where Content: View {
@@ -1526,5 +1527,40 @@ extension Backport where Content: UIView {
         }
         return nil
     }
+}
+```
+
+### Back deploy `labelIconToTitleSpacing`
+
+```swift
+public extension Backport where Content: View {
+    @available(iOS, deprecated: 26.0, message: "Use the function added in iOS 26.0")
+    @ViewBuilder
+    nonisolated func labelIconToTitleSpacing(_ value: CGFloat) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+                .labelIconToTitleSpacing(value)
+        } else {
+            content
+                .labelStyle(TitleAndIconLabelStyle(spacing: value))
+        }
+    }
+}
+
+private struct TitleAndIconLabelStyle: LabelStyle {
+    let spacing: CGFloat
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: self.spacing) {
+            configuration.icon
+            configuration.title
+        }
+    }
+}
+
+#Preview {
+    Label("Lightning", systemImage: "bolt.fill")
+        .backport
+        .labelIconToTitleSpacing(20)
 }
 ```
