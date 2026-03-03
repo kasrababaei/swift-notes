@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Check if a base branch argument was provided, default to 'main'
+base_branch=${1:-main}
+
+# Validate that the base branch exists
+if ! git rev-parse --verify "origin/$base_branch" >/dev/null 2>&1; then
+    echo "Error: Base branch '$base_branch' does not exist on remote"
+    exit 1
+fi
+
 # Get the currently checked out branch name using git
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
@@ -9,12 +18,12 @@ ticket_regex="([a-z]+|[A-Z]+)-[0-9]+"
 # Extract ticket number using the regular expression
 ticket=$(echo "$current_branch" | grep -oE "$ticket_regex")
 
-pull_request_template=$(cat ".github/pull_request_template.md")
+pull_request_template=$(cat ".github/PULL_REQUEST_TEMPLATE.md")
 
 # A placeholder that is inside the pull_request_template.md file
-ticket_placeholder="<!--- ENGIOS-#### --->"
+ticket_placeholder="ABC-1234"
 
 # Find and replace the placehlder with the extracted ticket
 pull_request_template=${pull_request_template//$ticket_placeholder/$ticket}
 
-gh pr create -t "$ticket: " -b "$pull_request_template" -w
+gh pr create -B "$base_branch" -t "[$ticket]: " -b "$pull_request_template" -w

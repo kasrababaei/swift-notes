@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Verify gum is installed
+if ! command -v gum &> /dev/null; then
+    echo "gum is not installed. Installing..."
+    if ! command -v brew &> /dev/null; then
+        echo "Homebrew is not installed. Please install Homebrew first."
+        exit 1
+    fi
+    if ! brew install gum;
+
+    then
+        echo "Failed to install gum. Please check your internet connection or try again later."
+        exit 1
+    fi
+fi
+
+LIST=$(cat <<END
+Open the derived data folder:open -R /Users/$(whoami)/Library/Developer/Xcode/DerivedData
+Open Xcode caches folder:open -R /Users/$(whoami)/Library/Caches/com.apple.dt.Xcode
+Open SPM cache folder:open -R /Users/$(whoami)/Library/Caches/org.swift.swiftpm
+Remove the contents of derived data:rm -fr /Users/$(whoami)/Library/Developer/Xcode/DerivedData
+Remove Xcode cache folder:rm -fr /Users/$(whoami)/Library/Caches/com.apple.dt.Xcode
+Remove SPM cache folder:rm -fr /Users/$(whoami)/Library/Caches/org.swift.swiftpm
+List iOS libraries:ls \"$(xcode-select -p)/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks\"
+Open ZSH config:code ~/.zshrc
+Open Git config:code ~/.gitconfig
+END
+)
+
+# cut is a Unix utility that splits each input line into fields.
+# -d ':'    # use a colon character as the field **delimiter**
+# -f 1      # select the **first** field from each line
+KEY=$(echo "$LIST" | cut -d':' -f1 | gum choose --header "Select what to run:")
+
+if [ -n "$KEY" ]; then
+    COMMAND=$(echo "$LIST" | grep $KEY | cut -d':' -f2)
+
+    if [ -n "$COMMAND" ]; then
+        gum confirm "Execute '$KEY'?" && eval "$COMMAND"
+    fi
+fi

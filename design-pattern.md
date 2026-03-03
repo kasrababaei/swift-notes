@@ -36,6 +36,7 @@
     - [Cursor Pagination](#cursor-pagination)
     - [Cursor Pagination vs. Offset Pagination](#cursor-pagination-vs-offset-pagination)
   - [Modularization](#modularization)
+  - [Law of Demeter (LoD) or principle of least knowledge](#law-of-demeter-lod-or-principle-of-least-knowledge)
 
 In software engineering, a design pattern describes a relatively small,
 well-defined aspect (i.e. functionality) of a computer program in terms of
@@ -867,3 +868,15 @@ monolithic modules, Xcode must serialize more tasks.
 To improve build performance, simplify your target’s dependency
 list, and break up monolithic targets so that Xcode can do more
 work in parallel<sup>[\*](https://developer.apple.com/documentation/xcode/improving-the-speed-of-incremental-builds?utm_source=chatgpt.com#Refactor-your-targets-to-improve-parallelism)</sup>.
+
+## Law of Demeter (LoD) or principle of least knowledge
+
+LoD is a specific case of loose coupling. These three recommendations
+serve as a succinct summary:
+
+1. Each unit should have only limited knowledge about other units: only units
+  "closely" related to the current unit.
+2. Each unit should only talk to its friends; don't talk to strangers.
+3. Only talk to your immediate friends.
+
+[_Source_](https://en.wikipedia.org/wiki/Law_of_Demeter)

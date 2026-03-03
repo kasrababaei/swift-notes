@@ -50,6 +50,8 @@
     - [Back deploy `scrollClipDisabled`](#back-deploy-scrollclipdisabled)
     - [Back deploy `presentationBackground`](#back-deploy-presentationbackground)
     - [Back deploy `labelIconToTitleSpacing`](#back-deploy-labelicontotitlespacing)
+    - [Back depoly \`setContentOffset(\_:animated:)](#back-depoly-setcontentoffset_animated)
+  - [\_VariadicView](#_variadicview)
 
 ## General Notes
 
@@ -1564,3 +1566,102 @@ private struct TitleAndIconLabelStyle: LabelStyle {
         .labelIconToTitleSpacing(20)
 }
 ```
+
+### Back depoly `setContentOffset(_:animated:)
+
+```swift
+fileprivate struct ScrollContentOffsetModifier: ViewModifier {
+    @Binding var contentOffset: CGPoint
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                InternalScrollViewHelper(contentOffset: $contentOffset)
+            }
+    }
+}
+
+extension View {
+    func scrollToOffset(contentOffset: Binding<CGPoint>) -> some View {
+        return modifier(ScrollContentOffsetModifier(contentOffset: contentOffset))
+    }
+}
+
+struct InternalScrollViewHelper: UIViewRepresentable {
+    @Binding var contentOffset: CGPoint
+    @State private var scrollView: UIScrollView?
+
+    func makeUIView(context: Context) -> some UIView {
+        let view = ScrollViewIdentifier()
+        view.scrollViewCompletion = { scrollView in
+            self.scrollView = scrollView
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIViewType, context: Context) {
+        scrollView?.setContentOffset(contentOffset, animated: true)
+    }
+}
+
+final class ScrollViewIdentifier: UIView {
+    var scrollViewCompletion: ((UIScrollView) -> Void)?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+
+    override func didMoveToWindow() {
+        guard let scrollView = superview?.superview?.superview as? UIScrollView else {
+            return
+        }
+        self.scrollViewCompletion?(scrollView)
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+}
+```
+
+## _VariadicView
+
+We can see all the details of this API in
+
+```text
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/SwiftUI.framework/Modules/SwiftUI.swiftmodule/arm64-apple-ios.swiftinterface.
+```
+
+But, this is a private API, so is it safe to use in production? I think it is,
+and it has been used successfully by many apps.
+
+The key reason you can use it is the VariadicView API is already used in apps,
+even without developers writing the code explicitly. _VariadicView can be
+emitted into your app just by using HStack since it is part of the `@inlinable`
+initializer:
+
+```swift
+@frozen public struct HStack<Content> : SwiftUI.View where Content : SwiftUI.View {
+@usableFromInline
+internal var _tree: SwiftUI._VariadicView.Tree<SwiftUI._HStackLayout, Content>
+@inlinable public init(
+    alignment: SwiftUI.VerticalAlignment = .center, 
+    spacing: CoreFoundation.CGFloat? = nil, 
+    @SwiftUI.ViewBuilder content: () -> Content
+    ) {
+        _tree = .init(
+            root: _HStackLayout(alignment: alignment, spacing: spacing), content: content()
+        )
+    }
+```
+
+The struct is also marked with @frozen, making _VariadicView.Tree part of the
+SwiftUI ABI. If it changed, it would break previously compiled apps that used
+`HStack`. There are also public SwiftUI types that conform to
+`_VariadicView.UnaryViewRoot`, such as GridLayout, making it impossible to
+remove these protocols. Thanks to @EricHoracek for pointing out these examples!
+
+Since this VariadicView code is already used by having the compiler emit it
+inline, it’s unlikely there would be any problem using it from your source code
+directly. Emerge is now using it as the root view of every snapshot we generate,
+and it might be useful for your views as well! [_Source_](https://www.emergetools.com/blog/posts/how-to-use-variadic-view#is-it-safe)

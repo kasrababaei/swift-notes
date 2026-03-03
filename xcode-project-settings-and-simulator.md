@@ -417,3 +417,13 @@ behalf called `XCPreviewAgent`. Previews in libraries help in two broad ways:
 
 Assets that are passed to Previews can be stripped out when submitting to the
 App Store. This is done by a feature called Development Assets.
+
+It usually takes 5-10 seconds until a SwiftUI Preview is ready, even if it was
+active before. Xcode insists that you do nothing in that time to see the Preview.
+Make another tiny edit, or switch to another file, and you’ll lose the Preview
+run. It would be great if it would be possible to run the Preview in a way so
+that nothing could interrupt that Preview run, similar to how it works
+for `Product > Run`.
+
+`Editor > Canvas > Automatically` Refresh Preview could be it, but if disabled,
+it’ll still pause the preview if you make a change to the source file.

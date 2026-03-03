@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Verify gum is installed
+if ! command -v gum &> /dev/null; then
+    echo "gum is not installed. Installing..."
+    if ! command -v brew &> /dev/null; then
+        echo "Homebrew is not installed. Please install Homebrew first."
+        exit 1
+    fi
+    if ! brew install gum;
+
+    then
+        echo "Failed to install gum. Please check your internet connection or try again later."
+        exit 1
+    fi
+fi
+
+
+switch_branch() {
+    BRANCH=$(git branch --format='%(refname:short)' | grep -v "$(git branch --show-current)" | gum choose --header "Select a branch:" || true)
+    if [ -n "$BRANCH" ]; then
+        git checkout "$BRANCH"
+    fi
+}
+
+if [[ $1 == switch ]]; then
+    switch_branch
+    return
+fi
+
+LIST=$(cat <<END
+Switch branches:!f switch_branch
+Create a pull request:github-create-pull-request
+Show pull request given a commit hash:github-pr-from-commit
+Request re-review:github-pr-re-review
+Cleanup (removed merged branches):!f git cleanup
+Create a branch:!f git chb
+Checkout with no hooks:!f git checkout-no-hooks
+Add & Amend without edits:!f git amend
+Add & Amend without edits or hooks:!f git qaemnd
+Yolo:!f git yolo
+Undo:!f git undo
+Redo:!f git redo
+END
+)
+
+# cut is a Unix utility that splits each input line into fields.
+# -d ':'    # use a colon character as the field **delimiter**
+# -f 1      # select the **first** field from each line
+KEY=$(echo "$LIST" | cut -d':' -f1 | gum choose --header "Select what to run:")
+
+if [ -n "$KEY" ]; then
+    COMMAND=$(echo "$LIST" | grep $KEY | cut -d':' -f2)
+
+    if [ -n "$COMMAND" ]; then
+        if [[ $COMMAND == !f* ]]; then
+            eval "${COMMAND:3}"
+        else
+            eval "$HOME/.scripts/$COMMAND"
+        fi
+    fi
+fi

@@ -34,6 +34,12 @@ Here's a list of disadvantages of using Storyboards:
   the Storyboard. Any animation or dynamic changes need to be done in the
   code.
 - Refactoring or modifying a complex Storyboard can be time consuming.
+  Sometimes, Xcode fails to load Storyboards and have to manually open the
+  file in another editor to fix the issue.
+- It's possible to have the Storyboard file and the Swift file that it points
+  to in different bundles. This means runtime coupling with no compile-time
+  safety. It worsens the two sources of truth problem and adds a hidden
+  dependency.
 - Storyboards are essentially `XML` files. Reading and reviewing `XML` files
   isn't an easy tasks during code review. In most cases, developers need to
   pull the branch and use Xcode to open the file. Also, the `XML` files usually

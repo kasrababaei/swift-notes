@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Convert MOV to GIF
+# Usage: ./mov_to_gif.sh input.mov [output.gif] [fps] [width]
+
+# Check if input file is provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 input.mov [output.gif] [fps] [width]"
+    exit 1
+fi
+
+# Check if input file exists
+if [ ! -f "$1" ]; then
+    echo "Input file not found: $1"
+    exit 1
+fi
+
+# Verify ffmpeg is installed
+if ! command -v ffmpeg &> /dev/null; then
+    echo "ffmpeg is not installed. Installing..."
+    if ! command -v brew &> /dev/null; then
+        echo "Homebrew is not installed. Please install Homebrew first."
+        exit 1
+    fi
+    if ! brew install ffmpeg;
+    then
+        echo "Failed to install ffmpeg. Please check your internet connection or try again later."
+        exit 1
+    fi
+fi
+
+INPUT="$1"
+OUTPUT="${2:-${INPUT%.*}.gif}"
+FPS="${3:-8}"
+WIDTH="${4:-600}"
+
+# Get input video width if width parameter not provided
+if [ -z "$4" ]; then
+    INPUT_WIDTH=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$INPUT")
+    WIDTH="$INPUT_WIDTH"
+else
+    WIDTH="$4"
+fi
+
+echo "Converting $INPUT to $OUTPUT..."
+echo "Settings: ${FPS} fps, ${WIDTH}px width"
+
+# Direct conversion without palette
+ffmpeg -i "$INPUT" -vf "fps=$FPS,scale=$WIDTH:-1:flags=lanczos" -y "$OUTPUT"
+
+# Get file sizes
+INPUT_SIZE=$(du -h "$INPUT" | cut -f1)
+OUTPUT_SIZE=$(du -h "$OUTPUT" | cut -f1)
+
+echo "Done! Created $OUTPUT"
+echo "Input: $INPUT_SIZE → Output: $OUTPUT_SIZE"

@@ -21,8 +21,8 @@ if [ ! -f "$LOG_FILE" ]; then
 fi
 
 # Notice that the timezone is set to MT. But you can adjust it.
-TIMESSTAMP="$(TZ=America/Edmonton date '+%Y-%m-%d-%H:%M:%S')"
-echo "$TIMESSTAMP git $*" >> "$LOG_FILE"
+TIMESTAMP="$(TZ=America/Edmonton date '+%Y-%m-%d-%H:%M:%S')"
+echo "$TIMESTAMP git $*" >> "$LOG_FILE"
 
 # The path needs to match the one that was logged in the previous step.
 /opt/homebrew/bin/git "${@}"
