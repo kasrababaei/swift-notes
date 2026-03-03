@@ -16,31 +16,81 @@ if ! command -v gum &> /dev/null; then
 fi
 
 
-switch_branch() {
+switch() {
     BRANCH=$(git branch --format='%(refname:short)' | grep -v "$(git branch --show-current)" | gum choose --header "Select a branch:" || true)
     if [ -n "$BRANCH" ]; then
         git checkout "$BRANCH"
     fi
 }
 
+absorb() {
+    git add . 
+    MESSAGE=$(git commit -m "$(gum input --placeholder "Commit message")" || true)
+    if [ -n "$MESSAGE" ]; then
+        git commit -m "$MESSAGE"
+        gum confirm "Push changes?" && git push
+    fi
+}
+
+sync() {
+    CURRENT_BRANCH=$(git branch --show-current)
+    DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p') || {
+        echo "Failed to determine default branch. Please check your git configuration." 2>&1
+        return
+    }
+
+    if [[ "$CURRENT_BRANCH" == "$DEFAULT_BRANCH" ]]; then
+        git pull
+
+        return
+    fi
+
+    git fetch origin "$DEFAULT_BRANCH" || {
+        echo "Failed to fetch from origin. Please check your network connection and remote repository." 2>&1
+        return
+    }
+
+    if [ "$CURRENT_BRANCH" != "$DEFAULT_BRANCH" ]; then
+        COMMAND=$(gum choose --header "Select sync method:" "Merge (git pull)" "Rebase (git pull --rebase)" || true)
+        if [ -n "$COMMAND" ]; then
+            if [[ $COMMAND == "Merge"* ]]; then
+                git merge "$DEFAULT_BRANCH"
+            elif [[ $COMMAND == "Rebase"* ]]; then
+                git rebase -i "$DEFAULT_BRANCH"
+            fi
+        fi
+    fi
+}
+
 if [[ $1 == switch ]]; then
-    switch_branch
+    switch
+    return
+fi
+
+if [[ $1 == absorb ]]; then
+    absorb
+    return
+fi
+
+if [[ $1 == sync ]]; then
+    sync
     return
 fi
 
 LIST=$(cat <<END
-Switch branches:!f switch_branch
-Create a pull request:github-create-pull-request
-Show pull request given a commit hash:github-pr-from-commit
-Request re-review:github-pr-re-review
-Cleanup (removed merged branches):!f git cleanup
-Create a branch:!f git chb
-Checkout with no hooks:!f git checkout-no-hooks
-Add & Amend without edits:!f git amend
-Add & Amend without edits or hooks:!f git qaemnd
+Sync:!f sync
+Create:!f git chb
+Switch:!f switch
+Checkout-without-hooks:!f git checkout-no-hooks
+Modify:!f git amend
+Absorb-and-modify:!f git qaemnd
 Yolo:!f git yolo
 Undo:!f git undo
 Redo:!f git redo
+Cleanup (removed merged branches):!f git cleanup
+PR:github-create-pull-request
+Find:github-pr-from-commit
+Request re-review:github-pr-re-review
 END
 )
 
