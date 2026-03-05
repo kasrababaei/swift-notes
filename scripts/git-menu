@@ -16,22 +16,6 @@ if ! command -v gum &> /dev/null; then
 fi
 
 
-switch() {
-    BRANCH=$(git branch --format='%(refname:short)' | grep -v "$(git branch --show-current)" | gum choose --header "Select a branch:" || true)
-    if [ -n "$BRANCH" ]; then
-        git checkout "$BRANCH"
-    fi
-}
-
-absorb() {
-    git add . 
-    MESSAGE=$(git commit -m "$(gum input --placeholder "Commit message")" || true)
-    if [ -n "$MESSAGE" ]; then
-        git commit -m "$MESSAGE"
-        gum confirm "Push changes?" && git push
-    fi
-}
-
 sync() {
     CURRENT_BRANCH=$(git branch --show-current)
     DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p') || {
@@ -45,8 +29,8 @@ sync() {
         return
     fi
 
-    git fetch origin "$DEFAULT_BRANCH" || {
-        echo "Failed to fetch from origin. Please check your network connection and remote repository." 2>&1
+    git fetch origin "$DEFAULT_BRANCH":"$DEFAULT_BRANCH" || {
+        echo "Failed to fetch $DEFAULT_BRANCH from origin. Please check your network connection and remote repository." 2>&1
         return
     }
 
@@ -62,28 +46,189 @@ sync() {
     fi
 }
 
+create() {
+    SUFFIX="dev/$(whoami)"
+    DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p') || {
+        echo "Failed to determine default branch. Please check your git configuration." 2>&1
+        return
+    }
+    CURRENT_BRANCH=$(git branch --show-current)
+    BASE_BRANCH="$DEFAULT_BRANCH"
+
+    if [ -n "$1" ]; then
+        BRANCH_NAME="$SUFFIX/$1"
+        
+        if [ -n "$2" ]; then
+            if [[ "$2" == "-c" ]]; then
+                BASE_BRANCH="$CURRENT_BRANCH"
+            else
+                BASE_BRANCH="$2"
+            fi
+        fi
+
+        git branch "$BRANCH_NAME" "origin/$BASE_BRANCH"
+        git checkout "$BRANCH_NAME"
+    else
+        BRANCH_NAME=$(gum input --placeholder "Branch name")
+
+        if [ -n "$BRANCH_NAME" ]; then
+            git branch "$BRANCH_NAME" "origin/$BASE_BRANCH"
+            git checkout "$BRANCH_NAME"
+        fi
+    fi
+
+    return
+}
+
+if [[ $1 == create ]]; then
+    create "$2" "$3"
+    return
+fi
+
+submit() {
+    CURRENT_BRANCH=$(git branch --show-current)
+    git push --set-upstream origin "$CURRENT_BRANCH" 1>/dev/null || {
+        echo "Failed to push to origin. Please check your network connection and remote repository." 2>&1
+        return
+    }
+
+    PR_NUMBER=$(gh pr list --head "$CURRENT_BRANCH" --state all --json number --jq '.[0].number')
+
+    if [[ -z "$PR_NUMBER" ]]; then
+        gum confirm "Create PR on GitHub?" && github-create-pull-request
+    fi
+}
+
+if [[ $1 == submit ]]; then
+    submit
+    return
+fi
+
+switch() {
+    if [[ "$1" == "-" ]]; then
+        git checkout -
+        return
+    fi
+
+    BRANCH=$(git branch --format='%(refname:short)' | grep -v "$(git branch --show-current)" | gum choose --header "Select a branch:" || true)
+    if [ -n "$BRANCH" ]; then
+        git checkout "$BRANCH"
+    fi
+}
+
 if [[ $1 == switch ]]; then
-    switch
+    switch "$2"
+    return
+fi
+
+absorb() {
+    local MESSAGE="$1"
+
+    git add .
+
+    if [ -n "$MESSAGE" ]; then
+        git commit -m "$MESSAGE" 2>&1 || {
+            echo "Failed to commit changes. Please check your git status and try again." 2>&1
+            return
+        }
+
+        gum confirm "Push changes?" && submit
+    else
+        MESSAGE=$(git commit -m "$(gum input --placeholder "Commit message")" || true)
+        if [ -n "$MESSAGE" ]; then
+            git commit -m "$MESSAGE"
+            gum confirm "Push changes?" && submit
+        fi
+    fi
+}
+
+modify() {
+    git add .
+    git commit --amend --no-edit
+}
+
+if [[ $1 == modify ]]; then
+    modify
+    return
+fi
+
+stack() {
+    DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p') || {
+        echo "Failed to determine default branch. Please check your git configuration." 2>&1
+        return
+    }
+    STACK="$DEFAULT_BRANCH"
+
+    while read -r COMMIT; do
+        LIST=$(git branch --format='%(refname:short)' --contains "$COMMIT")
+
+        while IFS=$'\n' read -r BRANCH; do
+            STACK="$STACK"$'\n'"$BRANCH"
+        done <<< "$LIST"
+    done < <(git log --format='%H' "$DEFAULT_BRANCH"..HEAD)
+
+    BRANCH=$(echo "${STACK}" | gum choose --header "Stack:" || true)
+    return
+}
+
+list() {
+    git branch --format='%(refname:short)'
+}
+
+delete() {
+    CURRENT_BRANCH=$(git branch --show-current)
+    LIST=""
+
+    while read -r BRANCH; do
+        if [ "$BRANCH" != "$CURRENT_BRANCH" ]; then
+            LIST="$LIST"$'\n'"$BRANCH"
+        fi
+    done < <(git branch --format='%(refname:short)')
+
+    BRANCH=$(echo "${LIST}" | gum choose --header "Select a branch to delete:" || true)
+    
+    if [ -n "$BRANCH" ]; then
+        gum confirm "Are you sure you want to delete '$BRANCH'?" && git branch -D "$BRANCH"
+    fi
+}
+
+if [[ $1 == sync ]]; then
+    sync "$2"
     return
 fi
 
 if [[ $1 == absorb ]]; then
-    absorb
+    absorb "$2"
     return
 fi
 
-if [[ $1 == sync ]]; then
-    sync
+if [[ $1 == stack ]]; then
+    stack
+    return
+fi
+
+if [[ $1 == list ]]; then
+    list
+    return
+fi
+
+if [[ $1 == delete ]]; then
+    delete
     return
 fi
 
 LIST=$(cat <<END
 Sync:!f sync
-Create:!f git chb
+Create:!f create
+Submit:!f submit
 Switch:!f switch
-Checkout-without-hooks:!f git checkout-no-hooks
-Modify:!f git amend
-Absorb-and-modify:!f git qaemnd
+Switch W/O Hooks:!f git checkout-no-hooks
+Stack:!f stack
+List:!f list
+Delete:!f delete
+Modify:!f modify
+Absorb:!f absorb
+Absorb + Modify:!f git qaemnd
 Yolo:!f git yolo
 Undo:!f git undo
 Redo:!f git redo
