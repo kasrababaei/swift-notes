@@ -34,17 +34,29 @@ sync() {
         return
     }
 
-    if [ "$CURRENT_BRANCH" != "$DEFAULT_BRANCH" ]; then
-        COMMAND=$(gum choose --header "Select sync method:" "Merge (git pull)" "Rebase (git pull --rebase)" || true)
-        if [ -n "$COMMAND" ]; then
-            if [[ $COMMAND == "Merge"* ]]; then
-                git merge "$DEFAULT_BRANCH"
-            elif [[ $COMMAND == "Rebase"* ]]; then
-                git rebase -i "$DEFAULT_BRANCH"
-            fi
+    BRANCH=$(git branch --format='%(refname:short)' | grep -v "$(git branch --show-current)" | gum choose --header "Select a branch:" || true)
+
+    if [ -z "$BRANCH" ]; then
+        echo "No branch selected. Defaulting to $DEFAULT_BRANCH."
+        BRANCH="$DEFAULT_BRANCH"
+    fi
+    
+    COMMAND=$(gum choose --header "Select sync method:" "Merge (git pull)" "Rebase (git pull --rebase)" || true)
+
+    if [ -n "$COMMAND" ]; then
+        if [[ $COMMAND == "Merge"* ]]; then
+            git merge "$BRANCH"
+        elif [[ $COMMAND == "Rebase"* ]]; then
+            git rebase -i "$BRANCH"
         fi
     fi
 }
+
+
+if [[ $1 == sync ]]; then
+    sync "$2"
+    return
+fi
 
 create() {
     SUFFIX="dev/$(whoami)"
@@ -142,6 +154,11 @@ absorb() {
     fi
 }
 
+if [[ $1 == absorb ]]; then
+    absorb "$2"
+    return
+fi
+
 modify() {
     git add .
     git commit --amend --no-edit
@@ -171,9 +188,20 @@ stack() {
     return
 }
 
+if [[ $1 == stack ]]; then
+    stack
+    return
+fi
+
 list() {
     git branch --format='%(refname:short)'
 }
+
+
+if [[ $1 == list ]]; then
+    list
+    return
+fi
 
 delete() {
     CURRENT_BRANCH=$(git branch --show-current)
@@ -192,28 +220,55 @@ delete() {
     fi
 }
 
-if [[ $1 == sync ]]; then
-    sync "$2"
-    return
-fi
-
-if [[ $1 == absorb ]]; then
-    absorb "$2"
-    return
-fi
-
-if [[ $1 == stack ]]; then
-    stack
-    return
-fi
-
-if [[ $1 == list ]]; then
-    list
-    return
-fi
-
 if [[ $1 == delete ]]; then
     delete
+    return
+fi
+
+cleanup() {
+    # git branch -vv: show SHA1 and commit subject line for each head
+    # grep ': gone]': filter branches whose upstream is gone
+    # grep -Ev "\*": exclude the current branch (marked with an asterisk)
+    # awk '{ print $1; }': print the first field (branch name)
+    # xargs git branch -D: delete each branch forcefully
+    git branch -vv | grep ': gone]' |  grep -Ev "\\*\"" | awk '{ print $1; }' | xargs git branch -D
+}
+
+if [[ $1 == cleanup ]]; then
+    cleanup
+    return
+fi
+
+reset() {
+    git reset --hard
+}
+
+if [[ $1 == reset ]]; then
+    gum confirm "Are you sure you want to reset all changes? This action cannot be undone." && reset
+    return
+fi
+
+stash() {
+    git stash
+}
+
+if [[ $1 == stash ]]; then
+    stash
+    return
+fi
+
+apply() {
+    git stash pop
+    return
+}
+
+if [[ $1 == apply ]]; then
+    apply
+    return
+fi
+
+if [[ $1 == status ]]; then
+    git status
     return
 fi
 
