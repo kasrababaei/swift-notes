@@ -51,6 +51,7 @@
     - [Back deploy `presentationBackground`](#back-deploy-presentationbackground)
     - [Back deploy `labelIconToTitleSpacing`](#back-deploy-labelicontotitlespacing)
     - [Back depoly \`setContentOffset(\_:animated:)](#back-depoly-setcontentoffset_animated)
+    - [PickerView with multiple columns](#pickerview-with-multiple-columns)
   - [\_VariadicView](#_variadicview)
 
 ## General Notes
@@ -1620,6 +1621,106 @@ final class ScrollViewIdentifier: UIView {
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+}
+```
+
+### PickerView with multiple columns
+
+```swift
+public extension Backport where Content == UIView {
+    /// Returns an array of `UIPickerView` that are immediate subviews of
+    /// the [UIHostingView](x-source-tag://UIHostingView).
+    var pickerViews: [UIPickerView] {
+        guard let hostingView = self.hostingView else {
+            return []
+        }
+
+        var subviews = hostingView.subviews
+        var pickerViews: [UIPickerView] = []
+
+        while let subview = subviews.popLast() {
+            if let pickerView = subview as? UIPickerView {
+                pickerViews.append(pickerView)
+            }
+            subviews.append(contentsOf: subview.subviews)
+        }
+
+        return pickerViews
+    }
+}
+
+public extension View {
+    /// Similar to `UIPickerView`, it applies a background color to all the components as opposed to showing
+    /// separated backgrounds for each component.
+    nonisolated func uiPickerMultiComponentSelectionStyle() -> some View {
+        self
+            .background {
+                TransparentSelection()
+            }
+    }
+}
+
+private struct TransparentSelection: UIViewRepresentable {
+    nonisolated init() {}
+
+    func makeUIView(context: Context) -> UIView {
+        UIViewBackport()
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
+}
+
+private final class UIViewBackport: UIView {
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        for pickerView in self.backport.pickerViews {
+            for subview in pickerView.subviews {
+                subview.backgroundColor = nil
+            }
+        }
+    }
+}
+
+public struct MultiColumnWheelPickerStyle {
+    public static let multiColumnWheel = MultiColumnWheelPickerStyle()
+}
+
+public extension View {
+    nonisolated func pickerStyle(_ style: MultiColumnWheelPickerStyle) -> some View {
+        self
+            .pickerStyle(.wheel)
+            .background {
+                TransparentSelection()
+            }
+    }
+}
+
+struct DateTimePartyPickerView: View {
+    let dict = [
+        1: [1, 11, 111],
+        2: [2, 22, 222],
+        3: [3, 33, 333],
+    ]
+    @State private var selectedDate = 2
+    @State private var selectedTime = 1
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Picker("", selection: $selectedDate) {
+                ForEach(Array(dict.keys).sorted(), id: \.self) {
+                    Text("\($0)")
+                }
+            }
+
+            Picker("", selection: $selectedTime) {
+                ForEach(dict[selectedDate, default: []], id: \.self) {
+                    Text("\($0)")
+                }
+            }
+        }
+        .pickerStyle(.multiColumnWheel)
     }
 }
 ```
