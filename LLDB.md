@@ -28,6 +28,7 @@ p (UIEdgeInsets)[[0x16203ac00 view] safeAreaInsets]
 p (void)[(UIView*)0x12e3adce0 setClipsToBounds:NO]
 p (int)[[(UIView*)0x11de05be0 subviews] count]
 p (UIView*)[[(UIView*)0x11de05be0 subviews] objectAtIndex:0]
+p [[(UIView*)0x10a374400 superview] class]  
 // To import a framework
 e @import UIKit // For Objective-C code
 e import PrivateFramework // For Swift code

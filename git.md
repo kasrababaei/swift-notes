@@ -232,6 +232,11 @@ git rebase -i origin/develop
 git push -f
 ```
 
+During a rebase, `--ours` refers to the upstream branch (main), which is
+counterintuitive but correct.
+
+During a merge, `--ours` refers to your current branch (the branch you're on).
+
 ## To add new changes to a not pushed commit
 
 ```bash

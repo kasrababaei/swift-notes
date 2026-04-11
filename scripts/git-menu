@@ -108,6 +108,8 @@ submit() {
 
     if [[ -z "$PR_NUMBER" ]]; then
         gum confirm "Create PR on GitHub?" && github-create-pull-request
+    else
+        gum confirm "PR #$PR_NUMBER already exists. View on GitHub?" && gh pr view "$PR_NUMBER" --web
     fi
 }
 
@@ -267,6 +269,33 @@ if [[ $1 == apply ]]; then
     return
 fi
 
+copy_commits() {
+    DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p') || {
+        echo "Failed to determine default branch. Please check your git configuration." 2>&1
+        return
+    }
+    CURRENT_BRANCH=$(git branch --show-current)
+
+    if [[ "$CURRENT_BRANCH" == "$DEFAULT_BRANCH" ]]; then
+        echo "You are on the default branch. No commits to copy."
+        return
+    fi
+
+    COMMITS=$(git log $MAIN_BRANCH..HEAD --pretty=format:"%s")
+
+    if [ -z "$COMMITS" ]; then
+        echo "No commits to copy."
+        return
+    fi
+
+    echo "$COMMITS" | pbcopy
+}
+
+if [[ $1 == "copy-commits" ]]; then
+    copy_commits
+    return
+fi
+
 if [[ $1 == status ]]; then
     git status
     return
@@ -289,6 +318,7 @@ Undo:!f git undo
 Redo:!f git redo
 Cleanup (removed merged branches):!f git cleanup
 PR:github-create-pull-request
+Copy Commits:!f copy
 Find:github-pr-from-commit
 Request re-review:github-pr-re-review
 END
