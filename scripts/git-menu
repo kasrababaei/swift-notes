@@ -29,11 +29,6 @@ sync() {
         return
     fi
 
-    git fetch origin "$DEFAULT_BRANCH":"$DEFAULT_BRANCH" || {
-        echo "Failed to fetch $DEFAULT_BRANCH from origin. Please check your network connection and remote repository." 2>&1
-        return
-    }
-
     BRANCH=$(git branch --format='%(refname:short)' | grep -v "$(git branch --show-current)" | gum choose --header "Select a branch:" || true)
 
     if [ -z "$BRANCH" ]; then
@@ -41,6 +36,12 @@ sync() {
         BRANCH="$DEFAULT_BRANCH"
     fi
     
+
+    git fetch origin "$BRANCH":"$BRANCH" || {
+        echo "Failed to fetch $BRANCH from origin. Please check your network connection and remote repository." 2>&1
+        return
+    }
+
     COMMAND=$(gum choose --header "Select sync method:" "Merge (git pull)" "Rebase (git pull --rebase)" || true)
 
     if [ -n "$COMMAND" ]; then
@@ -109,7 +110,7 @@ submit() {
     if [[ -z "$PR_NUMBER" ]]; then
         gum confirm "Create PR on GitHub?" && github-create-pull-request
     else
-        gum confirm "PR #$PR_NUMBER already exists. View on GitHub?" && gh pr view "$PR_NUMBER" --web
+        gum confirm "PR #$PR_NUMBER already exists. View on GitHub?" && gh pr view "$PR_NUMBER" --web 1>/dev/null
     fi
 }
 
@@ -119,8 +120,8 @@ if [[ $1 == submit ]]; then
 fi
 
 switch() {
-    if [[ "$1" == "-" ]]; then
-        git checkout -
+    if [ -n "$1" ]; then
+        git checkout "$1"
         return
     fi
 
@@ -281,18 +282,57 @@ copy_commits() {
         return
     fi
 
-    COMMITS=$(git log $MAIN_BRANCH..HEAD --pretty=format:"%s")
+    COMMITS=$(git log "$DEFAULT_BRANCH"..HEAD --pretty=format:"%s")
 
     if [ -z "$COMMITS" ]; then
         echo "No commits to copy."
         return
     fi
 
+    echo "$COMMITS"
     echo "$COMMITS" | pbcopy
 }
 
 if [[ $1 == "copy-commits" ]]; then
     copy_commits
+    return
+fi
+
+view_pr() {
+    BRANCH=$(git branch --format='%(refname:short)' | gum choose --header "Select a branch to view its PR:" || true)
+    if [ -z "$BRANCH" ]; then
+        return
+    fi
+    
+    PR_NUMBER=$(gh pr list --head "$BRANCH" --state all --json number --jq '.[0].number')
+
+    if [[ -n "$PR_NUMBER" ]]; then
+        gh pr view "$PR_NUMBER" --web 1>/dev/null
+    else
+        echo "No PR found for the current branch."
+    fi
+}
+
+if [[ $1 == view-pr ]]; then
+    view_pr
+    return
+fi
+
+undo() {
+    git reset --soft HEAD~1
+}
+
+if [[ $1 == undo ]]; then
+    undo
+    return
+fi
+
+redo() {
+    git reset --hard "HEAD@{1}"
+}
+
+if [[ $1 == redo ]]; then
+    redo
     return
 fi
 
@@ -314,11 +354,12 @@ Modify:!f modify
 Absorb:!f absorb
 Absorb + Modify:!f git qaemnd
 Yolo:!f git yolo
-Undo:!f git undo
-Redo:!f git redo
+Undo:!f undo
+Redo:!f redo
 Cleanup (removed merged branches):!f git cleanup
 PR:github-create-pull-request
-Copy Commits:!f copy
+Copy Commits:!f copy_commits
+View PR:!f view_pr
 Find:github-pr-from-commit
 Request re-review:github-pr-re-review
 END

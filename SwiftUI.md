@@ -53,6 +53,7 @@
     - [Back depoly \`setContentOffset(\_:animated:)](#back-depoly-setcontentoffset_animated)
     - [PickerView with multiple columns](#pickerview-with-multiple-columns)
   - [\_VariadicView](#_variadicview)
+  - [Random](#random)
 
 ## General Notes
 
@@ -1418,11 +1419,27 @@ struct NavigationBarTitleKey: PreferenceKey {
 }
 
 extension View {
-    unc navigationBarTitle(_ title: String) -> some View {
+    func navigationBarTitle(_ title: String) -> some View {
       self.preference(key: NavigationBarTitleKey.self, value: title)
   }
 }
 ```
+
+- `value ?? nextValue()`: Uses the first non-nil value found as SwiftUI walks up the view tree. Prioritizes earlier values.
+- `nextValue()`: Always uses only the latest value supplied by a child, ignoring earlier values.
+
+**Example:**
+
+```text
+Parent
+ ├─ ChildA (sets navigationTitleView to "A")
+ └─ ChildB (sets navigationTitleView to "B")
+```
+
+- With `value ?? nextValue()`: Result is "A" (first wins).
+- With `nextValue()`: Result is "B" (last wins).
+
+Choose based on which value you want to prevail if multiple children set a preference.
 
 ## Back Deploy
 
@@ -1766,3 +1783,11 @@ Since this VariadicView code is already used by having the compiler emit it
 inline, it’s unlikely there would be any problem using it from your source code
 directly. Emerge is now using it as the root view of every snapshot we generate,
 and it might be useful for your views as well! [_Source_](https://www.emergetools.com/blog/posts/how-to-use-variadic-view#is-it-safe)
+
+## Random
+
+An interesting SwiftUI call that saw in the call stack:
+
+```swift
+static SwiftUI.ViewGraphHostUpdate.dispatchImmediately<τ_0_0>(() -> τ_0_0) -> τ_0_0 ()
+```

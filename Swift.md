@@ -26,6 +26,11 @@
   - [@\_spi Attribute](#_spi-attribute)
   - [AttributedString](#attributedstring)
   - [Conditional Compilation Block](#conditional-compilation-block)
+  - [Access-Level Modifiers on Import Declarations](#access-level-modifiers-on-import-declarations)
+    - [Problem](#problem)
+    - [Solution](#solution)
+    - [Benefits](#benefits)
+    - [Example](#example)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -688,3 +693,54 @@ When creating blocks such as `#if DEBUG`, the word `DEBUG` needs to be added
 to the build settings. Either as `SWIFT_ACTIVE_COMPILATION_CONDITIONS` or
 as `OTHER_SWIFT_FLAGS` which is the legacy way for doing this and the flag
 name needs to be prefixed by `-D`, example: `-DDEBUG`.
+
+## Access-Level Modifiers on Import Declarations
+
+[SE-0409](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md)
+allows applying access-level modifiers (`internal`, `private`,
+`fileprivate`) to `import` statements to control the visibility of imported
+symbols within your module.
+
+### Problem
+
+Without this feature, all imports are implicitly `internal`, making imported
+types available throughout your module even when you only need them in a
+single file or implementation detail.
+
+### Solution
+
+Restrict import visibility using access modifiers:
+
+```swift
+// Only visible in this file
+private import Foundation
+
+// Only visible to this file and extensions in the same source file
+fileprivate import UIKit
+
+// Explicit internal (default behavior)
+internal import SwiftUI
+```
+
+### Benefits
+
+- **Encapsulation**: Hide implementation details from other files in your module
+- **Clarity**: Signal which imports are core dependencies vs. implementation details
+- **Build performance**: May enable better incremental compilation in the future
+- **Reduce coupling**: Prevents accidental usage of private dependencies across
+  files
+
+### Example
+
+```swift
+// DataStore.swift
+private import SQLite3  // Only needed here, not part of public API
+
+public struct DataStore {
+    // SQLite3 types only accessible within this file
+    private var db: OpaquePointer?
+}
+```
+
+Without `private import`, other files in your module could accidentally use 
+`SQLite3` types, creating unintended coupling.

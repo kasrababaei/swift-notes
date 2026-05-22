@@ -4,6 +4,7 @@
   - [Conditionally Include Development Dependencies](#conditionally-include-development-dependencies)
   - [DEBUG/DEVELOPMENT Configurations Name for SPM](#debugdevelopment-configurations-name-for-spm)
   - [Checksum](#checksum)
+  - [SPM vs XCFramework](#spm-vs-xcframework)
 
 ## Conditionally Include Development Dependencies
 
@@ -44,3 +45,43 @@ Prints: 227258fdb2f920f8ce90d4f08d019e1b0db5a4ad2090afa012fd7c2c91716df3
 ```
 
 _[Source](https://www.avanderlee.com/swift/binary-targets-swift-package-manager/)_
+
+## SPM vs XCFramework
+
+IDE / Xcode integration:
+
+- Package indexing on every Xcode launch, even with no changes — blocks code
+  completion and jump-to-definition until it finishes
+- SourceKit indexes all SPM source files, increasing total index size and slowing
+  symbol lookup across the whole workspace
+- Adding/removing packages modifies `project.pbxproj` in non-obvious ways, making
+  diffs noisy and increasing merge conflict surface
+
+Reliability:
+
+- SPM cache in `~/Library/Caches/org.swift.swiftpm/` and DerivedData can become
+ corrupted — fix is manual deletion, which triggers a full re-clone
+- "Package resolution" step in CI needs network access; flaky or rate-limited
+  GitHub/registry connections cause intermittent failures
+- Background package validation in Xcode can silently trigger re-resolution mid-session
+
+Dependency management:
+
+- Package.resolved merge conflicts are frequent on active teams
+- Diamond dependency problem: if two packages require conflicting versions of
+  a third, resolution fails with cryptic errors
+- Transitive dependencies are exposed to your build — you inherit their Swift
+  version requirements and platform constraints even for things you don't use directly
+
+Build system:
+
+- SPM has its own build system that sits somewhat awkwardly inside Xcode's;
+  custom build phases, xcconfig overrides, and code signing sometimes conflict
+  with SPM targets
+- No clean way to have different packages per build configuration (Debug vs. Release)
+- xcodebuild can trigger full package resolution on invocations where you'd
+ expect incremental behavior
+
+XCFrameworks sidestep almost all of these because from Xcode's perspective
+they're just files on disk — no source to index, no resolution to run,
+no network needed.

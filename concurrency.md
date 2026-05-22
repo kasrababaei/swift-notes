@@ -13,6 +13,8 @@
     - [Types of Isolation](#types-of-isolation)
       - [Explicit isolation](#explicit-isolation)
       - [isolated(any)](#isolatedany)
+    - [Problem](#problem)
+    - [Solution](#solution)
       - [Isolation inheritance](#isolation-inheritance)
       - [`sending` parameter and result values](#sending-parameter-and-result-values)
     - [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
@@ -21,6 +23,7 @@
   - [Actor](#actor)
   - [@MainActor](#mainactor)
   - [Testing](#testing)
+  - [Data Race vs Race Condition](#data-race-vs-race-condition)
 
 ## Operation Queue - iOS 2
 
@@ -606,6 +609,16 @@ actor MyActor {
 }
 ```
 
+Region-based isolation is very powerful, but it unfortunately is one of the
+thorniest parts of the Swift concurrency model. It has bad compiler errors,
+it’s the cause of many compiler crashes, and has many soundness holes,
+allowing you to write code that compiles but is technically wrong from a
+concurrency perspective.
+
+Sometimes you can transfer it from one isolation domain to another,
+as long as you can prove that the previous isolation domain no longer
+interacts with the object. In general, non-sendable objects are quite restricted.
+
 If a `sending` value's isolation region is merged into another disconnected
 isolation region, then the value is still considered to be `sending` since
 two disconnected regions when merged form a new disconnected region:
@@ -652,7 +665,18 @@ multiple times given the compiler cannot reason what the callee is going
 to do to the instance (is it going to mutate it, or merge it with something
 else and pass it on to another method?).
 
+Not that per [Apple's documentation:](https://developer.apple.com/documentation/swift/sendable#Sendable-Classes):
+
+> Have no superclass or have `NSObject` as the superclass
+
 ## Isolation
+
+Why do we need isolation? Isolation is a compile time guarantee that when a
+particular line of code is executed, it will be free from data races and data
+corruption. We don't have to take any special considerations into account when
+writing these lines of code, such as locks or mutexes. The Swift compiler has
+deep knowledge of the concept of isolation, means we can write boring and vanilla
+code without ever worrying about data races or synchronization.
 
 Isolation is the mechanism that Swift uses to make data races impossible.
 Isolation is specified at compile time. Everything is non-isolated by default.
@@ -974,7 +998,24 @@ class NonSendableType {
 A function value with this type dynamically carries the isolation of the
 function that was used to initialize it.
 
-```Swift
+### Problem
+
+Swift's type system couldn't express closures that are isolated to a
+dynamically-captured actor. This caused:
+
+- **Performance penalties**: Task APIs couldn't intelligently schedule work
+  because they couldn't recover dynamic isolation from function values
+- **Forced async conversions**: Functions had to convert to async types,
+  erasing isolation information
+- **No type expressivity**: Impossible to write signatures accepting closures
+  isolated to their captured actor instance
+
+### Solution
+
+Use `@isolated(any)` to allow functions to carry their isolation information
+at runtime:
+
+```swift
 func gradually(over: Duration, operation: @isolated(any) (Double) -> ())
 ```
 
@@ -984,6 +1025,13 @@ the call is effectively asynchronous and must be `await`ed.
 
 ```Swift
 await operation(timePassed / overallDuration)
+```
+
+The isolation can be read using the special isolation property of these types:
+
+```swift
+let isolation = operation.isolation  // Query the dynamic isolation
+// Call appropriately based on actual isolation
 ```
 
 This is useful because even though it's possible to determine the isolation
@@ -1142,6 +1190,9 @@ boundary and thus possesses the capability of being safely sent across an
 isolation domain or merged into an actor-isolated region in the function's
 body or the function's caller respectively.
 
+`sending` means, roughly, this value is not referenced by any other actors so
+you can transfer it to some actor if you want, 
+
 ### Passing non-sendable types into actor-isolated context
 
 ```Swift
@@ -1257,6 +1308,10 @@ From _Visualize and optimize Swift concurrency_, WWDC22:
 > Actor. We divide the task into chunks. Some chunks must run on the Actor,
 > and the others don't. The non-Actor isolated chunks can be executed in
 > parallel, which means the computer can finish the work much faster.
+
+When you want to access something inside an actor from the outside,
+you almost always have to await so that exclusive access to the data
+can be guaranteed, and then you are allowed access to the data.
 
 While actors are great for protecting encapsulated state, sometimes we want to
 modify and read individual properties on the type, so actors aren't quite the
@@ -1579,3 +1634,10 @@ swift_task_enqueueGlobal_hook = { job, original in
   original(job)
 }
 ```
+
+## Data Race vs Race Condition
+
+Every data race is a race condition, but not every race condition is necessarily
+a data race. A race condition is just a logical error due to executing your
+code on multiple threads, and it can happen even if there is never an instant
+where literally 2 threads are accessing a single piece of data at the same time.

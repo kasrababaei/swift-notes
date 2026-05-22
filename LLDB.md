@@ -33,3 +33,5 @@ p [[(UIView*)0x10a374400 superview] class]
 e @import UIKit // For Objective-C code
 e import PrivateFramework // For Swift code
 ```
+
+Run `swift-healthcheck` to get more details (logs) why LLDB is acting weird.
