@@ -36,6 +36,9 @@ This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
 can't find a better place to document them.
 
+Swift's general philosophy is to prioritize safety and ease-of-use over performance,
+while still providing tools to write more efficient code<sup>[*](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md#introduction)</sup>.
+
 ## Protocol Oriented Programming (POP)
 
 Swift is known to be a POP programming language. Protocol-Oriented Programming
@@ -568,6 +571,14 @@ There are three ways to improve performance by eliminating dynamic dispatch<sup>
 
 Structs are value types. Value types are infinitely understandable since they
 have such well-defined semantics.
+
+While Swift can synthesize `Equatable` or `Hashable` conformance automatically
+for value-types (with some exceptions), it can't do it for reference types such
+as classes and actors.
+
+That's because reference types cannot be made equatable using their data
+on the inside. Reference types are not data, they are the data plus the
+behavior, i.e., the semantic.
 
 ## Writing Symbol Documentation
 

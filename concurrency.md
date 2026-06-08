@@ -24,6 +24,8 @@
   - [@MainActor](#mainactor)
   - [Testing](#testing)
   - [Data Race vs Race Condition](#data-race-vs-race-condition)
+  - [Run nonisolated async functions on the caller's actor](#run-nonisolated-async-functions-on-the-callers-actor)
+  - [Region-based Isolation](#region-based-isolation)
 
 ## Operation Queue - iOS 2
 
@@ -582,6 +584,10 @@ A type that conforms to the `Sendable` protocol is a thread-safe type: values
 of that type can be shared with and used safely from multiple concurrent
 contexts at once without causing data races, [_source_](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md#sendable-values-and-sendable-types).
 
+The `Sendable` protocol, introduced in Swift 5.7, is a _marker_ protocol,
+meaning it's an empty protocol. Proposal [SE-0302](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md)
+introduced `Sendable` and `@Sendable`.
+
 If a value does not conform to `Sendable`, Swift must ensure that the value is
 never used concurrently. The value can still be sent between concurrent
 contexts, but the send must be a complete transfer of the value's entire region
@@ -618,6 +624,17 @@ concurrency perspective.
 Sometimes you can transfer it from one isolation domain to another,
 as long as you can prove that the previous isolation domain no longer
 interacts with the object. In general, non-sendable objects are quite restricted.
+Some of the features that region-based isolation provides were not available
+in the past without conforming to the crude `Sendable` protocol.
+
+Also, before making something `Sendable`, must think how to do it. For instance,
+by using `DispatchQueue`, `NSLock`, `NSRecursiveLock`, `OSAllocatedUnfairLock`,
+`Mutex` or `Actor`. While all of them except actors can cause a deadlock,
+actors allow reentrancy and caller's need to switch to the actor's boundary
+to call functions that mutate some state on the actor. Moreover, actors are
+reference types, and if for some reason we need them to be `Equatable` based
+on some data on them, the equatable method is a non-`async` method; so, it can
+only be done via an object identity equality check.
 
 If a `sending` value's isolation region is merged into another disconnected
 isolation region, then the value is still considered to be `sending` since
@@ -834,6 +851,22 @@ Witnesses of synchronous `nonisolated` protocol requirements when the witness is
 isolated and the protocol conformance is annotated as `@preconcurrency`.
 3. Mark the protocol requirement `applyStyle` `async` to allow actor-isolated
 conformance.
+4. Mark the conformance as `@MainActor` to tell Swift that this conformance is
+   only valid in the context of `@MainActor`. It's also possible to use an
+   upcoming feature flag, `InferIsolatedConformances`, which was introduced
+   in [SE-0470](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md).
+   In the future, when the flag is on, for opting out from the conformance on
+   main actor, need to do `extension UIViewController: nonisolated Foo {}`.
+
+```swift
+protocol Foo {
+  func myFoo()
+}
+
+extension UIViewController: @MainActor: Foo {
+  func myFoo() { /* ... */ }
+}
+```
 
 ### Types of Isolation
 
@@ -1182,7 +1215,7 @@ This is completely different from how queues or locks work.
 
 #### `sending` parameter and result values
 
-This [proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md)
+The proposal [SE-430](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md)
 extends region isolation to enable the application of an explicit `sending`
 annotation to function parameters and results. A function parameter or result
 that is annotated with `sending` is required to be disconnected at the function
@@ -1191,7 +1224,8 @@ isolation domain or merged into an actor-isolated region in the function's
 body or the function's caller respectively.
 
 `sending` means, roughly, this value is not referenced by any other actors so
-you can transfer it to some actor if you want, 
+you can transfer it to some actor if you want but only if it's not touched
+again afterwards.
 
 ### Passing non-sendable types into actor-isolated context
 
@@ -1641,3 +1675,148 @@ Every data race is a race condition, but not every race condition is necessarily
 a data race. A race condition is just a logical error due to executing your
 code on multiple threads, and it can happen even if there is never an instant
 where literally 2 threads are accessing a single piece of data at the same time.
+
+## Run nonisolated async functions on the caller's actor
+
+Proposal [SE-0641](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md)
+changes the behavior that was established in [SE-0338](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0338-clarify-execution-non-actor-async.md).
+
+In SE-0338, it was specified that non-isolated async functions never run on an
+actor's executor to prevent unnecessary serialization and contention for the actor
+by switching off of the actor to run the non-isolated async function, and any new
+tasks it creates that inherit isolation. The actor is then free to make forward
+progress on other work. This behavior is especially important for preventing
+unexpected overhang on the main actor.
+
+The unfortunate consequence of SE-0338 lies in the semantic difference between
+nonisolated synchronous and asynchronous functions.
+
+1. nonisolated synchronous: always runs ont the caller's actor
+2. nonisolated asynchronous: always switches off of the caller's actor
+
+No. 2 means that _sendable checking_ applies to arguments and results of
+nonisolated async functions, but not nonisolated synchronous functions.
+For example:
+
+```swift
+class NotSendable {
+  func performSync() { ... }
+  func performAsync() async { ... }
+}
+
+actor MyActor {
+  let x: NotSendable
+
+  func call() async {
+    x.performSync() // okay
+
+    await x.performAsync() // error
+    // |- error: Sending 'self.x' risks causing data races
+    //           Sending 'self'-isolated 'self.x' to nonisolated instance method 'performAsync()'
+    //           risks causing data races between nonisolated and 'self'-isolated uses
+  }
+}
+```
+
+The call to `performAsync` from the actor results in a data-race safety error
+because the call leaves the actor to run the function. This frees up the actor
+to run other tasks, but those tasks can access the non-`Sendable` value `x`
+concurrently with the call to `performAsync`, which risks a data race.
+
+It's possible to write async functions that run on the caller's actor.
+The following async function does not leave an actor to run using
+isolated parameters and the `#isolation` macro as a default argument:
+
+```swift
+class NotSendable {
+  func performAsync(
+    isolation: isolated (any Actor)? = #isolation
+  ) async { ... }
+}
+
+actor MyActor {
+  let x: NotSendable
+
+  func call() async {
+    await x.performAsync() // okay
+  }
+}
+```
+
+This resolves the date-race safety error because `performAsync` now runs
+on the actor. However, this is onerous boilerplate to write, and the default
+argument is lost if the method is used in a higher-order manner.
+Also, `performAsync` method could be in a library that the programmer doesn't
+own. In addition to that, it's difficult to write higher-order async APIs.
+
+In the following example, despite `withResource` explicitly running on the
+caller's actor by default, there's no way to specify that the async `body`
+function value should also run in the same context. The compiler treats the
+async function parameter as switching off of the actor to run, so it requires
+sendable checking on the arguments and results. This particular example happens
+to _pass a value in a disconnected region to `body`_, but passing an argument in
+the actor's region would be invalid.
+
+```swift
+public struct Resource {
+  internal init() {}
+  internal mutating func close() async {}
+}
+
+public func withResource<Return>(
+  isolation: isolated (any Actor)? = #isolation,
+  _ body: (inout Resource) async -> Return
+) async -> Return {
+  var resource = Resource()
+  let result = await body(&resource)
+  await resource.close()
+  return result
+}
+```
+
+In SE-461, changes the execution semantics of nonisolated async functions
+to always run on the caller's actor by default. This means that nonisolated
+functions will have consistent execution semantics by default, regardless
+of whether the function is synchronous or asynchronous.
+
+As of May 2026, this feature is gated behind the `NonisolatedNonsendingByDefault`
+upcoming feature flag because it can change the behavior of existing code.
+
+A new `nonsending` argument can be written with `nonisolated` to indicate that
+by default, the argument and result values are not sent over an isolation
+boundary when the function is called.
+
+```swift
+class NotSendable {
+  nonisolated(nonsending)
+  func performAsync() async { ... }
+}
+
+actor MyActor {
+  let x: NotSendable
+
+  func call() async {
+    await x.performAsync() // okay
+  }
+}
+```
+
+The `@concurrent` attribute is an explicit spelling for the behavior of
+async functions in language mode <= Swift 6. It indicates that calling
+the function always switches off of an actor to run, so the function will
+run concurrently with other tasks on the caller's actor.
+
+`@concurrent` is the current default for nonisolated async functions.
+
+## Region-based Isolation
+
+The [SE-0414](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0414-region-based-isolation.md)
+defines _region-based isolation as:
+
+> An isolation region is a set of non-Sendable values that can only be
+> aliased or reachable from values that are within the isolation region.
+> An isolation region can be associated with a specific isolation domain
+> associated with a task, protected by an actor instance or a global actor,
+> or disconnected from any specific isolation domain. As the program executes,
+> each isolation region can be merged with other isolation regions as new
+> values begin to alias or be reachable from each other.

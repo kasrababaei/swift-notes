@@ -5,6 +5,7 @@
   - [DEBUG/DEVELOPMENT Configurations Name for SPM](#debugdevelopment-configurations-name-for-spm)
   - [Checksum](#checksum)
   - [SPM vs XCFramework](#spm-vs-xcframework)
+  - [Generating XCFramework from SPM](#generating-xcframework-from-spm)
 
 ## Conditionally Include Development Dependencies
 
@@ -85,3 +86,8 @@ Build system:
 XCFrameworks sidestep almost all of these because from Xcode's perspective
 they're just files on disk — no source to index, no resolution to run,
 no network needed.
+
+## Generating XCFramework from SPM
+
+There isn't really a good way to do it. There's [this script](https://forums.swift.org/t/how-on-earth-can-i-create-a-framework-from-a-swift-package/76797/6)
+that worked for me in the past.
