@@ -31,6 +31,7 @@
     - [Solution](#solution)
     - [Benefits](#benefits)
     - [Example](#example)
+  - [@convention(block) -\> Void](#conventionblock---void)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -753,5 +754,12 @@ public struct DataStore {
 }
 ```
 
-Without `private import`, other files in your module could accidentally use 
+Without `private import`, other files in your module could accidentally use
 `SQLite3` types, creating unintended coupling.
+
+## @convention(block) -> Void
+
+`@convention(block)` is an attribute applied to a closure to specify that it
+must be compiled as an Objective-C block rather than a native Swift closure.
+It guarantees binary compatibility when interacting with Objective-C APIs or
+C APIs that expect block-based callbacks.

@@ -33,7 +33,8 @@
   - [Cherry picking](#cherry-picking)
   - [List remote branches](#list-remote-branches)
   - [See only files that are having conflicts](#see-only-files-that-are-having-conflicts)
-  - [To Delete every branch that starts with bugfix](#to-delete-every-branch-that-starts-with-bugfix)
+  - [To delete every branch that starts with bugfix](#to-delete-every-branch-that-starts-with-bugfix)
+  - [To delete the currently checked out branch on the remote](#to-delete-the-currently-checked-out-branch-on-the-remote)
   - [To stash changes with a name](#to-stash-changes-with-a-name)
   - [To change remote upstream](#to-change-remote-upstream)
   - [To unset upstream after renaming a branch that has been pushed to the remote](#to-unset-upstream-after-renaming-a-branch-that-has-been-pushed-to-the-remote)
@@ -296,10 +297,16 @@ git branch -r
 git diff --name-only --diff-filter=U
 ```
 
-## To Delete every branch that starts with bugfix
+## To delete every branch that starts with bugfix
 
 ```bash
 git branch --list ‘bugfix*’ | xargs -r git branch -d
+```
+
+## To delete the currently checked out branch on the remote
+
+```bash
+git push -d origin $(git branch --show-current) 
 ```
 
 ## To stash changes with a name

@@ -12,11 +12,12 @@
     - [Dynamic Actor Isolation (Under-Specified Protocol)](#dynamic-actor-isolation-under-specified-protocol)
     - [Types of Isolation](#types-of-isolation)
       - [Explicit isolation](#explicit-isolation)
-      - [isolated(any)](#isolatedany)
-    - [Problem](#problem)
-    - [Solution](#solution)
-      - [Isolation inheritance](#isolation-inheritance)
-      - [`sending` parameter and result values](#sending-parameter-and-result-values)
+    - [isolated(any)](#isolatedany)
+      - [Problem](#problem)
+      - [Solution](#solution)
+    - [Isolation inheritance](#isolation-inheritance)
+    - [@\_inheritActorContext vs isolated(any)](#_inheritactorcontext-vs-isolatedany)
+    - [`sending` parameter and result values](#sending-parameter-and-result-values)
     - [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
     - [SendableClosureCaptures](#sendableclosurecaptures)
   - [Concurrency-safe singletons](#concurrency-safe-singletons)
@@ -863,7 +864,7 @@ protocol Foo {
   func myFoo()
 }
 
-extension UIViewController: @MainActor: Foo {
+extension UIViewController: @MainActor Foo {
   func myFoo() { /* ... */ }
 }
 ```
@@ -1026,12 +1027,12 @@ class NonSendableType {
 }
 ```
 
-#### [isolated(any)](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0431-isolated-any-functions.md)
+### [isolated(any)](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0431-isolated-any-functions.md)
 
 A function value with this type dynamically carries the isolation of the
 function that was used to initialize it.
 
-### Problem
+#### Problem
 
 Swift's type system couldn't express closures that are isolated to a
 dynamically-captured actor. This caused:
@@ -1043,7 +1044,7 @@ dynamically-captured actor. This caused:
 - **No type expressivity**: Impossible to write signatures accepting closures
   isolated to their captured actor instance
 
-### Solution
+#### Solution
 
 Use `@isolated(any)` to allow functions to carry their isolation information
 at runtime:
@@ -1147,7 +1148,7 @@ these functions should usually take a non-`Sendable` function instead
 frameworks that expect their event handlers to be `@MainActor` or actor functions
 that run an operation on the actor
 
-#### Isolation inheritance
+### Isolation inheritance
 
 `@inheritsIsolation` unconditionally and implicitly captures the isolation context.
 
@@ -1213,7 +1214,45 @@ This is really a consequence of the fact that isolation is controlled entirely
 by a function’s definition. It does not matter how the caller is being isolated.
 This is completely different from how queues or locks work.
 
-#### `sending` parameter and result values
+### @_inheritActorContext vs isolated(any)
+
+As [Holly Borla mentioned:](https://forums.swift.org/t/distinction-between-isolated-any-and-inheritactorcontext/75730/2)
+
+> `@isolated(any)` allows you to recover the isolation of a function value as
+> an `(any Actor)?` value. It has no impact on the inferred isolation of a
+> closure whose type includes `@isolated(any)`, and that's where I think
+> people get confused. If you take `@isolated(any)` away, isolation inference
+> behaves exactly the same way. For non-@Sendable/sending closures, isolation
+> is already effectively "inherited" from the enclosing context where the
+> closure is formed.
+>
+> `@_inheritActorContext` is only useful when you have a closure that
+> either `@Sendable` or passed to a sending parameter, and it applies the same
+> isolation inference behavior that you would get if that closure didn't
+> have those other concurrency annotations.
+>
+> I think the need for `@isolated(any)` is fairly rare; the task creation APIs
+> use the isolation value to enqueue the operation directly on the isolated
+> actor to resolve the issue that tasks always (used to) begin on the generic
+> executor. That problem wasn't caused by closures having the wrong static
+> isolation, it was because the implementation of the task creation APIs didn't
+> have the actor value to enqueue on.
+
+From [John McCall](https://forums.swift.org/t/distinction-between-isolated-any-and-inheritactorcontext/75730/3):
+
+> I think `@isolated(any)` is generally the right tool for when you accept a
+> function from the user that you're happy to invoke with any arbitrary
+> isolation. If you have a subscription API which takes a callback,
+> for example, and you don't specifically need to deliver events in
+> some specific way for synchronization/ordering purposes, you should probably
+> take the callback as an `@isolated(any)` function so that users can provide a
+> function with whatever isolation they like.
+
+`TaskGroup` have different semantics compared to `Task`. They do use
+`isolated(any)` to let the caller state the isolation of the closure;
+however, they don't use `@_inheritActorContext` like `Task` does.
+
+### `sending` parameter and result values
 
 The proposal [SE-430](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md)
 extends region isolation to enable the application of an explicit `sending`
@@ -1807,6 +1846,19 @@ the function always switches off of an actor to run, so the function will
 run concurrently with other tasks on the caller's actor.
 
 `@concurrent` is the current default for nonisolated async functions.
+
+It's important to note that when calling a method like `Task.init` which
+uses `@_inheritActorContext` and `isolated(any)`, it's going to interact
+with isolated parameters [_source_](https://forums.swift.org/t/distinction-between-isolated-any-and-inheritactorcontext/75730/10).
+To resolve this, you can try explicitly capturing the isolated param
+value within the Task body like this:
+
+```swift
+return Task {
+        _ = isolation // a capture affects the static isolation
+        /* ... */
+    }
+```
 
 ## Region-based Isolation
 

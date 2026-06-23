@@ -54,6 +54,7 @@
     - [PickerView with multiple columns](#pickerview-with-multiple-columns)
   - [\_VariadicView](#_variadicview)
   - [Random](#random)
+  - [Visual Effect](#visual-effect)
 
 ## General Notes
 
@@ -669,6 +670,13 @@ accept any proposed size from zero to infinity and fill the available space.
 `Circle` is an exception: it'll fit itself into any proposed size and report
 back the actual size of the circle. If we propose `nil` to a shape, i.e., wrap
 it in a `.fixedSize`, it takes on a default size of 10⨉10.
+
+You can call `strokeBorder(_:style:antialiased:)` on a shape to draw a border
+Unlike calling `border(_:)`, stroking will result insetting the view by half
+of its style’s line width.
+
+To draw an outline border, can either use `stroke(_:lineWidth:)` or use a `padding(_:)`
+followed by `border(_:)`.
 
 #### Colors
 
@@ -1790,4 +1798,37 @@ An interesting SwiftUI call that saw in the call stack:
 
 ```swift
 static SwiftUI.ViewGraphHostUpdate.dispatchImmediately<τ_0_0>(() -> τ_0_0) -> τ_0_0 ()
+```
+
+## Visual Effect
+
+[VisualEffect](https://developer.apple.com/documentation/swiftui/visualeffect)
+is a protocol that changes the visual appearance of a view without changing
+its ancestors or descendents.
+
+You don’t conform to this protocol yourself. Instead, visual effects are
+created by calling modifier functions such as `.offset(x:y:)` on other
+effects, as seen in the example above.
+
+The visual effect modifier on `View` takes a closure. In the definition,
+this closure is `@Sendable`, which is an indication from SwiftUI that this
+closure will be evaluated on the background. In this case, SwiftUI calls
+visual effect again whenever selection changes, so I can make a copy of it
+using the closure's capture list, [_source_](https://developer.apple.com/videos/play/wwdc2025/270?time=1433).
+
+```swift
+struct Foo: View {
+  @State private var scaleFactor = 1
+
+  var body: some View {
+    Button(action: { scaleFactor = (1...10).randomElement()! }) {
+      Text("\(scaleFactor)")
+    }
+    // Now, when SwiftUI calls this closure, it will operate on a copy of scaleFactor value,
+    // making this operation data-race free.
+    .visualEffect { [scaleFactor] effect, proxy in
+      effect.scaleEffect(Double(scaleFactor))
+    }
+  }
+}
 ```
