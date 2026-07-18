@@ -23,6 +23,8 @@
   - [Provisioning Profiles](#provisioning-profiles)
   - [Running custom scripts during a build](#running-custom-scripts-during-a-build)
   - [Previews](#previews)
+  - [Coding Agent](#coding-agent)
+    - [Exporting Skills](#exporting-skills)
 
 ## iOS Keys for Info.plist
 
@@ -427,3 +429,29 @@ for `Product > Run`.
 
 `Editor > Canvas > Automatically` Refresh Preview could be it, but if disabled,
 it’ll still pause the preview if you make a change to the source file.
+
+## Coding Agent
+
+Xcode stores files that are related to the coding agent in the following directory:
+
+```text
+$HOME/Library/Developer/Xcode/CodingAssistant/ClaudeAgentConfig
+```
+
+Any feedback that needs to be stored for following sessions gets stored under the
+project name. Example, for a project called _Isolation_:
+
+```text
+$HOME/Library/Developer/Xcode/CodingAssistant/ClaudeAgentConfig/projects/-Users-[name]-iphone/memory
+```
+
+where `[name]` would be your username.
+
+### Exporting Skills
+
+The SwiftUI Specialist Skill can help you follow SwiftUI best practices in your
+apps. The What's New In SwiftUI Skill can guide you through adopting new APIs
+from the 2027 releases. And to use these skills with other tools, you can export
+them with the `xcrun agent skills export` command.
+
+This will create markdown files you can import in your workflows.

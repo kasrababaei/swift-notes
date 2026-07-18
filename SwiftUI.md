@@ -55,6 +55,7 @@
   - [\_VariadicView](#_variadicview)
   - [Random](#random)
   - [Visual Effect](#visual-effect)
+  - [ContentBuilder vs ViewBuilder](#contentbuilder-vs-viewbuilder)
 
 ## General Notes
 
@@ -1832,3 +1833,32 @@ struct Foo: View {
   }
 }
 ```
+
+## ContentBuilder vs ViewBuilder
+
+In WWDC26, a new `resultBuilder` was introduced, named `ContentBuilder`.
+In short, `ContentBuilder` is a typealias for `ViewBuilder` that's backported
+to iOS 13 because under the hood, it's an evolution of the existing `ViewBuilder`.
+It unifies multiple builders, such as `TabContentBuilder`, `ToolbarContentBuilder`
+`CommandsBuilder`, `KeyframeTrackContentBuilder`, or `CompositorContentBuilder`
+under a single builder that introduces substantial improvement in type checking
+performance in SwiftUI.
+
+From the official [ContentBuilder documentation](https://developer.apple.com/documentation/swiftui/contentbuilder):
+
+> In its build functions, `ContentBuilder` doesn’t enforce protocol conformance.
+> Instead, it maintains type safety through conditional conformances on the
+> content types it produces. For example, `TupleContent` conditionally conforms
+> to content types based on which types the content items it contains conform to.
+> This allows a single, shared set of initializers on `Group`, `ForEach`, and `Section`
+> to serve all content types, rather than a separate overloaded initializer per
+> builder.
+
+So, it's important to don't get it confused with a type-eraser. The compiler used
+to dive deep into each content type that, for instance, a `Section` or `Group`
+would produce in order to figure out the final content type. So, in an example
+where there's nested `ForEach`, trying each path makes type checking increasingly
+expensive. _But I already know that Section, Group, and ForEach in my code are
+building views, so there's really only one valid path through this decision tree.
+Instead of this complex set of choices, what if these builders weren't
+constrained by the types they produce, and instead just assembled their content_[<sup>☨</sup>](https://developer.apple.com/videos/play/wwdc2026/269?time=1534).

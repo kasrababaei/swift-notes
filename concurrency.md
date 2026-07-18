@@ -19,11 +19,12 @@
     - [@\_inheritActorContext vs isolated(any)](#_inheritactorcontext-vs-isolatedany)
     - [`sending` parameter and result values](#sending-parameter-and-result-values)
     - [Passing non-sendable types into actor-isolated context](#passing-non-sendable-types-into-actor-isolated-context)
-    - [SendableClosureCaptures](#sendableclosurecaptures)
+    - [Sendable Closure Captures](#sendable-closure-captures)
   - [Concurrency-safe singletons](#concurrency-safe-singletons)
   - [Actor](#actor)
   - [@MainActor](#mainactor)
   - [Testing](#testing)
+    - [Using toEventually](#using-toeventually)
   - [Data Race vs Race Condition](#data-race-vs-race-condition)
   - [Run nonisolated async functions on the caller's actor](#run-nonisolated-async-functions-on-the-callers-actor)
   - [Region-based Isolation](#region-based-isolation)
@@ -1263,8 +1264,8 @@ isolation domain or merged into an actor-isolated region in the function's
 body or the function's caller respectively.
 
 `sending` means, roughly, this value is not referenced by any other actors so
-you can transfer it to some actor if you want but only if it's not touched
-again afterwards.
+you can transfer it to some actor (isolation boundary) if you want but only if
+it's not touched again afterwards.
 
 ### Passing non-sendable types into actor-isolated context
 
@@ -1300,7 +1301,7 @@ It is also possible to make the whole function be `Sendable`
 }
 ```
 
-### SendableClosureCaptures
+### Sendable Closure Captures
 
 `@Sendable` closures can be called multiple times concurrently, so any captured
 values must also be safe to access concurrently. To prevent data races, the
@@ -1707,6 +1708,38 @@ swift_task_enqueueGlobal_hook = { job, original in
   original(job)
 }
 ```
+
+### Using toEventually
+
+Nimble has an operator called `toEventually`, which in some codebases is used
+abundantly because the unit under test depends on something like `DispatchQueue`
+that cannot be injected or controlled. While it works, it introduces problems.
+
+A well-written unit test should be deterministic and isolated. When a test
+depends on a real dispatch queue, run loop, or `Task`, it is no longer testing
+the unit in isolation, it is testing the unit plus the scheduler. That is
+integration testing.
+
+`toEventually` introduces a time budget. Even when the default timeout is
+generous, the test now has an implicit dependency on system load, CI machine
+performance, and task scheduling, variables outside your control. Run the
+suite under load, and the budget shrinks. That is where flakiness comes from,
+not from a mock being "too fast."
+
+This conflates the _interface_ with the _mechanism_. Production code uses async
+I/O, but in a unit test, you are not testing the HTTP transport. You are
+testing the behavior of the unit that _calls_ the transport. A mock that
+returns immediately collapses the timing dimension by design, so the test
+focuses on what matters: does the unit respond correctly to a success or a
+failure?
+
+That is not breaking the contract, that is controlling the test environment.
+
+Mocks that return immediately are easier to reason about and maintain. If the
+mock needs to become async later, you change the mock, not every test that
+depends on it. Preserving `toEventually` in the name of "async fidelity" in a
+mock is cargo-culting production behavior into the test layer.
+
 
 ## Data Race vs Race Condition
 

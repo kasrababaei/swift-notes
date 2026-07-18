@@ -32,6 +32,7 @@ p [[(UIView*)0x10a374400 superview] class]
 // To import a framework
 e @import UIKit // For Objective-C code
 e import PrivateFramework // For Swift code
+p (CGRect)CGRectIntersection((CGRect)[0x130458300 frame], (CGRect)[0x10ba56f80 frame])
 ```
 
 Run `swift-healthcheck` to get more details (logs) why LLDB is acting weird.

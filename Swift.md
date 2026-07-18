@@ -52,16 +52,16 @@ Object-Oriented Programming (OOP).
 > [!NOTE]
 > POP was part of a talk that Dave Abrahams gave in WWDC 2015 when Swift protocols
 > started having default implementation (the famous story about Crusty).
-> However, everyone misunderstood it and thought POP is _a thing_ which made it a
-> buzzword in Swift.
+> However, everyone misunderstood it and thought POP is _a thing_ which made it
+> a buzzword in Swift.
 >
 > ![image Crusty](./.images/.crusty.png)
 >
 > In fact, that video is removed from Apple's website. The goal of that session
 > was to push for using generics and creating creating generic algorithms.
 
-In essence, the paradigm advocates using protocols and value types that conform to
-protocols whereas OOP is mainly talking about inheritance.
+In essence, the paradigm advocates using protocols and value types that conform
+to protocols whereas OOP is mainly talking about inheritance.
 
 ## Functional Programming
 
