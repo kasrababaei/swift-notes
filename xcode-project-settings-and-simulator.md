@@ -343,6 +343,29 @@ The following directory contains the cache for the simulators:
 ~/Library/Developer/CoreSimulator/Caches
 ```
 
+To get a list of available runtimes:
+
+```powershell
+xcrun simctl runtime list
+
+== Disk Images ==
+-- iOS --
+iOS 26.5 (23F77) - C9FA8BD5-719A-495A-8EAA-D10C17FE8CFC (Ready)
+-- watchOS --
+watchOS 26.1 (23S36) - EABF2542-2C1D-49E2-8083-E30478ADD752 (Ready)
+
+Total Disk Images: 2 (11.5G)
+```
+
+To delete a specific runtime:
+
+```powershell
+xcrun simctl runtime delete 23F77
+```
+
+It might take a few seconds for the list to get updated; so, the deleted
+runtime may show up again until the background work for deleting it is done.
+
 ## Code Snippets
 
 Code snippet is a reusable piece of code or code template that you can save and
