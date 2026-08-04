@@ -4,6 +4,7 @@
   - [Why `required`?](#why-required)
   - [awakeFromNib](#awakefromnib)
   - [Storyboards vs Programmatically UI](#storyboards-vs-programmatically-ui)
+  - [Host App when testing](#host-app-when-testing)
 
 ## Why `required`?
 
@@ -56,3 +57,20 @@ Here's a list of disadvantages of using Storyboards:
 - Looking how SwiftUI views can only be built programmatically, using Storyboards
   is a misalignment that introduces a dissonance and makes UIKit and SwiftUI integration
   very challenging.
+
+## Host App when testing
+
+A summary of [this thread](https://developer.apple.com/forums/thread/832898):
+
+Why should we use a host app when, for example, doing snapshot testing where
+almost everything works fine except `screen.scale` on `UIWindow` returns nil
+because there's no `UIWindowScene` while `UIScreen.main.scale` works fine:
+
+> I understand model-level test targets not requiring a host app, but if you are
+> testing anything UI related - even just scale as you mentioned - you really
+> need a host. Testing UI and not having a UIWindowScene is really quite invalid.
+> A scene is a user-level "window" but also the system provided view-port and
+> connection to your app. Without that, all manner of things will be invalid and
+> not set. Having tests run in this sort of environment will give you a false
+> sense of security. They may pass, but it is not indicative of an actual
+> environment this code would see itself in when run with a UIWindowScene connected.

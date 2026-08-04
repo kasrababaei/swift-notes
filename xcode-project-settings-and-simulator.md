@@ -25,6 +25,7 @@
   - [Previews](#previews)
   - [Coding Agent](#coding-agent)
     - [Exporting Skills](#exporting-skills)
+  - [Devices and Simulator](#devices-and-simulator)
 
 ## iOS Keys for Info.plist
 
@@ -317,6 +318,10 @@ command in the Terminal app:
 
 ```bash
 xcrun simctl list devicetypes
+xcrun simctl list devices iOS
+xcrun simctl create [NAME] [DISPLAY_NAME] iOS[VERSION]
+xcrun simctl delete [NAME]
+xcrun simctl list devices available
 ```
 
 To list all the frameworks, including the private ones, in iOS:
@@ -478,3 +483,20 @@ from the 2027 releases. And to use these skills with other tools, you can export
 them with the `xcrun agent skills export` command.
 
 This will create markdown files you can import in your workflows.
+
+## Devices and Simulator
+
+"Show Run Destination" in the Devices and Simulators window
+(Window ▸ Devices and Simulators) is a toggle on a device/simulator's
+context menu (right-click the entry, or the "..." / action menu).
+
+- It controls whether that particular device or simulator appears in
+  Xcode's run destination menu, the destination picker next to the scheme
+  selector in the toolbar.
+- When off, the device/simulator still exists and is managed in this window,
+  but it's hidden from the destination dropdown so the list stays uncluttered
+  (useful when you have dozens of simulators).
+- Toggling it on puts it back in the pickable destinations.
+
+It does not delete, unpair, or erase anything — it's purely a visibility filter
+for the toolbar's destination list.

@@ -32,6 +32,8 @@
     - [Benefits](#benefits)
     - [Example](#example)
   - [@convention(block) -\> Void](#conventionblock---void)
+  - [Borrowing vs Consuming](#borrowing-vs-consuming)
+  - [Generate Public Interface](#generate-public-interface)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -568,6 +570,11 @@ There are three ways to improve performance by eliminating dynamic dispatch<sup>
    to make inferences about the entire module together and infer `final` on
    declarations with `internal` if there are no visible overrides.
 
+A [benchmark] was done which shows how this optimization can improve
+the compile time for about ~400 classes.
+
+[benchmark]: https://forums.swift.org/t/final-optimization-recommendations/18835/11
+
 ## [Struct vs Class](https://developer.apple.com/documentation/swift/choosing-between-structures-and-classes)
 
 Structs are value types. Value types are infinitely understandable since they
@@ -763,3 +770,23 @@ Without `private import`, other files in your module could accidentally use
 must be compiled as an Objective-C block rather than a native Swift closure.
 It guarantees binary compatibility when interacting with Objective-C APIs or
 C APIs that expect block-based callbacks.
+
+## Borrowing vs Consuming
+
+In Swift, borrowing grants temporary, read-only access to a value without
+transferring ownership, while consuming permanently transfers ownership of
+that value to the called function, ending its availability in the caller.
+This was introduced in [SE-0377](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0377-parameter-ownership-modifiers.md).
+
+## Generate Public Interface
+
+It's possible to create a '*.swiftinterface' file for a target. This is handy
+for creating AI skills. In the following examples, given a few file paths,
+we can generate the interface for module Ginger
+
+```cli
+swiftc -emit-module-interface \
+         -emit-module-interface-path Ginger.swiftinterface \
+         -module-name Ginger \
+         <source-files>
+```

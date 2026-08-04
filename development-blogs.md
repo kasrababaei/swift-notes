@@ -15,6 +15,7 @@ Here's a list of development blogs:
 - [WTF Auto Layout](https://www.wtfautolayout.com/)
 - [SwiftUI Layout Guide](https://www.swiftuifieldguide.com/)
 - [Livsy Code](https://livsycode.com/)
+- [Wendy](https://wendy.dev/)
 
 ## User Retention
 

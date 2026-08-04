@@ -15,6 +15,7 @@
     - [isolated(any)](#isolatedany)
       - [Problem](#problem)
       - [Solution](#solution)
+      - [isolated(any) vs async closures](#isolatedany-vs-async-closures)
     - [Isolation inheritance](#isolation-inheritance)
     - [@\_inheritActorContext vs isolated(any)](#_inheritactorcontext-vs-isolatedany)
     - [`sending` parameter and result values](#sending-parameter-and-result-values)
@@ -28,6 +29,7 @@
   - [Data Race vs Race Condition](#data-race-vs-race-condition)
   - [Run nonisolated async functions on the caller's actor](#run-nonisolated-async-functions-on-the-callers-actor)
   - [Region-based Isolation](#region-based-isolation)
+  - [Swift Rockies](#swift-rockies)
 
 ## Operation Queue - iOS 2
 
@@ -164,7 +166,7 @@ let queue = DispatchQueue(label: "queue", attributes: .concurrent)
 // 5 <NSThread: 0x600002a24140>{number = 4, name = (null)}
 ```
 
-Just like `OperationQueue`, `DispatchQueue` can also make sure thread thread
+Just like `OperationQueue`, `DispatchQueue` can also make sure thread
 exhaustion doesn't happen.
 
 `DispatchQueue` is also capable of scheduling work to be performed in the future
@@ -321,6 +323,8 @@ print(counter.count)
 ```
 
 ## Tasks - iOS 13
+
+Swift concurrency was introduced in Swift 5.5.
 
 A task is the basic unit of concurrency in the system. By looking at Instrument,
 can see it has the following lifetime states:
@@ -516,7 +520,7 @@ with regular threads too.
 
 ### Current task
 
-There is no Task.current static like there was `Thread.current`. This is
+There is no `Task.current` static like there was `Thread.current`. This is
 because it’s possible to not be operating inside the context of a task, whereas
 you are always operating within a thread no matter what.
 
@@ -956,7 +960,7 @@ is inserted at the call-site of `onMain()` when ModuleB is recompiled against
 ModuleA after ModuleA has migrated to the Swift 6 language mode.
 
 When calling an actor non-isolated function from an actor isolated context,
-based on [0420 proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0420-inheritance-of-actor-isolation.md):
+based on [SE-0420 proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0420-inheritance-of-actor-isolation.md):
 
 > Non-isolated synchronous functions dynamically inherit the isolation of their caller.
 
@@ -1148,6 +1152,35 @@ these functions should usually take a non-`Sendable` function instead
 - APIs that intend to call the function with a specific isolation, such as UI
 frameworks that expect their event handlers to be `@MainActor` or actor functions
 that run an operation on the actor
+
+#### isolated(any) vs async closures
+
+Give a closure in the form of `@Sendable () async -> Void`,
+
+- Async. The callee awaits it. Calling it introduces a suspension point.
+- Nonisolated by default. The closure body does not adopt any actor's isolation.
+  It runs on the generic executor (concurrent thread pool).
+- The callee has no idea what isolation, if any, the body wants. There's nothing
+  to inspect.
+
+However, given a closure in the form of `@isolated(any) @Sendable () -> Void`
+
+- Synchronous signature — no async, no await at the call site's type level.
+- Carries a dynamic isolation value. The closure knows, at runtime, which actor
+  (if any) it must run on. The callee can read it:
+
+```swift
+func bar(_ job: @escaping @isolated(any) @Sendable () -> Void) {
+    let iso: (any Actor)? = job.isolation   // <-- the whole point
+    Task { await job() }   // runtime hops to job's isolation before running the body
+}
+```
+
+- Even though the type is synchronous, you still can't just call job() directly
+  if you're not already on its isolation — you invoke it from an async context
+  and the runtime performs the hop to the closure's stored isolation. job.isolation
+  lets frameworks make scheduling decisions (e.g. enqueue directly on the right
+  executor, avoid a hop if already there).
 
 ### Isolation inheritance
 
@@ -1800,8 +1833,9 @@ The following async function does not leave an actor to run using
 isolated parameters and the `#isolation` macro as a default argument:
 
 ```swift
-class NotSendable {
+nonisolated class NotSendable {
   func performAsync(
+    // Passing nil here is the equivalent of calling this method concurrently
     isolation: isolated (any Actor)? = #isolation
   ) async { ... }
 }
@@ -1905,3 +1939,142 @@ defines _region-based isolation as:
 > or disconnected from any specific isolation domain. As the program executes,
 > each isolation region can be merged with other isolation regions as new
 > values begin to alias or be reachable from each other.
+
+## Swift Rockies
+
+Global executor is not identical to the global queue; however, conceptually
+it is very similar.
+
+Nonisolated async methods, run on a global actor by pulling one from the
+global pull. MainActor; on the other hand, always runs on the same actor
+that ends up being the main thread.
+
+Nonisolated async methods used to run on the background, i.e., global executor;
+however, [SE-0414](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0414-region-based-isolation.md)
+changed that. When we make an async method `nonisolated(nonsending)`, we're
+saying that we're not sending the method or parameters to the background
+thread.
+
+```swift
+nonisolated class NonSendable {}
+
+@MainActor
+func caller(value: NonSendable) async {
+  let fn = {
+    // Closure is non-escaping, non-sendable, declared on MainActor
+    // Compiler uses the information at the call site to reason if
+    // it's safe to pass this to workAsync
+  }
+
+  await workAsync(fn)
+}
+
+func workAsync(_ block: () -> Void) {
+
+}
+```
+
+The Swift version that you use is locked in your Xcode, the language "mode"
+that we change in Xcode, is essentially telling the compiler which settings,
+features, or flags to use.
+
+One approach to deal with types that are not `Sendable` and we want to send
+them to the background thread is to construct a new type that can be used
+to only pass around things that we want. One example, is `NSAttributedString`,
+which is non-sendable, and `AttributedString`, which is sendable.
+
+```swift
+@MainActor
+func caller(value: NSAttributedString) async {
+    await workAsync(value) // Sending 'value' risks causing data races
+    await workAsync(value) // Sending 'value' risks causing data races
+}
+
+@concurrent
+func workAsync(_ value: NSAttributedString) async {
+    //
+}
+```
+
+`sending` makes sure this thing is constructed and passed around but not
+owned by anyone.
+
+```swift
+@MainActor
+func caller(value: sending NSAttributedString) async {
+    await workAsync(value)
+    await workAsync(value)
+}
+
+@concurrent
+func workAsync(_ value: NSAttributedString) async {
+    //
+}
+```
+
+New problem:
+
+```swift
+@Observable
+class ViewState {
+    init() {
+        Task {
+            await asyncWork() // Passing closure as a 'sending' parameter 
+                              // risks causing data races between code in the current task and concurrent 
+                              // execution of the closure
+        }
+    }
+
+    func asyncWork() async {
+      //
+    }
+}
+```
+
+The initializer that we have above, is very similar to this:
+
+```swift
+init() {
+  DispatchQueue.global().async {
+    await asyncWork()
+  }
+}
+```
+
+Maybe the initializer runs on the `MainActor`; so, the `Task` should
+inherit that. However, tasks don't work at runtime, they reason at compile time
+and in this case, given the class is not actor isolated, the task runs on the
+global actor. One workaround for this is making `ViewState` a main actor-isolated
+type or make it `Sendable`. Another solution is by doing:
+
+```swift
+@Observable
+class ViewState {
+    init(isolation: isolated (any Actor)) {
+        Task {
+           // Task {} inherits actor isolation — but only if the closure captures the isolated value.
+            _ = isolation
+            self.work()
+        }
+    }
+}
+```
+
+Combine sink function doesn't accept arbitrary execution context.
+So, this won't work:
+
+```swift
+func closureAssumptions() {
+  _ = Just(1)
+    .receive(on: DispatchQueue.global())
+    .sink { @MainActor _ in // Converting function value of type '@MainActor (Publishers.ReceiveOn<Just<Int>,
+                            // DispatchQueue>.Output) -> Void' (aka '@MainActor (Int) -> ()') to 
+                            // '(Publishers.ReceiveOn<Just<Int>, DispatchQueue>.Output) -> Void' 
+                            // (aka '(Int) -> ()') loses global actor 'MainActor'
+      //
+    }
+}
+```
+
+Unless, you make `closureAssumptions` main actor-isolated. Alternatively, you
+could make the `sink` closure `sink { @Sendable in /* ... */ }`.

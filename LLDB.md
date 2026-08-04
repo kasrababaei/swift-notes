@@ -33,6 +33,8 @@ p [[(UIView*)0x10a374400 superview] class]
 e @import UIKit // For Objective-C code
 e import PrivateFramework // For Swift code
 p (CGRect)CGRectIntersection((CGRect)[0x130458300 frame], (CGRect)[0x10ba56f80 frame])
+p (CGRect)[(UIView*)0x125a93640 convertRect:[(UIView*)0x125a93640 bounds] toView:(UIView*)0x13aed5500]
+p (CGRect)[(UIView*)0x13aed5500 convertRect:[(UIView*)0x13aed5500 bounds] toView:(UIView*)0x1283fe300]
 ```
 
 Run `swift-healthcheck` to get more details (logs) why LLDB is acting weird.

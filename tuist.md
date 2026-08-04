@@ -7,6 +7,10 @@ Since I've been exploring different Xcode project (and dependency) management
 tools, and Tuist is an emerging tool that is widely getting adopted by many
 teams, thought it's good to collect my findings in a file.
 
+> How slow is too slow for you?
+
+"Slow" is whatever that breaks your flows.
+
 ## [Manifest](https://docs.tuist.dev/en/guides/develop/projects/manifests)
 
 Tuist defaults to Swift files as the primary way to define projects and workspaces
