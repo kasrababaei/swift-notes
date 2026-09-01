@@ -467,7 +467,7 @@ $HOME/Library/Developer/Xcode/CodingAssistant/ClaudeAgentConfig
 ```
 
 Any feedback that needs to be stored for following sessions gets stored under the
-project name. Example, for a project called _Isolation_:
+project name. Example, for a project called *Isolation*:
 
 ```text
 $HOME/Library/Developer/Xcode/CodingAssistant/ClaudeAgentConfig/projects/-Users-[name]-iphone/memory

@@ -11,6 +11,9 @@ Macros transform your source code when you compile it, letting you avoid
 writing repetitive code by hand. During compilation, Swift expands any
 macros in your code before building your code as usual.
 
+Note: macros have some pretty limited diagnostic capabilities that first class
+syntax would not.
+
 ## Known issues
 
 > [!NOTE]

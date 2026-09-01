@@ -18,9 +18,10 @@ protocol Shape {
 }
 ```
 
-- Using generics, by writing `struct VerticalShapes<S: Shape>` and `var shapes: [S]`,
-makes an array whose elements are some specific shape type, and where the identity
-of that specific type is visible to any code that interacts with the array.
+- Using generics, by writing `struct VerticalShapes<S: Shape>` and
+`var shapes: [S]`, makes an array whose elements are some specific shape
+type, and where the identity of that specific type is visible to any
+code that interacts with the array.
 - Using an opaque type, by writing `var shapes: [some Shape]`, makes an array
 whose elements are some specific shape type, and where that specific type’s
 identity is hidden.

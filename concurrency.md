@@ -962,7 +962,8 @@ ModuleA after ModuleA has migrated to the Swift 6 language mode.
 When calling an actor non-isolated function from an actor isolated context,
 based on [SE-0420 proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0420-inheritance-of-actor-isolation.md):
 
-> Non-isolated synchronous functions dynamically inherit the isolation of their caller.
+> Non-isolated synchronous functions dynamically inherit the isolation of their
+> caller.
 
 However, it only inherits the static isolation, not the dynamic context.
 That is why in the following code, the first `assertIsolated` doesn't throw
@@ -1084,7 +1085,7 @@ func scheduleSomeWork(_ f: @Sendable @escaping () async -> Void) {
   // We've lost all the static isolation information
   // available where f was defined.
   Task {
-  await f()
+    await f()
   }
 }
 
@@ -1682,8 +1683,8 @@ swift_task_enqueueGlobal_hook = { job, original in
 Looking at the symbol, `swift_task_enqueueGlobal_hook`, can find an equivalent
 in the `C` header file [_CAsyncSequenceValidationSupport.h](https://github.com/apple/swift-async-algorithms/blob/adb12bfcccaa040778c905c5a50da9d9367fd0db/Sources/_CAsyncSequenceValidationSupport/_CAsyncSequenceValidationSupport.h#L242-L247).
 There's also another signature in the [Concurrency.h](https://github.com/apple/swift/blob/bd11fceff5390c960ccdfca2f6c8951dc96941c9/include/swift/Runtime/Concurrency.h#L737-L738)
-file in the Concurrency repo. The Async Algorithms package wants access to some `C`
-functions that are defined in Swift’s C++ codebase, [GlobalExecutor.cpp](https://github.com/apple/swift/blob/bd11fceff5390c960ccdfca2f6c8951dc96941c9/stdlib/public/BackDeployConcurrency/GlobalExecutor.cpp#L85-L92),
+file in the Concurrency repo. The Async Algorithms package wants access to
+some `C` functions that are defined in Swift’s C++ codebase, [GlobalExecutor.cpp](https://github.com/apple/swift/blob/bd11fceff5390c960ccdfca2f6c8951dc96941c9/stdlib/public/BackDeployConcurrency/GlobalExecutor.cpp#L85-L92),
 but are not exposed with a proper Swift API. In order to do that the package
 defines a system library that publicly declares those signatures, and that makes
 it available in Swift. Whenever an async task is enqueued it calls this closure
@@ -1772,7 +1773,6 @@ Mocks that return immediately are easier to reason about and maintain. If the
 mock needs to become async later, you change the mock, not every test that
 depends on it. Preserving `toEventually` in the name of "async fidelity" in a
 mock is cargo-culting production behavior into the test layer.
-
 
 ## Data Race vs Race Condition
 
@@ -2078,3 +2078,14 @@ func closureAssumptions() {
 
 Unless, you make `closureAssumptions` main actor-isolated. Alternatively, you
 could make the `sink` closure `sink { @Sendable in /* ... */ }`.
+Even if we make `MainActor` conform to `Scheduler`, the sink function
+won't be able to inherit the isolation:
+
+```swift
+_ = Just(1)
+  .receive(on: MainActor.shared)
+  .sink { @MainActor _ in } // Converting function value of type '@MainActor 
+                            // (Publishers.ReceiveOn<Just<Int>, MainActor>.Output) -> Void'
+                            // (aka '@MainActor (Int) -> ()') to '(Publishers.ReceiveOn<Just<Int>, 
+                            // MainActor>.Output) -> Void' (aka '(Int) -> ()') loses global actor 'MainActor'
+```

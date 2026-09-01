@@ -34,6 +34,7 @@
   - [@convention(block) -\> Void](#conventionblock---void)
   - [Borrowing vs Consuming](#borrowing-vs-consuming)
   - [Generate Public Interface](#generate-public-interface)
+  - [Raw identifiers](#raw-identifiers)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -789,4 +790,16 @@ swiftc -emit-module-interface \
          -emit-module-interface-path Ginger.swiftinterface \
          -module-name Ginger \
          <source-files>
+```
+
+## Raw identifiers
+
+The [SE-0451](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0451-escaped-identifiers.md)
+proposal added a new feature in Swift 6.2 that allows using
+backtick-delimited identifiers for declaring methods or types. Example:
+
+```swift
+@Test func `square returns x * x`() {
+  #expect(square(4) == 4 * 4)
+}
 ```

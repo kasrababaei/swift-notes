@@ -373,7 +373,8 @@ cp -f "${TEMP_DIR}/${FILENAME}" "${NEW_DIR}/${FILENAME}" || {
 ## Swift Format in pre-commit
 
 The following bash script uses [SwiftFormat](https://github.com/swiftlang/swift-format)
-to lint the Swift files that are added/modified/copied files in the current git commit.
+to lint the Swift files that are added/modified/copied files in the current
+git commit.
 
 ```bash
 #!/bin/bash
@@ -407,7 +408,8 @@ while read -r line; do
 done <<< "$FILE_PATHS"
 
 # Get the exit code of swift format lint
-swift format lint --strict --parallel --recursive --configuration "$CONFIG_PATH" "${EXPANDED_FILE_PATHS[@]}" 2>&1 || {
+swift format lint --strict --parallel --recursive --configuration \
+    "$CONFIG_PATH" "${EXPANDED_FILE_PATHS[@]}" 2>&1 || {
   echo "SwiftFormat lint failed." >&2
   exit 1
 }

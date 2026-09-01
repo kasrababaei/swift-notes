@@ -10,6 +10,7 @@ and more.
 ## Table of content
 
 - [Accessibility](accessibility.md)
+- [AI](AI.md)
 - [Bash](bash.md)
 - [Concurrency](concurrency.md)
   - [Concurrency code blocks](concurrency-code-blocks.md)
