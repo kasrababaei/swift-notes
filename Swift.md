@@ -35,6 +35,7 @@
   - [Borrowing vs Consuming](#borrowing-vs-consuming)
   - [Generate Public Interface](#generate-public-interface)
   - [Raw identifiers](#raw-identifiers)
+  - [Mangled names](#mangled-names)
 
 This page contains contents that are mostly about the language itself or the
 compiler. It also contains a few concepts like delegates that at the moment
@@ -802,4 +803,22 @@ backtick-delimited identifiers for declaring methods or types. Example:
 @Test func `square returns x * x`() {
   #expect(square(4) == 4 * 4)
 }
+```
+
+## Mangled names
+
+Swift provides a tool and process that converts encrypted, "mangled" Swift
+programming symbols back into a clean, human-readable format.
+
+`@_silgen_name` is an internal compiler attribute in the Swift programming
+language used to override or specify the exact link-time symbol name (mangled
+name) of a function or declaration.
+
+It's possible to de-mangle it by running the following in Terminal:
+
+```bash
+swift demangle ss5ClockPsE7measurey8DurationQzyyYaKXEYaKF
+# Returns:
+# $ss5ClockPsE7measurey8DurationQzyyYaKXEYaKF ---> 
+#   (extension in Swift):Swift.Clock.measure(() async throws -> ()) async throws -> A.Duration
 ```
