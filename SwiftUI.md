@@ -1073,14 +1073,14 @@ However, lazy stacks don't attempt to distribute the available space along the
 major axis among their subviews. For example, a `LazyHStack` just proposes
 `nil⨉proposedHeight` to its subviews, i.e., the subviews become their ideal width.
 
-Computing the height of the lazy vertical stack is complicated by the fact that it
-creates its subviews lazily when it's embedded inside a scroll view a scroll view
-(for the width, the lazy vertical stack accepts the proposed width).
+Computing the height of the lazy vertical stack is complicated by the fact that
+it creates its subviews lazily when it's embedded inside a scroll view a scroll
+view (for the width, the lazy vertical stack accepts the proposed width).
 
 As we scroll, more and more print messages start to appear, and views in the render
-tree get created as needed. Therefore, just like `List`, the `LazyVStack` needs to
-estimate its height based on the subviews that have already been laid out and update
-its own size as new subviews appear onscreen.
+tree get created as needed. Therefore, just like `List`, the `LazyVStack` needs
+to estimate its height based on the subviews that have already been laid out and
+update its own size as new subviews appear onscreen.
 
 When choosing the type of stack view to use, always start with a standard stack
 view and only switch to a lazy stack if profiling your code shows a worthwhile
