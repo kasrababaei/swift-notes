@@ -41,6 +41,7 @@
   - [Copy diff into clipboard](#copy-diff-into-clipboard)
   - [Apply the diff inside the clipboard](#apply-the-diff-inside-the-clipboard)
   - [Transferring Keys](#transferring-keys)
+  - [Branching](#branching)
 
 Git is a distributed version control system (VCS) that allows developers to track
 changes in source code, collaborate on software development, and manage
@@ -460,3 +461,15 @@ To tell Git exactly what to use for GPG:
 ```bash
 git config --global gpg.program $(which gpg)
 ```
+
+## Branching
+
+Why having a release branch is better than merging into 'main/master' branch?
+
+One benefit of maintaining separate main, develop, and transient release branches
+is that main can continue to represent the version currently available in the
+App Store. If a behaviour appears broken in develop or the release candidate,
+we can quickly check out main and compare it against the production version.
+Without a release branch, main would already contain the upcoming release, so validating
+current production behaviour would require locating and checking out
+the previous release tag or commit.
