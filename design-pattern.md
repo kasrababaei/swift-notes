@@ -78,7 +78,8 @@ When choosing an architecture, must consider things such as:
 - Flexibility and Reusability: Some patterns provide better flexibility for code
   reuse and modification. Patterns like Decorator or Strategy make it easier to
   add or modify behaviors without extensive code changes.
-- Team Experience and Consistency: Consider the team's familiarity with certain patterns.
+- Team Experience and Consistency: Consider the team's familiarity with certain
+  patterns.
 - Scalability and Performance: Some patterns can be more demanding on resources,
   so consider the performance needs of your app.
 
@@ -232,7 +233,7 @@ and explicit. Remember:
     You _don't_ think, you swap.
   - With mechanical replacement:
     - Rollbacks become easier
-    - CoDe reviews become trivial
+    - Code reviews become trivial
     - Changes are localized
     - Junior developers can do it safely
 
@@ -379,7 +380,8 @@ But it brings in some complexity and requires hundreds or thousands lines of cod
 There's a hard learning curve. Often makes it harder to reason about the production
 code.
 
-Incremental adoption can be difficult and it's just one dependency to rule them all.
+Incremental adoption can be difficult and it's just one dependency to rule them
+all.
 
 ### Instance Creation
 
