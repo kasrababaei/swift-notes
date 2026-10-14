@@ -16,6 +16,7 @@ Here's a list of development blogs:
 - [SwiftUI Layout Guide](https://www.swiftuifieldguide.com/)
 - [Livsy Code](https://livsycode.com/)
 - [Wendy](https://wendy.dev/)
+- [WWDCNotes (excellent for finding deleted WWDC sessions/videos)](https://wwdcnotes.com/documentation/missingnotes/)
 - [SlidesCodeHighlighter](https://romannurik.github.io/SlidesCodeHighlighter/)
 
 ## User Retention
