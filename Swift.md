@@ -635,6 +635,33 @@ func bar() -> Bar {
 struct Bar {}
 ```
 
+DocC offers support for various types of elements such as tables, notes,
+and asides _[[source](https://www.swift.org/documentation/docc/other-formatting-options)]_.
+
+Supported asides:
+
+```Swift
+/// > Note:
+/// > Hello
+func foo() {}
+
+/// > Important:
+/// > Hello
+func foo() {}
+
+/// > Warning:
+/// > Hello
+func foo() {}
+
+/// > Tip:
+/// > Hello
+func foo() {}
+
+/// > Experiment:
+/// > Hello
+func foo() {}
+```
+
 ## Non-breaking Space
 
 A narrow non-breaking space, `\u{202F}`, is not equal to a normal space.

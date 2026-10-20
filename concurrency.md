@@ -1154,6 +1154,12 @@ these functions should usually take a non-`Sendable` function instead
 frameworks that expect their event handlers to be `@MainActor` or actor functions
 that run an operation on the actor
 
+A function value with type `@isolated(any)` carries its actor isolation dynamically.
+Calling such a function from a context that does not share its isolation requires
+hopping to the function’s actor, which can only be done from an asynchronous
+context. As a result, an `@isolated(any)` function value cannot be converted to
+a synchronous, non-`@isolated(any)` function type _[[source](https://docs.swift.org/latest/documentation/diagnostics/conversion-from-isolated-any-to-synchronous)]_.
+
 #### isolated(any) vs async closures
 
 Give a closure in the form of `@Sendable () async -> Void`,
@@ -1925,6 +1931,21 @@ return Task {
         _ = isolation // a capture affects the static isolation
         /* ... */
     }
+```
+
+In this example, the `Task` is inheriting the isolation
+
+```swift
+@Observable
+class ViewState {
+    init(isolation: isolated (any Actor)) {
+        Task {
+           // Task {} inherits actor isolation — but only if the closure captures the isolated value.
+            _ = isolation
+            self.work()
+        }
+    }
+}
 ```
 
 ## Region-based Isolation

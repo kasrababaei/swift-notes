@@ -18,6 +18,7 @@ Here's a list of development blogs:
 - [Wendy](https://wendy.dev/)
 - [WWDCNotes (excellent for finding deleted WWDC sessions/videos)](https://wwdcnotes.com/documentation/missingnotes/)
 - [SlidesCodeHighlighter](https://romannurik.github.io/SlidesCodeHighlighter/)
+- [Swift Algorithm Club](https://github.com/kodecocodes/swift-algorithm-club)
 
 ## User Retention
 

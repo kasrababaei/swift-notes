@@ -42,6 +42,7 @@
   - [Apply the diff inside the clipboard](#apply-the-diff-inside-the-clipboard)
   - [Transferring Keys](#transferring-keys)
   - [Branching](#branching)
+  - [WIP](#wip)
 
 Git is a distributed version control system (VCS) that allows developers to track
 changes in source code, collaborate on software development, and manage
@@ -473,3 +474,21 @@ we can quickly check out main and compare it against the production version.
 Without a release branch, main would already contain the upcoming release, so validating
 current production behaviour would require locating and checking out
 the previous release tag or commit.
+
+## WIP
+
+```bash
+gh pr list --repo opentable/GuestCenter-iPad --state merged --search "merged:>=$since" --limit 1000 --json mergedBy --jq "[.[] | select(.mergedBy.login == \"$me\")] | length"
+gh pr list --repo opentable/GuestCenter-iPad --state all --search "reviewed-by:$me updated:>=$since" --limit 1000 --json reviews --jq "[.[] | select(any(.reviews[]?; .author.login == \"$me\" and (.submittedAt // \"\") >= \"$since\"))] | length"
+
+gh pr list --repo opentable/GuestCenter-iPad --state all \
+  --search "reviewed-by:$me updated:>=$since" \
+  --limit 1000 --json reviews \
+  --jq "[.[] | select(any(.reviews[]?; .author.login == \"$me\" and (.submittedAt // \"\") >= \"$since\" and .state != \"DISMISSED\"))] | length"
+  
+gh pr list --repo opentable/GuestCenter-iPad --state all \
+  --search "reviewed-by:$me updated:>=$since" \
+  --limit 1000 --json number,reviews \
+  --jq "[.[] | . as \$pr | [\$pr.reviews[]? | select(.author.login == \"$me\" and (.submittedAt // \"\") >= \"$since\")] | sort_by(.submittedAt) | last | select(.) | {number: \$pr.number, status: .state}]" | pbcopy
+  
+```

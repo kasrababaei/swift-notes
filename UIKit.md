@@ -5,6 +5,7 @@
   - [awakeFromNib](#awakefromnib)
   - [Storyboards vs Programmatically UI](#storyboards-vs-programmatically-ui)
   - [Host App when testing](#host-app-when-testing)
+  - [UIDragPreview](#uidragpreview)
 
 ## Why `required`?
 
@@ -74,3 +75,32 @@ because there's no `UIWindowScene` while `UIScreen.main.scale` works fine:
 > not set. Having tests run in this sort of environment will give you a false
 > sense of security. They may pass, but it is not indicative of an actual
 > environment this code would see itself in when run with a UIWindowScene connected.
+
+## UIDragPreview
+
+`UIDragPreview` places the center of `visiblePath` on the target.
+The preview view moves with that point. Its own center ends up at `a - b`,
+which is on the target only when the path is centered on the view.
+
+The path is in the preview view's coordinate space. Its center is
+`origin + (size / 2)`.
+
+- `a` = preview view's bounds center = half its bounds size
+- `b` = visible path's center
+- `c` = `a - b` = preview view's center in the container
+- `d` = `c - a` = preview view's frame origin
+
+`d` is also `-b`. The frame's size stays the bounds size, so the preview
+view's frame is `(d.x, d.y, bounds.width, bounds.height)`.
+
+`c` is how far the preview view shifts from the target. If the path's center
+is to the right of the view's center, `b.x` is larger than `a.x` and
+the view moves left.
+
+Bounds `(0, 0, 80, 40)`, path `(-10, 6, 30, 18)`:
+
+- `a = (40, 20)`
+- `b = (-10 + 15, 6 + 9) = (5, 15)`
+- `c = (40, 20) - (5, 15) = (35, 5)`
+- `d = (35, 5) - (40, 20) = (-5, -15)`
+- frame = `(-5, -15, 80, 40)`

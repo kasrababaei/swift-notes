@@ -3,6 +3,7 @@
 - [Generic types](#generic-types)
   - [Opaque return type vs generics](#opaque-return-type-vs-generics)
   - [Boxed protocol](#boxed-protocol)
+  - [Recursive Protocol](#recursive-protocol)
 
 ## Opaque return type vs generics
 
@@ -176,3 +177,48 @@ mergedOne == mergedTwo
 // By using generics, the caller can decide the type.
 let flip: AnyShape = Shapes.random(square, triangle)
 ```
+
+## [Recursive Protocol](https://github.com/apple/swift-evolution/blob/main/proposals/0157-recursive-protocol-constraints.md)
+
+`ViewPresenter` and `ComponentView` refer to each other through
+associated types. `where Self == ViewType.Presenter` is a same-type
+requirement: the presenter's view must name that presenter back.
+
+```swift
+protocol ViewPresenter where Self == ViewType.Presenter {
+    associatedtype ViewType: ComponentView
+}
+
+protocol ComponentView {
+    associatedtype Presenter: ViewPresenter
+}
+```
+
+That cycle is a recursive protocol constraint. Swift allows it under SE-0157,
+"Recursive protocol constraints".
+
+There is no separate design-pattern name. The terms that fit are mutually
+recursive protocols, recursive protocol constraints, and a same-type requirement
+that closes the cycle.
+
+The equality sits only on ViewPresenter. A presenter determines its view, but
+another view may still use that presenter. Both sides need the same constraint
+for a one-to-one pair:
+
+```swift
+protocol ComponentView {
+    associatedtype Presenter: ViewPresenter
+        where Presenter.ViewType == Self
+}
+
+protocol ViewPresenter {
+    associatedtype ViewType: ComponentView
+        where ViewType.Presenter == Self
+}
+```
+
+Use this when two roles call each other and a mismatch should be a compile
+error: an MVP or VIPER view and presenter, a cell and its view model, or a
+coordinator and its scene. Code generic over the presenter then knows
+the view's presenter type is that same presenter, so assigning self needs no
+cast. any ViewPresenter still erases ViewType.
